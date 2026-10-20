@@ -3,10 +3,12 @@
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
 No database, authentication, hit points, or game loop.
 
-**This is intentionally not a working scientific simulator yet.** All numeric
-traits are zero placeholders, sources are empty, and the scoring engine throws
-`SCORING_NOT_IMPLEMENTED` (HTTP 501). No fake results or fallback narration are
-substituted. A valid Fight request reaches that error before contacting an LLM.
+**This is intentionally not a working scientific simulator yet.** The seven
+animal profiles and trait values were entered from user-provided data; their
+sources and measurements have not been independently verified. The scoring
+engine throws `SCORING_NOT_IMPLEMENTED` (HTTP 501). No fake results or fallback
+narration are substituted. A valid Fight request reaches that error before
+contacting an LLM.
 
 ## Run
 
@@ -37,18 +39,17 @@ an LLM, require a key, or replace scoring in production.
 
 The backend folder is **`artifacts/api-server/server/`**:
 
-- `traits.json`: six hand-written animal records. Replace every numeric zero
-  with researched values and add citations to `sources`. Zero means **unknown,
-  not an actual measurement**. `bite_force_psi` also accepts `null` for unknown
-  or not applicable. Categorical assignments are starter examples, not verified
-  facts; review those and specify species before trusting them. Restart the API
-  after edits because JSON is bundled at startup.
+- `traits.json`: seven animal records copied from the user-provided file:
+  Lion, Grizzly bear, Saltwater crocodile, Gorilla, Hippopotamus, Great white
+  shark, and Rhinoceros. These are the values now sent to the animal selectors
+  and API. Review the supplied numbers and URLs for accuracy before relying on
+  them. `bite_force_psi` accepts `null` for unknown or not applicable. Restart
+  the API after edits because JSON is bundled at startup.
 - `profile` is `adult_male` or `adult_female`; the starter records use
   `adult_male`. The result card currently states “Assumes adult males.”
 - `engine.ts`: implement `scoreMatchup(a, b, environment)` yourself. The body is
   deliberately a TODO and an explicit throw, not a hidden scoring formula.
-  Validate data readiness in your scoring implementation; do not score zeros
-  as real measurements.
+  Validate data readiness and source quality in your scoring implementation.
 - `schemas.ts`: shared Zod-derived types used by the engine, narrator, and routes.
   Exact enums are defined by `lib/api-spec/openapi.yaml`; regenerate contract
   helpers after edits with `pnpm --filter @workspace/api-spec run codegen`.

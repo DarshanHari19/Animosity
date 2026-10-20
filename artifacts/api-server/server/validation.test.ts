@@ -15,16 +15,22 @@ const a = animals[0]!;
 const b = animals[1]!;
 const validInput = { animalA: a.name, animalB: b.name, environment: "land" };
 
-test("traits are six unique named animals with documented zero/empty placeholders", () => {
-  assert.equal(animals.length, 6);
-  assert.equal(new Set(animals.map((item) => item.name)).size, 6);
-  for (const animal of animals) {
-    assert.equal(animal.mass_kg, 0);
-    assert.equal(animal.length_m, 0);
-    assert.equal(animal.top_speed_kmh, 0);
-    assert.equal(animal.bite_force_psi, 0);
-    assert.deepEqual(animal.sources, []);
-  }
+test("traits include all seven user-provided animals and their supplied values", () => {
+  assert.equal(animals.length, 7);
+  assert.equal(new Set(animals.map((item) => item.name)).size, 7);
+  assert.deepEqual(animals.map((animal) => animal.name), [
+    "Lion", "Grizzly bear", "Saltwater crocodile", "Gorilla",
+    "Hippopotamus", "Great white shark", "Rhinoceros",
+  ]);
+  assert.deepEqual(animals[0], {
+    name: "Lion", profile: "adult_male", mass_kg: 190, length_m: 2.5,
+    top_speed_kmh: 80, primary_weapon: "bite", bite_force_psi: 650,
+    armor: "none", temperament: "aggressive", habitats: ["land"],
+    sources: ["https://en.wikipedia.org/wiki/Lion"],
+  });
+  assert.equal(animals[6]?.bite_force_psi, null);
+  assert.equal(animals.every((animal) => animal.profile === "adult_male"), true);
+  assert.equal(animals.every((animal) => animal.sources.length > 0), true);
 });
 
 test("animal validation uses exact enums and nonnegative nullable numeric fields", () => {
@@ -88,7 +94,7 @@ test("HTTP request boundary rejects unknown/malformed inputs and preserves live 
   t.after(() => { server.closeAllConnections(); server.close(); });
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   const list = await (await fetch(`${base}/animals`)).json() as unknown[];
-  assert.equal(list.length, 6);
+  assert.equal(list.length, 7);
   for (const input of [{}, { ...validInput, animalA: "Unknown" }, { ...validInput, animalB: a.name }, { ...validInput, environment: "air" }]) {
     const response = await fetch(`${base}/fight`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),

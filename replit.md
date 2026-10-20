@@ -5,8 +5,9 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 ## Scope rules
 
 - User explicitly wants no database, auth, hit points, game loop, or styling beyond basic layout.
-- Keep numerical traits as documented zero placeholders and sources empty until
-  the user fills them in. Do not invent scientific measurements.
+- Use the user-provided seven animal records in `traits.json`. Do not replace or
+  silently alter their values; remind users that sources and measurements need
+  independent review before being treated as scientific facts.
 - The user will implement scoring. Preserve the throwing engine stub unless
   explicitly asked to implement it. Never add production mock scores or narration.
 - Winner identifiers are exact animal names in engine output and narration.
