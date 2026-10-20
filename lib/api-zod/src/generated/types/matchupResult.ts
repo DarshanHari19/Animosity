@@ -7,8 +7,8 @@
  */
 
 export interface MatchupResult {
-  /** @minLength 1 */
-  winner: string;
+  /** Exact selected animal name, or a non-winning outcome. */
+  winner: 'no_contest' | 'no_decisive_winner' | string;
   /**
      * @minimum 0
      * @maximum 1

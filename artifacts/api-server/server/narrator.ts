@@ -19,7 +19,7 @@ const ProviderResponseSchema = z.object({
   })).min(1),
 });
 
-/** winner and beat.animal are always exact animal names, never A/B or indices. */
+/** Final beat identifies the exact winner name or non-winning outcome token. */
 export async function narrateMatchup(
   output: MatchupResult,
   animalA: Animal,
@@ -84,7 +84,8 @@ export async function narrateMatchup(
         "Return a JSON object {beats:[...]} containing 5 to 8 beats, no other fields.",
         "Each beat is {text, action, animal, fact_used}; all values are nonempty strings.",
         "action is approach|charge|bite|dodge|grapple|retreat|finish.",
-        "animal is exactly one of the supplied animal names. fact_used must exactly copy an evidence string.",
+        "animal is exactly one of the supplied animal names, except the final finish beat may use no_contest or no_decisive_winner.",
+        "For these non-winning outcomes, do not claim either animal won. fact_used must exactly copy an evidence string.",
         "Text must be consistent with fact_used and the supplied engine factors.",
         "The last beat MUST have action finish and animal exactly equal to result.winner.",
         "Never change the engine winner. Do not use finish before the final beat.",

@@ -100,8 +100,11 @@ test("engine throws the explicit not-implemented error in both environments", ()
   }
 });
 
-test("result validates confidence, factors, and selected-name winner", () => {
+test("result validates confidence, factors, selected names and non-winning outcomes", () => {
   const result = { winner: a.name, confidence: 0.7, factors: ["Fixture factor"] };
+  for (const winner of [a.name, b.name, "no_contest", "no_decisive_winner"]) {
+    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, winner }).success, true);
+  }
   for (const confidence of [-0.1, 1.1, NaN, Infinity]) {
     assert.equal(resultSchemaFor(a, b).safeParse({ ...result, confidence }).success, false);
   }
@@ -123,6 +126,21 @@ test("beat validation rejects unknown identifiers, actions, lengths and non-fini
     beats.map((item) => ({ ...item, action: "retreat" })),
     beats.map((item) => ({ ...item, fact_used: "" })),
   ]) assert.equal(beatsSchemaFor(a, b).safeParse(invalid).success, false);
+});
+
+test("non-winning beat identifiers are restricted to the final finish beat", () => {
+  for (const outcome of ["no_contest", "no_decisive_winner"]) {
+    const beats = [
+      ...Array.from({ length: 4 }, () => ({
+        text: "Fixture movement", action: "approach", animal: a.name, fact_used: "Fixture factor",
+      })),
+      { text: "Fixture outcome", action: "finish", animal: outcome, fact_used: "Fixture factor" },
+    ];
+    assert.equal(beatsSchemaFor(a, b).safeParse(beats).success, true);
+    assert.equal(beatsSchemaFor(a, b).safeParse([
+      { ...beats[0], animal: outcome }, ...beats.slice(1),
+    ]).success, false);
+  }
 });
 
 test("HTTP request boundary rejects unknown/malformed inputs and preserves live stub", async (t) => {

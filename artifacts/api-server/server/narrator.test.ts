@@ -57,6 +57,23 @@ test("second winner mismatch fails without third call or fallback", async () => 
   assert.equal(mock.calls.length, 2);
 });
 
+for (const outcome of ["no_contest", "no_decisive_winner"]) {
+  test(`${outcome} is preserved as the final narration outcome`, async () => {
+    const mock = mockProvider([provider(beatsFor(outcome))]);
+    const beats = await narrateMatchup({ ...result, winner: outcome }, a, b, mock.options);
+    assert.equal(beats.at(-1)!.animal, outcome);
+    assert.equal(mock.calls.length, 1);
+  });
+
+  test(`${outcome} corrects an animal-winner mismatch with one retry`, async () => {
+    const mock = mockProvider([provider(beatsFor(a.name)), provider(beatsFor(outcome))]);
+    const beats = await narrateMatchup({ ...result, winner: outcome }, a, b, mock.options);
+    assert.equal(beats.at(-1)!.animal, outcome);
+    assert.equal(mock.calls.length, 2);
+    assert.ok(mock.calls[1]!.messages.at(-1)!.content.includes(outcome));
+  });
+}
+
 test("invalid JSON, provider envelope, beat schema and evidence fail clearly", async () => {
   const base = beatsFor(a.name);
   const invalidResponses = [

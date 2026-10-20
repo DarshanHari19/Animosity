@@ -63,6 +63,9 @@ export default function Home() {
 
   const beats = playback?.response.beats ?? [];
   const current = shown > 0 ? beats[shown - 1] : undefined;
+  // A non-winning finish should not put either figure in a defeated pose.
+  const currentAction = current?.animal === "no_contest" ||
+    current?.animal === "no_decisive_winner" ? null : current?.action ?? null;
   const done = playback !== null && beats.length > 0 && shown >= beats.length;
   const result = playback?.response.result;
 
@@ -123,8 +126,8 @@ export default function Home() {
         <section className="space-y-3" data-testid="section-playback">
           <h2 className="font-semibold">{playback.a} vs {playback.b} ({playback.env})</h2>
           <svg viewBox="0 0 320 190" className="w-full border bg-card" role="img" aria-label="Stick figure fight">
-            <StickFigure side="left" label={playback.a} action={current?.action ?? null} isActor={current?.animal === playback.a} />
-            <StickFigure side="right" label={playback.b} action={current?.action ?? null} isActor={current?.animal === playback.b} />
+            <StickFigure side="left" label={playback.a} action={currentAction} isActor={current?.animal === playback.a} />
+            <StickFigure side="right" label={playback.b} action={currentAction} isActor={current?.animal === playback.b} />
           </svg>
           <ol className="list-decimal pl-5 space-y-2 text-sm">
             {beats.slice(0, shown).map((beat, i) => (
@@ -136,7 +139,7 @@ export default function Home() {
           </ol>
           {done && result && (
             <div className="border p-3 space-y-1" data-testid="card-result">
-              <p>Winner: <strong data-testid="text-winner">{result.winner}</strong></p>
+              <p>{result.winner === "no_contest" || result.winner === "no_decisive_winner" ? "Outcome" : "Winner"}: <strong data-testid="text-winner">{result.winner.replaceAll("_", " ")}</strong></p>
               <p data-testid="text-profile-assumption">Assumes adult males</p>
               <p data-testid="text-confidence">Confidence: {(result.confidence * 100).toFixed(1)}%</p>
               <p>Factors:</p>

@@ -114,7 +114,11 @@ components:
       type: object
       required: [winner, confidence, factors]
       properties:
-        winner: { type: string, minLength: 1 }
+        winner:
+          description: Exact selected animal name, or a non-winning outcome.
+          anyOf:
+            - { type: string, enum: [no_contest, no_decisive_winner] }
+            - { type: string, minLength: 1 }
         confidence: { type: number, minimum: 0, maximum: 1 }
         factors:
           type: array

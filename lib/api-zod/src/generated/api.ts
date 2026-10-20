@@ -70,7 +70,7 @@ export const createFightResponseBeatsMax = 8;
 
 export const CreateFightResponse = zod.object({
   "result": zod.object({
-  "winner": zod.string().min(1),
+  "winner": zod.union([zod.enum(['no_contest', 'no_decisive_winner']),zod.string().min(1)]).describe('Exact selected animal name, or a non-winning outcome.'),
   "confidence": zod.number().min(createFightResponseResultConfidenceMin).max(createFightResponseResultConfidenceMax),
   "factors": zod.array(zod.string().min(1))
 }),

@@ -10,7 +10,9 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
   independent review before being treated as scientific facts.
 - The user will implement scoring. Preserve the throwing engine stub unless
   explicitly asked to implement it. Never add production mock scores or narration.
-- Winner identifiers are exact animal names in engine output and narration.
+- Winner identifiers are exact selected animal names, `no_contest`, or
+  `no_decisive_winner`. Narration repeats that identifier on its final finish
+  beat; non-winning tokens cannot identify animals in earlier beats.
 
 ## Run and verify
 

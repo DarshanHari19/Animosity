@@ -57,9 +57,18 @@ The backend folder is **`artifacts/api-server/server/`**:
   helpers after edits with `pnpm --filter @workspace/api-spec run codegen`.
 
 Return `{ winner, confidence, factors }`: `winner` must be **the exact selected
-animal name**, never `"A"`, `"B"`, or a numeric ID. `confidence` is finite and
+animal name**, `"no_contest"`, or `"no_decisive_winner"`; never `"A"`, `"B"`,
+or a numeric ID. The final narration beat uses that same name or outcome token
+in `animal`; outcome tokens are allowed only on the final `finish` beat.
+`confidence` is finite and
 between 0 and 1; `factors` is a string array explaining your scoring. The
 API validates the output before sending it to the narrator.
+
+`server/engine.test.ts` records ten user-requested matchup expectations as
+comments, not established scientific facts. Each currently asserts
+`SCORING_NOT_IMPLEMENTED`; scoring remains deliberately unimplemented.
+The Lion-vs-Lion case exercises the engine directly; the API still rejects
+identical selections.
 
 ## Configure narration
 

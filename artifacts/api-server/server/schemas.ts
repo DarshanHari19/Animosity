@@ -26,19 +26,26 @@ export const ResultSchema = CreateFightResponse.shape.result.strict();
 export type MatchupResult = z.infer<typeof ResultSchema>;
 export const BeatSchema = CreateFightResponse.shape.beats.element.strict();
 export type Beat = z.infer<typeof BeatSchema>;
+export const NonWinningOutcomeSchema = z.enum(["no_contest", "no_decisive_winner"]);
 
 export function resultSchemaFor(a: Animal, b: Animal) {
   return ResultSchema.refine(
-    (result) => result.winner === a.name || result.winner === b.name,
-    { message: "Engine winner must be one of the selected animal names.", path: ["winner"] },
+    (result) => result.winner === a.name || result.winner === b.name ||
+      NonWinningOutcomeSchema.safeParse(result.winner).success,
+    { message: "Engine winner must be a selected animal name, no_contest, or no_decisive_winner.", path: ["winner"] },
   );
 }
 
 export function beatsSchemaFor(a: Animal, b: Animal) {
   return z.array(BeatSchema.extend({
-    animal: z.enum([a.name, b.name]),
+    animal: z.enum([a.name, b.name, ...NonWinningOutcomeSchema.options]),
   })).min(5).max(8).refine(
     (beats) => beats.at(-1)?.action === "finish",
     { message: "The last beat must have action finish." },
+  ).refine(
+    (beats) => beats.every((beat, index) =>
+      !NonWinningOutcomeSchema.safeParse(beat.animal).success ||
+      (index === beats.length - 1 && beat.action === "finish")),
+    { message: "Non-winning outcome identifiers are allowed only on the final finish beat." },
   );
 }
