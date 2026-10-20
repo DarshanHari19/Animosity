@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Lion",
+    "mass_kg": 0,
+    "length_m": 0,
+    "top_speed_kmh": 0,
+    "primary_weapon": "bite",
+    "bite_force_psi": 0,
+    "armor": "none",
+    "temperament": "aggressive",
+    "habitats": ["land"],
+    "sources": []
+  },
+  {
+    "name": "Tiger",
+    "mass_kg": 0,
+    "length_m": 0,
+    "top_speed_kmh": 0,
+    "primary_weapon": "claws",
+    "bite_force_psi": 0,
+    "armor": "none",
+    "temperament": "aggressive",
+    "habitats": ["land"],
+    "sources": []
+  },
+  {
+    "name": "Rhinoceros",
+    "mass_kg": 0,
+    "length_m": 0,
+    "top_speed_kmh": 0,
+    "primary_weapon": "horns",
+    "bite_force_psi": 0,
+    "armor": "thick_hide",
+    "temperament": "defensive",
+    "habitats": ["land"],
+    "sources": []
+  },
+  {
+    "name": "Elephant",
+    "mass_kg": 0,
+    "length_m": 0,
+    "top_speed_kmh": 0,
+    "primary_weapon": "tusks",
+    "bite_force_psi": 0,
+    "armor": "thick_hide",
+    "temperament": "defensive",
+    "habitats": ["land"],
+    "sources": []
+  },
+  {
+    "name": "Crocodile",
+    "mass_kg": 0,
+    "length_m": 0,
+    "top_speed_kmh": 0,
+    "primary_weapon": "bite",
+    "bite_force_psi": 0,
+    "armor": "scales",
+    "temperament": "defensive",
+    "habitats": ["both"],
+    "sources": []
+  },
+  {
+    "name": "Python",
+    "mass_kg": 0,
+    "length_m": 0,
+    "top_speed_kmh": 0,
+    "primary_weapon": "constriction",
+    "bite_force_psi": 0,
+    "armor": "scales",
+    "temperament": "avoids",
+    "habitats": ["both"],
+    "sources": []
+  }
+]

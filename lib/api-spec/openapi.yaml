@@ -11,6 +11,53 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /animals:
+    get:
+      operationId: getAnimals
+      summary: List animal trait placeholders
+      responses:
+        "200":
+          description: Animals
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Animal" }
+  /fight:
+    post:
+      operationId: createFight
+      summary: Score and narrate a matchup (scoring intentionally unimplemented)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FightInput" }
+      responses:
+        "200":
+          description: Validated result and narration
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FightResponse" }
+        "400":
+          description: Invalid selections
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiFailure" }
+        "501":
+          description: Scoring not implemented
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiFailure" }
+        "502":
+          description: Invalid engine or narrator output, or provider failure
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiFailure" }
+        "503":
+          description: Narrator configuration missing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiFailure" }
   /healthz:
     get:
       operationId: healthCheck
@@ -26,6 +73,65 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    Animal:
+      type: object
+      required: [name, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_psi, armor, temperament, habitats, sources]
+      properties:
+        name: { type: string, minLength: 1 }
+        mass_kg: { type: number, minimum: 0 }
+        length_m: { type: number, minimum: 0 }
+        top_speed_kmh: { type: number, minimum: 0 }
+        primary_weapon: { type: string, enum: [bite, claws, horns, tusks, strike, constriction] }
+        bite_force_psi: { type: [number, "null"], minimum: 0 }
+        armor: { type: string, enum: [none, thick_hide, shell, scales] }
+        temperament: { type: string, enum: [avoids, defensive, aggressive] }
+        habitats:
+          type: array
+          items: { type: string, enum: [land, water, both] }
+        sources:
+          type: array
+          items: { type: string }
+    FightInput:
+      type: object
+      required: [animalA, animalB, environment]
+      additionalProperties: false
+      properties:
+        animalA: { type: string, minLength: 1 }
+        animalB: { type: string, minLength: 1 }
+        environment: { type: string, enum: [land, water] }
+    MatchupResult:
+      type: object
+      required: [winner, confidence, factors]
+      properties:
+        winner: { type: string, minLength: 1 }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        factors:
+          type: array
+          items: { type: string, minLength: 1 }
+    Beat:
+      type: object
+      required: [text, action, animal, fact_used]
+      properties:
+        text: { type: string, minLength: 1 }
+        action: { type: string, enum: [approach, charge, bite, dodge, grapple, retreat, finish] }
+        animal: { type: string, minLength: 1 }
+        fact_used: { type: string, minLength: 1 }
+    FightResponse:
+      type: object
+      required: [result, beats]
+      properties:
+        result: { $ref: "#/components/schemas/MatchupResult" }
+        beats:
+          type: array
+          minItems: 5
+          maxItems: 8
+          items: { $ref: "#/components/schemas/Beat" }
+    ApiFailure:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        code: { type: string }
     HealthStatus:
       type: object
       properties:

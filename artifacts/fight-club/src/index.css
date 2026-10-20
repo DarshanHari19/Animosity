@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Basic layout only. Use native controls, system fonts, and no decorative theme. */
+@theme inline {
+  --color-card: white;
+  --color-primary: white;
+  --color-primary-foreground: black;
+  --color-muted-foreground: black;
+  --color-destructive: black;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: black;
+  background: white;
+}
+
+button, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}

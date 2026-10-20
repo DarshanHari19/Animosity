@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Fight Club"
+description = "A minimal animal matchup simulator with editable sourced traits, user-written scoring, and validated LLM narration."
+version = "1.0.0"
+id = "artifacts/fight-club"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21528
+
+[services.development]
+run = "pnpm --filter @workspace/fight-club run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/fight-club", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/fight-club/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21528"
+BASE_PATH = "/"
