@@ -1,0 +1,56 @@
+Update the app to match the new methodology. Do NOT implement scoring logic: engine.ts keeps throwing SCORING_NOT_IMPLEMENTED, but update its signature and types.
+
+1. Data (traits.json + Zod schema)
+Replace the "habitats" field with "functions_in": array of enum land | shallow_water | deep_water. Set these values exactly:
+- Lion: [land]
+- Grizzly bear: [land, shallow_water]
+- Saltwater crocodile: [land, shallow_water, deep_water]
+- Gorilla: [land]
+- Hippopotamus: [land, shallow_water]
+- Great white shark: [shallow_water, deep_water]
+- Rhinoceros: [land, shallow_water]
+Add a field_sources entry for functions_in on each animal with tier 3 and ref "TODO: verify".
+
+2. Request: POST /api/fight
+{ animalA, animalB, environment: land | shallow_water | deep_water, mode: realistic | forced_fight, encounter: face_off }
+encounter only allows face_off for now. Defaults: land, realistic, face_off.
+
+3. Engine signature and result type (engine.ts stays a stub)
+scoreMatchup(a, b, { environment, mode, encounter }) returns:
+{
+  outcome: { kind: "favored", animal: string } | { kind: "even" } | { kind: "indeterminate" } | { kind: "no_contest" },
+  deciding_factor: "fighting_ability" | "environmental_advantage" | "behavior" | null,
+  evidence_quality: "mostly_measured" | "mixed" | "mostly_estimated",
+  encounter_label: "hypothetical" | "ranges_overlap" | "documented",
+  advantage_score: number | null,
+  factors: { name: string, value: number, reason: string }[]
+}
+No percentages or confidence fields anywhere.
+
+4. Narrator
+Only call the narrator when outcome.kind is "favored" or "even". The retry check compares the narrated result to outcome (favored animal, or no winner for even). For indeterminate and no_contest, skip narration and return a one-line explanation instead.
+
+5. Frontend
+- Environment picker: Land, Shallow water, Deep water
+- Mode toggle: Realistic / Forced fight, with the caption "Forced fight: no retreat; environmental disadvantages count."
+- No encounter control yet
+- Result card shows, in order: outcome ("Hippopotamus favored", "Even matchup", "Indeterminate", "No contest"), deciding factor, evidence quality, encounter label, and "Assumes adult males"
+
+6. Tests: create server/engine.test.ts with these cases inside describe.skip, using real assertions so I can un-skip them once scoring exists. Define blue whale and African elephant as fixtures inside the test file only, not in traits.json (whale functions_in [deep_water]; elephant functions_in [land, shallow_water]).
+1. Hippo vs Lion, land, realistic: Hippo favored, fighting_ability
+2. Croc vs Lion, deep_water, realistic: no_contest
+3. Croc vs Lion, deep_water, forced_fight: Croc favored, environmental_advantage
+4. Croc vs Lion, land, realistic: tuning case, accept Croc favored or even; add a TODO comment
+5. Great white vs Croc, deep_water, realistic: Great white favored, fighting_ability
+6. Great white vs Lion, land, forced_fight: Lion favored, environmental_advantage
+7. Rhino vs Lion, land, realistic: Rhino favored, fighting_ability
+8. Gorilla vs Grizzly, land, realistic: even, behavior
+9. Gorilla vs Grizzly, land, forced_fight: tuning case, accept Grizzly favored or even; add a TODO comment
+10. Hippo vs Croc, shallow_water, realistic: Hippo favored, fighting_ability
+11. Lion vs Lion, land: even
+12. Blue whale vs Elephant, land, forced_fight: Elephant favored, environmental_advantage
+13. Blue whale vs Elephant, land, realistic: no_contest
+14. Blue whale vs Elephant, deep_water, forced_fight: Blue whale favored, environmental_advantage
+15. Great white vs Blue whale, land, forced_fight: indeterminate
+
+Keep all existing tests passing. Show me the plan first.
