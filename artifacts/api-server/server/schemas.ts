@@ -5,9 +5,16 @@ import {
   CreateFightResponse,
 } from "@workspace/api-zod";
 
-// The OpenAPI contract defines the exact enums. These stricter runtime schemas
-// and inferred types are shared by the data loader, engine, and narrator.
-export const AnimalSchema = GetAnimalsResponseItem.strict();
+// The OpenAPI contract defines the enums and generated field types. Add strict
+// nested validation too, so source entries match exactly { tier, ref }.
+export const FieldSourceSchema = z.object({
+  tier: z.union([z.literal(1), z.literal(2), z.literal(3), z.null()]),
+  ref: z.string(),
+}).strict();
+export type FieldSource = z.infer<typeof FieldSourceSchema>;
+export const AnimalSchema = GetAnimalsResponseItem.extend({
+  field_sources: z.record(z.string(), FieldSourceSchema),
+}).strict();
 export type Animal = z.infer<typeof AnimalSchema>;
 export const EnvironmentSchema = z.enum(["land", "water"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;

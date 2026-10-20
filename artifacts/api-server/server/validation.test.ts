@@ -24,25 +24,65 @@ test("traits include all seven user-provided animals and their supplied values",
   ]);
   assert.deepEqual(animals[0], {
     name: "Lion", profile: "adult_male", mass_kg: 190, length_m: 2.5,
-    top_speed_kmh: 80, primary_weapon: "bite", bite_force_psi: 650,
-    armor: "none", temperament: "aggressive", habitats: ["land"],
-    sources: ["https://en.wikipedia.org/wiki/Lion"],
+    top_speed_kmh: 80, primary_weapon: "bite", bite_force_n: 5500,
+    armor: "none", temperament: "aggressive", fighting_style: "ambush",
+    habitats: ["land"],
+    field_sources: {
+      mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
+      length_m: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
+      top_speed_kmh: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
+      bite_force_n: {
+        tier: 2,
+        ref: "Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table",
+      },
+    },
   });
-  assert.equal(animals[6]?.bite_force_psi, null);
+  assert.equal(animals[6]?.bite_force_n, null);
   assert.equal(animals.every((animal) => animal.profile === "adult_male"), true);
-  assert.equal(animals.every((animal) => animal.sources.length > 0), true);
+  assert.equal(animals.every((animal) => animal.field_sources !== undefined), true);
 });
 
 test("animal validation uses exact enums and nonnegative nullable numeric fields", () => {
   for (const field of ["primary_weapon", "armor", "temperament"] as const) {
     assert.equal(AnimalSchema.safeParse({ ...a, [field]: "invented" }).success, false);
   }
+  for (const fighting_style of ["invented", "approach"]) {
+    assert.equal(AnimalSchema.safeParse({ ...a, fighting_style }).success, false);
+  }
+  for (const fighting_style of ["ambush", "sustained", "bluff", "grapple", "charge"]) {
+    assert.equal(AnimalSchema.safeParse({ ...a, fighting_style }).success, true);
+  }
   assert.equal(AnimalSchema.safeParse({ ...a, habitats: ["air"] }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_juvenile" }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_female" }).success, true);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: undefined }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, mass_kg: -1 }).success, false);
-  assert.equal(AnimalSchema.safeParse({ ...a, bite_force_psi: null }).success, true);
+  assert.equal(AnimalSchema.safeParse({ ...a, bite_force_n: null }).success, true);
+  assert.equal(AnimalSchema.safeParse({ ...a, bite_force_n: -1 }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, bite_force_psi: 5500 }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, sources: [] }).success, false);
+  assert.equal(AnimalSchema.safeParse({
+    ...a,
+    field_sources: {
+      mass_kg: { tier: 4, ref: "invalid tier" },
+    },
+  }).success, false);
+  assert.equal(AnimalSchema.safeParse({
+    ...a,
+    field_sources: {
+      mass_kg: { tier: null, ref: "Valid unknown-tier note" },
+      new_trait: { tier: 1, ref: "Valid arbitrary trait key" },
+    },
+  }).success, true);
+  assert.equal(AnimalSchema.safeParse({
+    ...a,
+    field_sources: { mass_kg: { tier: 1, ref: 123 } },
+  }).success, false);
+  assert.equal(AnimalSchema.safeParse({
+    ...a,
+    field_sources: { mass_kg: { tier: 1, ref: "valid", extra: true } },
+  }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, field_sources: undefined }).success, false);
 });
 
 test("request rejects missing, identical, invalid-environment and extra fields", () => {

@@ -1,0 +1,138 @@
+Copy all of it and paste it over the contents of artifacts/api-server/server/traits.json:
+
+json
+[
+  {
+    "name": "Lion",
+    "profile": "adult_male",
+    "mass_kg": 190,
+    "length_m": 2.5,
+    "top_speed_kmh": 80,
+    "primary_weapon": "bite",
+    "bite_force_n": 5500,
+    "armor": "none",
+    "temperament": "aggressive",
+    "fighting_style": "ambush",
+    "habitats": ["land"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Lion" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Lion" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Lion" },
+      "bite_force_n": { "tier": 2, "ref": "Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table" }
+    }
+  },
+  {
+    "name": "Grizzly bear",
+    "profile": "adult_male",
+    "mass_kg": 270,
+    "length_m": 2.0,
+    "top_speed_kmh": 56,
+    "primary_weapon": "claws",
+    "bite_force_n": null,
+    "armor": "thick_hide",
+    "temperament": "defensive",
+    "fighting_style": "grapple",
+    "habitats": ["land"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Grizzly_bear" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Grizzly_bear" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Grizzly_bear" },
+      "bite_force_n": { "tier": null, "ref": "Popular 975 psi figure unsourced; check Christiansen & Wroe 2007" }
+    }
+  },
+  {
+    "name": "Saltwater crocodile",
+    "profile": "adult_male",
+    "mass_kg": 450,
+    "length_m": 5.0,
+    "top_speed_kmh": 29,
+    "primary_weapon": "bite",
+    "bite_force_n": 16400,
+    "armor": "scales",
+    "temperament": "aggressive",
+    "fighting_style": "ambush",
+    "habitats": ["both"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Saltwater_crocodile" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Saltwater_crocodile" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Saltwater_crocodile (short burst only)" },
+      "bite_force_n": { "tier": 1, "ref": "Erickson et al. 2012, PLoS ONE, doi:10.1371/journal.pone.0031781" }
+    }
+  },
+  {
+    "name": "Gorilla",
+    "profile": "adult_male",
+    "mass_kg": 180,
+    "length_m": 1.7,
+    "top_speed_kmh": 40,
+    "primary_weapon": "strike",
+    "bite_force_n": null,
+    "armor": "none",
+    "temperament": "avoids",
+    "fighting_style": "bluff",
+    "habitats": ["land"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Gorilla" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Gorilla" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Gorilla" },
+      "bite_force_n": { "tier": null, "ref": "Popular 1,300 psi figure unsourced" }
+    }
+  },
+  {
+    "name": "Hippopotamus",
+    "profile": "adult_male",
+    "mass_kg": 1500,
+    "length_m": 3.5,
+    "top_speed_kmh": 30,
+    "primary_weapon": "bite",
+    "bite_force_n": null,
+    "armor": "thick_hide",
+    "temperament": "aggressive",
+    "fighting_style": "charge",
+    "habitats": ["both"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Hippopotamus" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Hippopotamus" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Hippopotamus" },
+      "bite_force_n": { "tier": null, "ref": "Popular 1,800 psi figure unsourced" }
+    }
+  },
+  {
+    "name": "Great white shark",
+    "profile": "adult_male",
+    "mass_kg": 750,
+    "length_m": 3.8,
+    "top_speed_kmh": 40,
+    "primary_weapon": "bite",
+    "bite_force_n": null,
+    "armor": "none",
+    "temperament": "defensive",
+    "fighting_style": "ambush",
+    "habitats": ["water"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Great_white_shark" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Great_white_shark" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Great_white_shark" },
+      "bite_force_n": { "tier": null, "ref": "TODO: interpolate for 3.8 m from Wroe et al. 2008 (about 3,000 N at 2.5 m, about 18,000 N at 6.5 m)" }
+    }
+  },
+  {
+    "name": "Rhinoceros",
+    "profile": "adult_male",
+    "mass_kg": 2300,
+    "length_m": 3.8,
+    "top_speed_kmh": 50,
+    "primary_weapon": "horns",
+    "bite_force_n": null,
+    "armor": "thick_hide",
+    "temperament": "defensive",
+    "fighting_style": "charge",
+    "habitats": ["land"],
+    "field_sources": {
+      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/White_rhinoceros" },
+      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/White_rhinoceros" },
+      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/White_rhinoceros" },
+      "bite_force_n": { "tier": null, "ref": "Not a biting fighter" }
+    }
+  }
+]

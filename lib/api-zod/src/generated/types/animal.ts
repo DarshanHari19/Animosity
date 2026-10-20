@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AnimalArmor } from './animalArmor';
+import type { AnimalFieldSources } from './animalFieldSources';
+import type { AnimalFightingStyle } from './animalFightingStyle';
 import type { AnimalHabitatsItem } from './animalHabitatsItem';
 import type { AnimalPrimaryWeapon } from './animalPrimaryWeapon';
 import type { AnimalProfile } from './animalProfile';
@@ -26,9 +28,10 @@ export interface Animal {
      * @minimum 0
      * @nullable
      */
-  bite_force_psi: number | null;
+  bite_force_n: number | null;
   armor: AnimalArmor;
   temperament: AnimalTemperament;
+  fighting_style: AnimalFightingStyle;
   habitats: AnimalHabitatsItem[];
-  sources: string[];
+  field_sources: AnimalFieldSources;
 }

@@ -76,7 +76,7 @@ export default function Home() {
       <section className="border p-3 text-sm space-y-1" data-testid="text-limitations">
         <strong>Starter limitations</strong>
         <ul className="list-disc pl-5">
-          <li>Seven adult-male trait profiles are loaded from user-provided data. Review the listed sources and values before treating them as verified facts.</li>
+          <li>Seven adult-male trait profiles are loaded from user-provided data. Review field-level source notes and values before treating them as verified facts.</li>
           <li>The scoring engine is not implemented; Fight returns a 501 "scoring-not-implemented" error until it is written.</li>
           <li>No results are simulated. Narration appears only from a real engine response.</li>
         </ul>

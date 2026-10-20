@@ -43,10 +43,12 @@ The backend folder is **`artifacts/api-server/server/`**:
   Lion, Grizzly bear, Saltwater crocodile, Gorilla, Hippopotamus, Great white
   shark, and Rhinoceros. These are the values now sent to the animal selectors
   and API. Review the supplied numbers and URLs for accuracy before relying on
-  them. `bite_force_psi` accepts `null` for unknown or not applicable. Restart
+  them. `bite_force_n` accepts `null` for unknown or not applicable, and
+  `field_sources` records a tier and reference per trait. Restart
   the API after edits because JSON is bundled at startup.
 - `profile` is `adult_male` or `adult_female`; the starter records use
-  `adult_male`. The result card currently states “Assumes adult males.”
+  `adult_male`. `fighting_style` is one of `ambush`, `sustained`, `bluff`,
+  `grapple`, or `charge`. The result card states “Assumes adult males.”
 - `engine.ts`: implement `scoreMatchup(a, b, environment)` yourself. The body is
   deliberately a TODO and an explicit throw, not a hidden scoring formula.
   Validate data readiness and source quality in your scoring implementation.

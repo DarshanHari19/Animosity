@@ -18,7 +18,7 @@ export const getAnimalsResponseLengthMMin = 0;
 
 export const getAnimalsResponseTopSpeedKmhMin = 0;
 
-export const getAnimalsResponseBiteForcePsiMin = 0;
+export const getAnimalsResponseBiteForceNMin = 0;
 
 
 
@@ -29,11 +29,15 @@ export const GetAnimalsResponseItem = zod.object({
   "length_m": zod.number().min(getAnimalsResponseLengthMMin),
   "top_speed_kmh": zod.number().min(getAnimalsResponseTopSpeedKmhMin),
   "primary_weapon": zod.enum(['bite', 'claws', 'horns', 'tusks', 'strike', 'constriction']),
-  "bite_force_psi": zod.number().min(getAnimalsResponseBiteForcePsiMin).nullable(),
+  "bite_force_n": zod.number().min(getAnimalsResponseBiteForceNMin).nullable(),
   "armor": zod.enum(['none', 'thick_hide', 'shell', 'scales']),
   "temperament": zod.enum(['avoids', 'defensive', 'aggressive']),
+  "fighting_style": zod.enum(['ambush', 'sustained', 'bluff', 'grapple', 'charge']),
   "habitats": zod.array(zod.enum(['land', 'water', 'both'])),
-  "sources": zod.array(zod.string())
+  "field_sources": zod.record(zod.string(), zod.object({
+  "tier": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(null)]).nullable(),
+  "ref": zod.string()
+}))
 })
 export const GetAnimalsResponse = zod.array(GetAnimalsResponseItem)
 

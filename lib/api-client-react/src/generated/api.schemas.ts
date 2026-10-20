@@ -44,6 +44,17 @@ export const AnimalTemperament = {
   aggressive: 'aggressive',
 } as const;
 
+export type AnimalFightingStyle = typeof AnimalFightingStyle[keyof typeof AnimalFightingStyle];
+
+
+export const AnimalFightingStyle = {
+  ambush: 'ambush',
+  sustained: 'sustained',
+  bluff: 'bluff',
+  grapple: 'grapple',
+  charge: 'charge',
+} as const;
+
 export type AnimalHabitatsItem = typeof AnimalHabitatsItem[keyof typeof AnimalHabitatsItem];
 
 
@@ -52,6 +63,26 @@ export const AnimalHabitatsItem = {
   water: 'water',
   both: 'both',
 } as const;
+
+/**
+ * @nullable
+ */
+export type FieldSourceTier = typeof FieldSourceTier[keyof typeof FieldSourceTier] | null;
+
+
+export const FieldSourceTier = {
+  NUMBER_1: 1,
+  NUMBER_2: 2,
+  NUMBER_3: 3,
+} as const;
+
+export interface FieldSource {
+  /** @nullable */
+  tier: FieldSourceTier;
+  ref: string;
+}
+
+export type AnimalFieldSources = {[key: string]: FieldSource};
 
 export interface Animal {
   /** @minLength 1 */
@@ -68,11 +99,12 @@ export interface Animal {
      * @minimum 0
      * @nullable
      */
-  bite_force_psi: number | null;
+  bite_force_n: number | null;
   armor: AnimalArmor;
   temperament: AnimalTemperament;
+  fighting_style: AnimalFightingStyle;
   habitats: AnimalHabitatsItem[];
-  sources: string[];
+  field_sources: AnimalFieldSources;
 }
 
 export type FightInputEnvironment = typeof FightInputEnvironment[keyof typeof FightInputEnvironment];

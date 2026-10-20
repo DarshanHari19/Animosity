@@ -8,6 +8,8 @@
 
 export * from './animal';
 export * from './animalArmor';
+export * from './animalFieldSources';
+export * from './animalFightingStyle';
 export * from './animalHabitatsItem';
 export * from './animalPrimaryWeapon';
 export * from './animalProfile';
@@ -15,6 +17,8 @@ export * from './animalTemperament';
 export * from './apiFailure';
 export * from './beat';
 export * from './beatAction';
+export * from './fieldSource';
+export * from './fieldSourceTier';
 export * from './fightInput';
 export * from './fightInputEnvironment';
 export * from './fightResponse';
