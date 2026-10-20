@@ -43,6 +43,8 @@ The backend folder is **`artifacts/api-server/server/`**:
   or not applicable. Categorical assignments are starter examples, not verified
   facts; review those and specify species before trusting them. Restart the API
   after edits because JSON is bundled at startup.
+- `profile` is `adult_male` or `adult_female`; the starter records use
+  `adult_male`. The result card currently states “Assumes adult males.”
 - `engine.ts`: implement `scoreMatchup(a, b, environment)` yourself. The body is
   deliberately a TODO and an explicit throw, not a hidden scoring formula.
   Validate data readiness in your scoring implementation; do not score zeros

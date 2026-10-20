@@ -24,6 +24,7 @@ export const getAnimalsResponseBiteForcePsiMin = 0;
 
 export const GetAnimalsResponseItem = zod.object({
   "name": zod.string().min(1),
+  "profile": zod.enum(['adult_male', 'adult_female']),
   "mass_kg": zod.number().min(getAnimalsResponseMassKgMin),
   "length_m": zod.number().min(getAnimalsResponseLengthMMin),
   "top_speed_kmh": zod.number().min(getAnimalsResponseTopSpeedKmhMin),

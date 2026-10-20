@@ -8,11 +8,13 @@
 import type { AnimalArmor } from './animalArmor';
 import type { AnimalHabitatsItem } from './animalHabitatsItem';
 import type { AnimalPrimaryWeapon } from './animalPrimaryWeapon';
+import type { AnimalProfile } from './animalProfile';
 import type { AnimalTemperament } from './animalTemperament';
 
 export interface Animal {
   /** @minLength 1 */
   name: string;
+  profile: AnimalProfile;
   /** @minimum 0 */
   mass_kg: number;
   /** @minimum 0 */

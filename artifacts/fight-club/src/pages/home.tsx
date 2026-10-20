@@ -137,6 +137,7 @@ export default function Home() {
           {done && result && (
             <div className="border p-3 space-y-1" data-testid="card-result">
               <p>Winner: <strong data-testid="text-winner">{result.winner}</strong></p>
+              <p data-testid="text-profile-assumption">Assumes adult males</p>
               <p data-testid="text-confidence">Confidence: {(result.confidence * 100).toFixed(1)}%</p>
               <p>Factors:</p>
               <ul className="list-disc pl-5 text-sm">

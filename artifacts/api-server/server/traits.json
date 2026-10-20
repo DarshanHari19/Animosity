@@ -1,6 +1,7 @@
 [
   {
     "name": "Lion",
+    "profile": "adult_male",
     "mass_kg": 0,
     "length_m": 0,
     "top_speed_kmh": 0,
@@ -13,6 +14,7 @@
   },
   {
     "name": "Tiger",
+    "profile": "adult_male",
     "mass_kg": 0,
     "length_m": 0,
     "top_speed_kmh": 0,
@@ -25,6 +27,7 @@
   },
   {
     "name": "Rhinoceros",
+    "profile": "adult_male",
     "mass_kg": 0,
     "length_m": 0,
     "top_speed_kmh": 0,
@@ -37,6 +40,7 @@
   },
   {
     "name": "Elephant",
+    "profile": "adult_male",
     "mass_kg": 0,
     "length_m": 0,
     "top_speed_kmh": 0,
@@ -49,6 +53,7 @@
   },
   {
     "name": "Crocodile",
+    "profile": "adult_male",
     "mass_kg": 0,
     "length_m": 0,
     "top_speed_kmh": 0,
@@ -61,6 +66,7 @@
   },
   {
     "name": "Python",
+    "profile": "adult_male",
     "mass_kg": 0,
     "length_m": 0,
     "top_speed_kmh": 0,

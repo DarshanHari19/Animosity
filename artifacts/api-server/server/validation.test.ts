@@ -32,6 +32,9 @@ test("animal validation uses exact enums and nonnegative nullable numeric fields
     assert.equal(AnimalSchema.safeParse({ ...a, [field]: "invented" }).success, false);
   }
   assert.equal(AnimalSchema.safeParse({ ...a, habitats: ["air"] }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_juvenile" }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_female" }).success, true);
+  assert.equal(AnimalSchema.safeParse({ ...a, profile: undefined }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, mass_kg: -1 }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, bite_force_psi: null }).success, true);
 });

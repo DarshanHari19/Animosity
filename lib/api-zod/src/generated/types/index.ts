@@ -10,6 +10,7 @@ export * from './animal';
 export * from './animalArmor';
 export * from './animalHabitatsItem';
 export * from './animalPrimaryWeapon';
+export * from './animalProfile';
 export * from './animalTemperament';
 export * from './apiFailure';
 export * from './beat';

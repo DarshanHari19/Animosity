@@ -75,9 +75,10 @@ components:
   schemas:
     Animal:
       type: object
-      required: [name, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_psi, armor, temperament, habitats, sources]
+      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_psi, armor, temperament, habitats, sources]
       properties:
         name: { type: string, minLength: 1 }
+        profile: { type: string, enum: [adult_male, adult_female] }
         mass_kg: { type: number, minimum: 0 }
         length_m: { type: number, minimum: 0 }
         top_speed_kmh: { type: number, minimum: 0 }

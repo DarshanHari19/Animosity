@@ -5,6 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type AnimalProfile = typeof AnimalProfile[keyof typeof AnimalProfile];
+
+
+export const AnimalProfile = {
+  adult_male: 'adult_male',
+  adult_female: 'adult_female',
+} as const;
+
 export type AnimalPrimaryWeapon = typeof AnimalPrimaryWeapon[keyof typeof AnimalPrimaryWeapon];
 
 
@@ -48,6 +56,7 @@ export const AnimalHabitatsItem = {
 export interface Animal {
   /** @minLength 1 */
   name: string;
+  profile: AnimalProfile;
   /** @minimum 0 */
   mass_kg: number;
   /** @minimum 0 */
