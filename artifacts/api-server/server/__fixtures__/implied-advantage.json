@@ -1,0 +1,30 @@
+{
+  "description": "Known implied-advantage gap, captured verbatim from a successful live Hippopotamus/Lion response. Validation is intentionally unchanged in this evaluation-only request.",
+  "input": {
+    "animalA": "Hippopotamus",
+    "animalB": "Lion",
+    "environment": "land",
+    "mode": "realistic",
+    "encounter": "face_off"
+  },
+  "placement": "non_final",
+  "beat": {
+    "text": "The Lion attempts to retreat from the heavier animal, unable to shake it off in the close exchange.",
+    "action": "retreat",
+    "animal": "Lion",
+    "facts_used": [
+      "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]",
+      "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+    ]
+  },
+  "observed_baseline": {
+    "date": "2026-10-21",
+    "validation": "accepted",
+    "citations": "context only"
+  },
+  "desired_validation": {
+    "verdict": "reject",
+    "check": "causal_grounding",
+    "reason": "Unable to shake it off implies an escape or restraint advantage not established by descriptive mass and length citations."
+  }
+}

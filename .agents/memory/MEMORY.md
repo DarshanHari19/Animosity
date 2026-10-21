@@ -1,1 +1,2 @@
 - [DOM test dependency compatibility](dom-test-dependencies.md) — package installs may accept unsupported Node engines; check runtime compatibility before upgrading.
+- [Narration evaluation logs](narration-evaluation-logs.md) — correlate failures by embedded timestamps, not log arrival; buffered warnings can arrive during the next request.
