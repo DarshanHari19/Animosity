@@ -39,4 +39,7 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 - Express entry: `artifacts/api-server/src/`
 - React page and SVG poses: `artifacts/fight-club/src/`
 
-The backend alone reads LLM_API_KEY from Secrets. The database template is unused.
+Narration uses Replit-managed Anthropic AI Integrations and a Claude Haiku-class
+model; no personal LLM_API_KEY. Credentials stay on the backend. Preserve the
+narrator's validation and single corrective retry; disable SDK automatic retries.
+The database template is unused.

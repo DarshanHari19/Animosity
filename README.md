@@ -113,17 +113,22 @@ tests cover exact scoring rules, validation, routes and mocked provider response
 
 ## Configure narration
 
-After scoring is ready, add **`LLM_API_KEY` through Replit's Secrets tool**.
-Never put it in source code, chat, a frontend `VITE_` variable, or a commit.
-Only `server/narrator.ts` reads this secret, on the backend.
+Narration uses **Replit AI Integrations for Anthropic** with Replit-managed
+credentials. No personal API key or `LLM_API_KEY` is required. Usage is billed
+to your Replit credits.
 
-Defaults:
+- Default model: **`claude-haiku-5-5`**, a Claude Haiku-class model.
+- Replit provisions `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` and
+  `AI_INTEGRATIONS_ANTHROPIC_API_KEY`. The backend uses these through the
+  Anthropic SDK; credentials never go to the browser or logs.
+- If managed configuration is missing, narration returns `LLM_NOT_CONFIGURED`
+  with an instruction to enable the Anthropic AI integration, not to add a key.
+- Legacy `LLM_API_KEY`, `LLM_API_URL`, and `LLM_MODEL` are no longer read.
 
-- Full chat-completions endpoint: `https://api.openai.com/v1/chat/completions`
-- Model: `gpt-4o-mini`
-- Optional backend environment variables: `LLM_API_URL` (full HTTPS endpoint)
-  and `LLM_MODEL`. Use a trusted OpenAI-compatible provider that supports
-  `response_format: { type: "json_object" }`. Your key is sent to that endpoint.
+The provider adapter converts Anthropic text blocks into the narrator's
+existing internal response envelope. The beat schema, evidence filtering,
+`fact_used` checks, error codes, and single corrective retry are unchanged.
+SDK automatic retries are disabled so they cannot add hidden attempts.
 
 The provider must return `{ "beats": [...] }` with 5–8 beats, each containing
 `text`, `action`, `animal`, and `fact_used`. Actions are exactly `approach`,

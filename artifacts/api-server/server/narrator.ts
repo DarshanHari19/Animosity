@@ -4,6 +4,7 @@ import {
   type Animal, type Beat, type MatchupResult,
 } from "./schemas";
 import { FightError } from "./errors";
+import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -36,20 +37,28 @@ export async function narrateMatchup(
   if (result.outcome.kind !== "favored" && result.outcome.kind !== "even") {
     throw new FightError("NARRATION_NOT_APPLICABLE", "This outcome requires an explanation, not narration.", 502);
   }
-  const apiKey = options.apiKey ?? process.env.LLM_API_KEY;
-  if (!apiKey) {
-    throw new FightError("LLM_NOT_CONFIGURED", "Add LLM_API_KEY in Replit Secrets to enable narration.", 503);
+  const baseURL = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
+  const apiKey = options.apiKey ?? process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+  if (!apiKey || (!options.fetch && !baseURL)) {
+    throw new FightError("LLM_NOT_CONFIGURED",
+      "Enable Replit AI Integrations for Anthropic to provision managed narration credentials; no personal API key is required.", 503);
   }
-  const endpoint = options.endpoint ?? process.env.LLM_API_URL ??
-    "https://api.openai.com/v1/chat/completions";
-  const model = options.model ?? process.env.LLM_MODEL ?? "gpt-4o-mini";
+  // The reserved URL is only used by injected test transports, never live calls.
+  const endpoint = options.endpoint ?? baseURL ?? "https://narration.test.invalid";
+  const model = options.model ?? "claude-haiku-5-5";
   let url: URL;
   try {
     url = new URL(endpoint);
-    if (url.protocol !== "https:" || url.username || url.password) throw new Error();
+    // Managed proxy URLs may use internal HTTP. Explicit test endpoints retain
+    // the existing HTTPS-only validation; production uses only the managed URL.
+    if (url.username || url.password ||
+      (url.protocol !== "https:" && (options.endpoint !== undefined || url.protocol !== "http:"))) throw new Error();
   } catch {
-    throw new FightError("LLM_CONFIGURATION", "LLM_API_URL must be a full HTTPS chat-completions URL without credentials.", 503);
+    throw new FightError("LLM_CONFIGURATION", "The managed Anthropic integration URL is invalid.", 503);
   }
+  const provider = options.fetch ? null : createAnthropicProvider({
+    apiKey, baseURL: url.toString(), model,
+  });
 
   // fact_used must cite an exact engine factor or a supplied trait with a
   // non-null source tier. functions_in is gating metadata, never trait evidence.
@@ -79,7 +88,7 @@ export async function narrateMatchup(
       { message: "Every fact_used must exactly cite supplied evidence." },
     ),
   }).strict();
-  const messages = [
+  const messages: NarrationMessage[] = [
     {
       role: "system",
       content: [
@@ -106,14 +115,17 @@ export async function narrateMatchup(
   for (let attempt = 0; attempt < 2; attempt++) {
     let response: Response;
     try {
-      response = await (options.fetch ?? fetch)(url, {
+      // Preserve the normalized test transport and the narrator's existing
+      // validation contract. Live requests always use the Anthropic SDK.
+      response = options.fetch ? await options.fetch(url, {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model, messages, response_format: { type: "json_object" } }),
         signal: AbortSignal.timeout(30_000),
         redirect: "error",
-      });
-    } catch {
+      }) : await provider!(messages);
+    } catch (error) {
+      if (error instanceof FightError) throw error;
       // Do not echo provider errors, headers, URLs, or bodies: they may contain secrets.
       throw new FightError("LLM_PROVIDER_FAILURE", "Narration provider request failed or timed out.", 502);
     }
