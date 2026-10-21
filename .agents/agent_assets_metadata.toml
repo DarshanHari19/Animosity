@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "yCTEOMKZMs8oEGYDCGuqc"
+uri = "file://docs/narration-test-changes.md"
+type = "text"
+title = "Narration test changes"
+description = "Old → new assertions and the guarantee preserved for every migrated test. No tests deleted."
+logical_id = "4ed06af6-8840-46f3-a0b4-3e980f24bd48"
+content_hash = "sha256:cc86ea475d10da31357e04313ab0e277502f33c33108ca78cb10355a12832cfc"
+size = 9451
+mtime_ms = 1792624520537
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:88294e23-1a51-4503-93c0-8a435b485520/4ed06af6-8840-46f3-a0b4-3e980f24bd48/211431d2-ee7e-4d5d-85d3-25eeda87e348"
+storage_version_token = "1792624556126828"
+content_type = "text/markdown"

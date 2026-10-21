@@ -134,10 +134,12 @@ by the UI. This replaces the old singular `fact_used`; IDs never reach the UI.
 Zod and the existing outcome checks remain the final authority.
 SDK automatic retries are disabled so they cannot add hidden attempts.
 
-The tool input is `{ "beats": [4–7 non-final beats], "finish": {one finish beat} }`.
+The tool input is `{ "beats": [4–7 non-finish beats] }` only.
 Every wire beat has `text`, `action`, `animal`, and `fact_ids`. The tool schema
-forbids null actors and the finish action in the non-final array, and fixes the
-separate finish actor to the favored name or null for even. The server maps this
+forbids null actors, any finish action, and a top-level finish field. Non-finish
+beats must be neutral attempted movements: no stated or implied winner,
+advantage, domination, or inability to escape (including “unable to shake it off”).
+The server appends exactly one deterministic finish and maps this
 to the existing 5–8 public beats array. Public actions remain `approach`, `charge`,
 `bite`, `dodge`, `grapple`, `retreat`, and `finish`. Each `facts_used` entry must
 exactly copy an evidence string: a readable scored comparison such as
@@ -160,11 +162,22 @@ must cite scored evidence. An even finish may not credit any advantage.
 
 The only exception is an environmental-favored engine outcome: a `gate` item
 copies only its existing outcome and deciding-factor fields. Its finish must
-cite that gate, not scored evidence, and explicitly say the environment decided
-the fight without implying physical superiority. No scores or engine factors
+cite that gate, not scored evidence, and use the selected environment rather
+than imply physical superiority. No scores or engine factors
 are invented for gates.
 Zod validates structure and evidence references; it cannot prove natural-language
 claims are scientifically true. Review sources and narration before relying on it.
+
+Server finish templates (readable size/bite text is copied from supplied scored evidence):
+- Fighting ability: `{Winner} is favored. {size factor text}`, followed by the
+  bite factor text only when bite was compared.
+- Environmental: `{Winner} is favored. {Other} can't function in {environment}.`
+  Environment labels use spaces, e.g. `deep water`.
+- Even: `Too close to call. Body mass and comparable bite force don't separate these two.`
+
+The model does not receive a separate requested verdict. The server-owned finish
+is included in the final Zod, citation, wording, grounding, and outcome checks.
+It is never returned alone if model narration fails.
 
 Only `favored` and `even` outcomes call the narrator. `no_engagement` never does.
 The final beat must have
@@ -248,5 +261,33 @@ These deterministic English checks are conservative, not semantic fact proof.
   show explanations. Narrated playback requires a configured provider; verdicts do not.
   API outcome `even` is displayed as **Too close to call**, with
   “Scored factors (body mass, comparable bite force) don't separate these two.”
-  The narrator prompt requires this distinction too: no claim of a stalemate
-  or equally matched animals.
+  The deterministic finish preserves this distinction; the prompt also forbids
+  claims of a stalemate or equally matched animals.
+
+## Live narration evaluation
+
+With the managed API workflow running, use the Shell from the project root:
+
+```sh
+pnpm eval                            # same baseline: 20 scenarios × 3 runs
+pnpm eval --scenarios 2,10 --runs 1   # just two scenarios once
+pnpm eval --help
+```
+
+This makes real `POST /api/fight` calls through the running server, using its
+normal rate limit and daily provider-call cap. It never reads LLM credentials or
+resets/bypasses limits. Requests start at least 6.5 seconds apart; expect the full
+batch to take several minutes and use up to 120 provider calls.
+
+Before every fight it compares `/api/health` against the current build manifest
+and stops on a mismatch. Default host is `REPLIT_DEV_DOMAIN`; `--base-url` can
+select another development origin, but it must serve that same build.
+`X-Narration-Attempts` is a server-owned response header counting actual provider
+attempts (0–2, including retries). The evaluator uses it rather than guessing
+first-attempt results from buffered logs. The public JSON response is unchanged.
+
+The summary prints first-attempt pass rate, final unavailable rate, every
+`narration_reason` count, and a per-scenario table. A successful retry is not a
+first-attempt pass. Gated/non-narrated scenarios stop the evaluation rather than
+inflate pass rates. Validated public responses and summary JSON are saved under
+`generated-artifacts/narration-eval/`, excluded from Git and deployment.

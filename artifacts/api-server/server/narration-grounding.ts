@@ -1,7 +1,8 @@
-import type { Animal, Beat, MatchupResult } from "./schemas";
+import type { Animal, Beat, Environment, MatchupResult } from "./schemas";
 import type { EvidenceItem } from "./narration-evidence";
 import { isEnvironmental } from "./narration-evidence";
 import type { FailureCheck } from "./narration-diagnostics";
+import { deterministicFinish } from "./narration-finish";
 
 const causal = /\b(?:because|due to|thanks to|decid(?:e|es|ed|ing)|determin(?:e|es|ed)|decisive|carried|carries|prevails?|wins?|winner|outcome|advantage|edge|favou?rs?|favou?red|offset|keeps)\b/i;
 const physical = /\b(?:size|mass|weight|heavier|outweighs|bite|speed|strength|power|reach|length|physical|bulk)\b/i;
@@ -11,7 +12,7 @@ const clauses = (text: string) => text.split(/[.!?;,]|\b(?:but|although|yet|whil
 
 /** Conservative English checks supplement the prompt; no scoring is done here. */
 export function narrationGroundingChecks(
-  beats: Beat[], result: MatchupResult, evidence: EvidenceItem[], _a: Animal, _b: Animal,
+  beats: Beat[], result: MatchupResult, evidence: EvidenceItem[], a: Animal, b: Animal, environment: Environment = "land",
 ): FailureCheck[] {
   const failures: FailureCheck[] = [];
   const environmental = isEnvironmental(result);
@@ -28,9 +29,11 @@ export function narrationGroundingChecks(
         if (!cited.some((item) => item.kind === "gate") || scored.length) {
           messages.push("An environmental finish must cite the engine gate, not a scored factor.");
         }
-        if (!/\benvironment(?:al)?\b/i.test(beat.text) ||
+        const serverTemplate = evidence.some(item => item.kind === "gate") &&
+          beat.text === deterministicFinish(result, a, b, evidence, environment).text;
+        if (!serverTemplate && (!/\benvironment(?:al)?\b/i.test(beat.text) ||
           !/\b(?:decid(?:e|es|ed|ing)|determin(?:e|es|ed)|decisive|because|due to)\b/i.test(beat.text) ||
-          physical.test(beat.text)) {
+          physical.test(beat.text))) {
           messages.push("The finish must say the environment decided the fight, without a physical advantage.");
         }
       } else if (!scored.length) messages.push("An ordinary favored finish must cite a scored engine factor.");

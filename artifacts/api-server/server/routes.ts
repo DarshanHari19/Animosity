@@ -49,9 +49,12 @@ export function createFightRouter(
       let beats: Beat[] = [];
       let narration_status = narrated ? "available" : "not_required";
       let narration_reason: string | null = null;
+      let providerAttempts = 0;
       if (narrated) {
         try {
-          beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b));
+          beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b, {
+            environment, onProviderAttempt: () => { providerAttempts++; },
+          }));
           if (!narrationMatchesOutcome(result, beats)) {
             throw new FightError("INVALID_NARRATION", "Narration does not match the engine outcome.", 502);
           }
@@ -84,6 +87,8 @@ export function createFightRouter(
       if (!response.success) {
         throw new FightError("INVALID_NARRATION", "Response does not match the selected animals and engine outcome.", 502);
       }
+      // Server-owned telemetry for pnpm eval; public JSON and UI are unchanged.
+      res.setHeader("X-Narration-Attempts", String(providerAttempts));
       res.json(response.data);
     } catch (error) {
       if (error instanceof FightError) {

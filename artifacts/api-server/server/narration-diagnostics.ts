@@ -3,7 +3,7 @@ import { logger } from "../src/lib/logger";
 
 export type FailureCheck = {
   check: "JSON_parse" | "Zod_schema" | "fact_used_not_in_evidence" |
-    "unknown_fact_id" | "outcome_winner_mismatch" | "provider_failure" | "text_consistency" | "causal_grounding";
+    "unknown_fact_id" | "outcome_winner_mismatch" | "provider_failure" | "text_consistency" | "causal_grounding" | "non_finish_verdict";
   path?: Array<string | number>;
   issues?: Array<{ path: Array<string | number>; message: string }>;
   fact_used?: string;

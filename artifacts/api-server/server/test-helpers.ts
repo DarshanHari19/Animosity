@@ -4,10 +4,12 @@ import type { AddressInfo } from "node:net";
 import type { TestContext } from "node:test";
 import { createFightRouter } from "./routes";
 import type { Animal, Beat, MatchupResult } from "./schemas";
+import { animals } from "./animals";
+import { scoredFactorText } from "./narration-evidence";
 
 // Fictional, test-only metadata and narration; never used by production.
-export const fixtureFactor = { name: "Fixture factor", value: 1, reason: "Fixture reason only" };
-export const fixtureEvidence = `${fixtureFactor.name}: ${fixtureFactor.reason}`;
+export const fixtureFactor = { name: "Size", value: 1, reason: "Fixture reason only" };
+export const fixtureEvidence = scoredFactorText(fixtureFactor, animals[0]!, animals[1]!);
 export function fixtureResult(outcome: MatchupResult["outcome"]): MatchupResult {
   return {
     outcome, deciding_factor: null, evidence_quality: "mixed",
@@ -22,7 +24,9 @@ export function fixtureBeats(a: Animal, finalAnimal: string | null): Beat[] {
     ...Array.from({ length: 4 }, (): Beat => ({
       text: "Hypothetical fixture movement.", action: "approach", animal: a.name, facts_used,
     })),
-    { text: "Fixture conclusion.", action: "finish", animal: finalAnimal, facts_used },
+    { text: finalAnimal === null
+      ? "Too close to call. Body mass and comparable bite force don't separate these two."
+      : `${finalAnimal} is favored. ${fixtureEvidence}`, action: "finish", animal: finalAnimal, facts_used },
   ];
 }
 

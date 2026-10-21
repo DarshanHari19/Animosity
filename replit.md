@@ -3,6 +3,8 @@
 Minimal fact-based animal matchup starter. See README.md for setup and limitations.
 
 ## Scope rules
+- Treat `engine.ts`, `traits.json`, `METHODOLOGY.md`, `SOURCES.md`, and engine
+  test expectations as protected unless the user explicitly authorizes changes.
 - Animosity is the display name; keep existing folder names and the Replit project name unchanged.
 - The daily narration cap counts every provider call, including retries and
   environmental-favored narration. Never cap/check that budget for no_contest,
@@ -26,7 +28,8 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 - Never hide a valid engine verdict because narration fails: HTTP 200 with
   empty beats, unavailable status and a sanitized reason code; no fallback text.
 - Display `even` as “Too close to call,” not equal ability or a stalemate.
-  The prompt must explain that the scored factors do not separate the animals.
+  The server-owned even finish explains that body mass and comparable bite
+  force do not separate the animals.
 - Before every live narration test, compare `/api/health` build_id against
   `artifacts/api-server/dist/build-id.json` and stop on mismatch.
 - Identical selections are allowed in both API and UI and use the normal
@@ -40,6 +43,8 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 - Frontend workflow: `artifacts/fight-club: web`
 - `pnpm run typecheck`
 - `pnpm --filter @workspace/api-server test`
+- `pnpm eval` for the baseline 20 scenarios × 3; use `--scenarios 2,10 --runs 1`
+  for two live fights only. These are real provider calls under existing limits.
 - `pnpm --filter @workspace/api-spec run codegen` after contract changes
 
 ## Locations
@@ -53,9 +58,11 @@ Narration uses Replit-managed Anthropic AI Integrations and a Claude Haiku-class
 model; no personal LLM_API_KEY. Credentials stay on the backend. Preserve the
 narrator's final Zod/outcome validation and single corrective retry for any
 validation failure; disable SDK automatic retries. Force the narration tool
-  with 4–7 named non-final beats plus one separate outcome-specific finish.
-  Resolve 1–3 evidence IDs per beat into public `facts_used: string[]`.
-  Ordinary favored finishes require scored evidence; environmental finishes
-  require gate evidence copied only from engine outcome fields and must say the
-  environment decided, not imply physical superiority. Never call gates scored.
+  with ONLY 4–7 named non-finish beats. They must not state or imply who is
+  winning. Resolve 1–3 evidence IDs per beat into public `facts_used: string[]`.
+  Append the server-owned deterministic finish using the exact approved
+  templates documented in README.md. Ordinary favored finishes cite size and
+  only compared bite evidence; environmental finishes cite only engine gate
+  evidence and name the other animal's inability to function in the selected
+  environment. Never call gates scored. Never return a finish-only fallback.
 The database template is unused.

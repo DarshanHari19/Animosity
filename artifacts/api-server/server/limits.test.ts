@@ -22,7 +22,7 @@ const hasCode = (code: string) => (error: unknown) =>
 const wire = () => {
   const encoded = fixtureBeats(a, a.name).map(({ facts_used: _unused, ...beat }) => ({ ...beat, fact_ids: ["E1"] }));
   return Response.json({ choices: [{ message: { content: JSON.stringify({
-    beats: encoded.slice(0, -1), finish: encoded.at(-1),
+    beats: encoded.slice(0, -1),
   }) } }] });
 };
 const badWire = () => Response.json({ choices: [{ message: { content: "not JSON" } }] });

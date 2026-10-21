@@ -15,18 +15,18 @@ const beatsFor = (finalAnimal: string | null) => fixtureBeats(a, finalAnimal);
 type FixtureResponse = (evidence: EvidenceItem[]) => Response;
 // Fixtures still describe expected public beats. Only their provider wire shape
 // changes: exact fixture evidence is encoded as the corresponding fight-local ID.
-const provider = (beats: unknown): FixtureResponse => (evidence) => Response.json({
+const provider = (beats: unknown, injectFinish = false): FixtureResponse => (evidence) => Response.json({
   choices: [{ message: { content: JSON.stringify({
-    ...fixtureWire(beats, evidence),
+    ...fixtureWire(beats, evidence, injectFinish),
   }) } }],
 });
-function fixtureWire(beats: unknown, evidence: EvidenceItem[]) {
+function fixtureWire(beats: unknown, evidence: EvidenceItem[], injectFinish = false) {
   if (!Array.isArray(beats)) return { beats };
   const encoded = beats.map(({ facts_used, ...rest }) => ({
     ...rest, fact_ids: Array.isArray(facts_used)
       ? facts_used.map((fact) => evidence.find(({ text }) => text === fact)?.id ?? "E_UNKNOWN") : [],
   }));
-  return { beats: encoded.slice(0, -1), finish: encoded.at(-1) };
+  return { beats: encoded.slice(0, -1), ...(injectFinish ? { finish: encoded.at(-1) } : {}) };
 }
 const errorCode = (code: string) => (error: unknown) =>
   error instanceof FightError && error.code === code;
@@ -56,26 +56,26 @@ test("matching favored outcome returns validated beats in one call", async () =>
   assert.equal(payload.evidence.some(({ text }) => text.includes(".functions_in")), false);
 });
 
-test("wrong favored animal retries once with corrective instruction", async () => {
-  const mock = mockProvider([provider(beatsFor(b.name)), provider(beatsFor(a.name))]);
+test("a model-supplied wrong finish retries once; server keeps the favored actor", async () => {
+  const mock = mockProvider([provider(beatsFor(b.name), true), provider(beatsFor(a.name))]);
   const beats = await narrateMatchup(result, a, b, mock.options);
   assert.equal(beats.at(-1)!.animal, a.name);
   assert.equal(mock.calls.length, 2);
-  assert.match(mock.calls[1]!.messages.at(-1)!.content, /outcome_winner_mismatch/);
-  assert.ok(mock.calls[1]!.messages.at(-1)!.content.includes(a.name));
+  assert.match(mock.calls[1]!.messages.at(-1)!.content, /Zod_schema/);
+  assert.match(mock.calls[1]!.messages.at(-1)!.content, /finish/);
 });
 
-test("second outcome mismatch fails without third call or fallback", async () => {
-  const mock = mockProvider([provider(beatsFor(b.name)), provider(beatsFor(b.name))]);
+test("second forged finish fails without third call or finish-only fallback", async () => {
+  const mock = mockProvider([provider(beatsFor(b.name), true), provider(beatsFor(b.name), true)]);
   await assert.rejects(narrateMatchup(result, a, b, mock.options), errorCode("INVALID_NARRATION"));
   assert.equal(mock.calls.length, 2);
 });
 
-test("even outcomes require a final null animal and can retry a named final actor", async () => {
+test("even outcomes get a server-owned null finish; model-supplied actors are rejected", async () => {
   const even = fixtureResult({ kind: "even" });
   for (const responses of [
     [provider(beatsFor(null))],
-    [provider(beatsFor(a.name)), provider(beatsFor(null))],
+    [provider(beatsFor(a.name), true), provider(beatsFor(null))],
   ]) {
     const expectedCalls = responses.length;
     const mock = mockProvider(responses);
@@ -83,13 +83,13 @@ test("even outcomes require a final null animal and can retry a named final acto
     assert.equal(beats.at(-1)!.animal, null);
     assert.equal(mock.calls.length, expectedCalls);
   }
-  const mock = mockProvider([provider(beatsFor(a.name)), provider(beatsFor(b.name))]);
+  const mock = mockProvider([provider(beatsFor(a.name), true), provider(beatsFor(b.name), true)]);
   await assert.rejects(narrateMatchup(even, a, b, mock.options), errorCode("INVALID_NARRATION"));
   assert.equal(mock.calls.length, 2);
 });
 
-test("favored outcomes retry an incorrectly even narration", async () => {
-  const mock = mockProvider([provider(beatsFor(null)), provider(beatsFor(a.name))]);
+test("favored outcomes reject an injected null finish before the server supplies its winner", async () => {
+  const mock = mockProvider([provider(beatsFor(null), true), provider(beatsFor(a.name))]);
   const beats = await narrateMatchup(result, a, b, mock.options);
   assert.equal(beats.at(-1)!.animal, a.name);
   assert.equal(mock.calls.length, 2);
@@ -109,7 +109,7 @@ test("sourced trait evidence is accepted; unknown values and TODO references are
   const source = a.field_sources.mass_kg!;
   const fact = `${a.name}.mass_kg = ${a.mass_kg} [tier ${source.tier}; ${source.ref}]`;
   const expected = beatsFor(a.name).map((beat, index) => ({
-    ...beat, facts_used: index === 4 ? [fact, fixtureEvidence] : [fact],
+    ...beat, facts_used: index === 4 ? [fixtureEvidence] : [fact],
   }));
   const mock = mockProvider([provider(expected)]);
   const unknownBite = { ...a, bite_force_n: null };
@@ -178,7 +178,7 @@ test("invalid JSON, provider envelope, beat schema and evidence fail after one r
     provider([...base, ...base]),
     provider(base.map((beat) => ({ ...beat, animal: "Unknown" }))),
     provider(base.map((beat) => ({ ...beat, action: "punch" }))),
-    provider(base.map((beat) => ({ ...beat, action: "retreat" }))),
+    provider(base.map((beat) => ({ ...beat, action: "retreat" })), true),
     provider(base.map((beat) => ({ ...beat, facts_used: ["Invented evidence"] }))),
     provider(base.map((beat) => ({ ...beat, extra: "unexpected" }))),
     provider([{ ...base[0], animal: null }, ...base.slice(1)]),
@@ -195,7 +195,7 @@ const wire = (fact_id: string) => Response.json({
   choices: [{ message: { content: JSON.stringify({
     ...(() => {
       const encoded = beatsFor(a.name).map(({ facts_used: _unused, ...beat }) => ({ ...beat, fact_ids: [fact_id] }));
-      return { beats: encoded.slice(0, -1), finish: encoded.at(-1) };
+      return { beats: encoded.slice(0, -1) };
     })(),
   }) } }],
 });
@@ -250,13 +250,13 @@ for (const [check, bad] of [
   ["JSON_parse", () => Response.json({ choices: [{ message: { content: "not JSON" } }] })],
   ["Zod_schema", () => provider(beatsFor(a.name).map((beat) => ({ ...beat, action: "punch" })))],
   ["unknown_fact_id", () => wire("E_UNKNOWN")],
-  ["outcome_winner_mismatch", () => provider(beatsFor(b.name))],
+  ["Zod_schema (forged finish)", () => provider(beatsFor(b.name), true)],
 ] as const) {
   test(`${check} receives one retry with the failed check identified`, async () => {
     const mock = mockProvider([bad(), provider(beatsFor(a.name))]);
     assert.deepEqual(await narrateMatchup(result, a, b, mock.options), beatsFor(a.name));
     assert.equal(mock.calls.length, 2);
-    assert.ok(mock.calls[1]!.messages.at(-1)!.content.includes(check));
+    assert.ok(mock.calls[1]!.messages.at(-1)!.content.includes(check.split(" ")[0]!));
   });
 }
 

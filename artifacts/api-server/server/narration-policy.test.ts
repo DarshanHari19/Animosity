@@ -27,10 +27,10 @@ const gate: EvidenceItem = {
 const beat = (text: string, facts: EvidenceItem[]): Beat =>
   ({ text, action: "finish", animal: a.name, facts_used: facts.map(({ text }) => text) });
 
-test("tool schema separates named non-final actors from outcome-specific finish actors", () => {
+test("tool schema allows only named non-final actors; no model-owned finish", () => {
   for (const result of [favored, fixtureResult({ kind: "even" })]) {
     const schema = JSON.parse(JSON.stringify(narrationTool(a, b, [scored], result).input_schema));
-    assert.deepEqual(schema.required, ["beats", "finish"]);
+    assert.deepEqual(schema.required, ["beats"]);
     assert.equal(schema.properties.beats.minItems, 4);
     assert.equal(schema.properties.beats.maxItems, 7);
     const item = schema.properties.beats.items.properties;
@@ -39,14 +39,14 @@ test("tool schema separates named non-final actors from outcome-specific finish 
     assert.equal(item.action.enum.includes("finish"), false);
     assert.equal(item.fact_ids.minItems, 1);
     assert.equal(item.fact_ids.maxItems, 3);
-    assert.deepEqual(schema.properties.finish.properties.animal,
-      result.outcome.kind === "favored" ? { type: "string", enum: [a.name] } : { type: "null" });
+    assert.equal(schema.properties.finish, undefined);
+    assert.equal(schema.additionalProperties, false);
   }
 });
 
 function wire(ids: string[] = ["E1"]) {
   const encoded = fixtureBeats(a, a.name).map(({ facts_used: _unused, ...rest }) => ({ ...rest, fact_ids: ids }));
-  return { beats: encoded.slice(0, -1), finish: encoded.at(-1)! };
+  return { beats: encoded.slice(0, -1) };
 }
 test("1–3 IDs resolve in order to exact facts, without leaking IDs or accepting duplicates", () => {
   const evidence = [scored, context, context2];
@@ -124,10 +124,9 @@ test("even finishes cannot credit a size advantage despite saying no winner", ()
   assert.deepEqual(narrationGroundingChecks([{ ...bad, text: "The encounter ends evenly with no advantage." }], even, [scored], a, b), []);
 });
 
-test("unknown fabricated scored IDs in an environmental finish retry once then fail", async () => {
+test("unknown fabricated scored IDs in environmental narration retry once then fail", async () => {
   let calls = 0;
   const input = wire(["E_FAKE_SCORED"]);
-  input.finish.text = "The environment decided the fight.";
   await assert.rejects(narrateMatchup(environmental, a, b, {
     apiKey: "test-only", reserveProviderCall: () => {},
     fetch: async () => {
@@ -140,7 +139,7 @@ test("unknown fabricated scored IDs in an environmental finish retry once then f
 test("causal failure retry names the failed check and offending beat text", async () => {
   let calls = 0;
   const bad = wire();
-  bad.finish.text = "Speed decided the outcome.";
+  bad.beats[0]!.text = "Speed decided the outcome.";
   await assert.rejects(narrateMatchup(favored, a, b, {
     apiKey: "test-only", reserveProviderCall: () => {},
     fetch: async (_url, options) => {
@@ -180,8 +179,15 @@ for (const fixture of fixtures.cases) {
     });
     let accepted = false;
     try {
-      const output = resolveEvidence({ beats: encoded.slice(0, -1), finish: encoded.at(-1) }, evidence, first, second);
-      const beats = beatsSchemaFor(first, second).parse(output.beats);
+      const output = resolveEvidence({ beats: encoded.slice(0, -1) }, evidence, first, second);
+      // Historical finish is evaluated as public data to retain the original
+      // outcome/evidence/grounding regression, not sent through the new tool.
+      const final = encoded.at(-1)!;
+      const finish = {
+        text: final.text, action: final.action, animal: final.animal,
+        facts_used: final.fact_ids.map(id => evidence.find(item => item.id === id)?.text ?? "REMOVED_EVIDENCE"),
+      };
+      const beats = beatsSchemaFor(first, second).parse([...output.beats, finish]);
       accepted = narrationMatchesOutcome(result, beats) &&
         narrationTextChecks(beats, result, first, second).length === 0 &&
         narrationGroundingChecks(beats, result, evidence, first, second).length === 0;

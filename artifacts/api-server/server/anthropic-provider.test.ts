@@ -39,10 +39,10 @@ test("Anthropic adapter forces one Haiku narration tool and normalizes only its 
   const subject = mock([Response.json({ content: [
     { type: "thinking", thinking: "Not narration." },
     { type: "text", text: "Not a fallback narration." },
-    { type: "tool_use", name: tool.name, input: { beats: [], finish: {} } },
+    { type: "tool_use", name: tool.name, input: { beats: [] } },
   ] })]);
   const response = await subject.provider(messages);
-  assert.deepEqual(await response.json(), { choices: [{ message: { content: '{"beats":[],"finish":{}}' } }] });
+  assert.deepEqual(await response.json(), { choices: [{ message: { content: '{"beats":[]}' } }] });
   assert.equal(subject.calls.length, 1);
   assert.equal(subject.calls[0]!.url, "https://anthropic.test.invalid/proxy/v1/messages");
   const init = subject.calls[0]!.init!;
@@ -62,7 +62,9 @@ test("Anthropic adapter forces one Haiku narration tool and normalizes only its 
   assert.equal(body.tools[0].input_schema.properties.beats.items.additionalProperties, false);
   assert.equal(body.tools[0].input_schema.properties.beats.items.properties.animal.type, "string");
   assert.equal(body.tools[0].input_schema.properties.beats.items.properties.action.enum.includes("finish"), false);
-  assert.deepEqual(body.tools[0].input_schema.properties.finish.properties.animal.enum, [animals[0]!.name]);
+  assert.deepEqual(body.tools[0].input_schema.required, ["beats"]);
+  assert.equal(body.tools[0].input_schema.additionalProperties, false);
+  assert.equal(body.tools[0].input_schema.properties.finish, undefined);
 });
 
 test("invalid Anthropic envelopes and JSON keep INVALID_NARRATION", async () => {

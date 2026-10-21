@@ -10,6 +10,7 @@ import { narrateMatchup } from "./narrator";
 import { FightError } from "./errors";
 import { fightResponseSchemaFor, type MatchupResult } from "./schemas";
 import { fixtureResult, startFightServer } from "./test-helpers";
+import { deterministicFinish } from "./narration-finish";
 
 const hippo = animals.find(({ name }) => name === "Hippopotamus")!;
 const lion = animals.find(({ name }) => name === "Lion")!;
@@ -31,7 +32,12 @@ test("size and comparable bite evidence includes both values without changing en
   }
 });
 
-type Regression = { name: string; original_failure: { missing_number: string }; raw_output: unknown };
+type Regression = {
+  name: string; original_failure: { missing_number: string };
+  raw_output: { beats: unknown[]; finish: {
+    text: string; action: "finish"; animal: string; fact_ids: string[];
+  } };
+};
 const recorded = JSON.parse(readFileSync(new URL("./__fixtures__/hippo-citation-regressions.json", import.meta.url), "utf8")) as { cases: Regression[] };
 for (const fixture of recorded.cases) {
   test(`${fixture.name}: original missing number is covered by readable comparison evidence`, async () => {
@@ -39,21 +45,30 @@ for (const fixture of recorded.cases) {
     const evidence = narrationEvidence(result, hippo, lion);
     const oldEvidence = evidence.map((item) => item.factor_name === "Size"
       ? { ...item, text: JSON.stringify(result.factors[0]) } : item);
-    const old = resolveEvidence(fixture.raw_output, oldEvidence, hippo, lion);
-    assert.ok(narrationTextChecks(old.beats, result, hippo, lion).some(({ issues }) =>
+    const wire = { beats: fixture.raw_output.beats };
+    const old = resolveEvidence(wire, oldEvidence, hippo, lion);
+    const historicalFinish = (items: typeof evidence) => {
+      const { fact_ids, ...beat } = fixture.raw_output.finish;
+      return { ...beat, facts_used: fact_ids.map(id => items.find(item => item.id === id)?.text ?? "REMOVED_EVIDENCE") };
+    };
+    assert.ok(narrationTextChecks([...old.beats, historicalFinish(oldEvidence)], result, hippo, lion).some(({ issues }) =>
       issues?.some(({ message }) => message.includes(`Number ${fixture.original_failure.missing_number} is absent`))));
     let calls = 0;
-    const beats = await narrateMatchup(result, hippo, lion, {
+    const resolved = resolveEvidence(wire, evidence, hippo, lion);
+    // Preserve the numeric-citation regression independently of the newly
+    // approved ban on implied verdicts in these historical non-final beats.
+    assert.deepEqual(narrationTextChecks(resolved.beats, result, hippo, lion), []);
+    assert.deepEqual(narrationTextChecks([...resolved.beats, historicalFinish(evidence)], result, hippo, lion), []);
+    assert.ok(resolved.beats.some(({ facts_used }) => facts_used.includes(evidence[0]!.text)));
+    assert.equal(resolved.beats.some(({ facts_used }) => facts_used.some((fact) => fact.startsWith("{"))), false);
+    await assert.rejects(narrateMatchup(result, hippo, lion, {
       apiKey: "test-only", reserveProviderCall: () => {},
       fetch: async () => {
         calls++;
-        return Response.json({ choices: [{ message: { content: JSON.stringify(fixture.raw_output) } }] });
+        return Response.json({ choices: [{ message: { content: JSON.stringify(wire) } }] });
       },
-    });
-    assert.equal(calls, 1);
-    assert.deepEqual(narrationTextChecks(beats, result, hippo, lion), []);
-    assert.ok(beats.some(({ facts_used }) => facts_used.includes(evidence[0]!.text)));
-    assert.equal(beats.some(({ facts_used }) => facts_used.some((fact) => fact.startsWith("{"))), false);
+    }), (error: unknown) => error instanceof FightError && error.code === "INVALID_NARRATION");
+    assert.equal(calls, 2);
   });
 }
 
@@ -93,12 +108,15 @@ test("response validation rejects contradictory narration status, reason, or bea
   ]) assert.equal(schema.safeParse(invalid).success, false);
 });
 
-test("even prompt distinguishes limited scoring from equal ability or a stalemate", async () => {
+test("even prompt bans equal ability or a stalemate; server supplies the limited-scoring finish", async () => {
+  const even = fixtureResult({ kind: "even" });
+  assert.equal(deterministicFinish(even, lion, hippo, narrationEvidence(even, lion, hippo)).text,
+    "Too close to call. Body mass and comparable bite force don't separate these two.");
   await assert.rejects(narrateMatchup(fixtureResult({ kind: "even" }), lion, hippo, {
     apiKey: "test-only", reserveProviderCall: () => {},
     fetch: async (_url, options) => {
       const body = JSON.parse(String(options?.body));
-      assert.match(body.messages[0].content, /scored factors \(body mass, comparable bite force\) don't separate these two/);
+      assert.match(body.messages[0].content, /No beat may say or imply who is winning/);
       assert.match(body.messages[0].content, /Do not call it a stalemate or say the animals are equally\/evenly matched/);
       return new Response("", { status: 503 });
     },

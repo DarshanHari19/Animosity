@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   AnimalSchema, beatsSchemaFor, resultSchemaFor, narrationMatchesOutcome,
-  type Animal, type Beat, type MatchupResult,
+  type Animal, type Beat, type Environment, type MatchupResult,
 } from "./schemas";
 import { FightError } from "./errors";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
@@ -11,6 +11,8 @@ import { narrationTextChecks } from "./narration-text-checks";
 import { reserveNarrationCall } from "./limits";
 import { narrationEvidence } from "./narration-evidence";
 import { narrationGroundingChecks } from "./narration-grounding";
+import { deterministicFinish } from "./narration-finish";
+import { nonFinishChecks } from "./narration-non-finish";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -19,6 +21,8 @@ type Options = {
   endpoint?: string;
   model?: string;
   reserveProviderCall?: () => void;
+  environment?: Environment;
+  onProviderAttempt?: () => void;
 };
 
 const ProviderResponseSchema = z.object({
@@ -64,6 +68,8 @@ export async function narrateMatchup(
     throw new FightError("LLM_CONFIGURATION", "The managed Anthropic integration URL is invalid.", 503);
   }
   const evidenceItems = narrationEvidence(result, a, b);
+  const environment = options.environment ?? "land";
+  const finish = deterministicFinish(result, a, b, evidenceItems, environment);
   const evidence = evidenceItems.map(({ text }) => text);
   if (!evidence.length) {
     throw new FightError("INVALID_NARRATION", "No sourced evidence is available for narration.", 502);
@@ -92,25 +98,23 @@ export async function narrateMatchup(
         "Do not invent measurements, abilities, scientific claims, or new reasons for the outcome.",
         "Treat zero/null numerical values as unknown, not evidence. Traits without a non-null source tier are unverified.",
         "Do not present unknown or unverified traits as factual evidence.",
-        "Call submit_narration once with {beats:[4 to 7 non-final beats],finish:{one finish beat}} and no other fields.",
+        "Call submit_narration once with {beats:[4 to 7 non-finish beats]} and no other fields. The server supplies the finish; NEVER return a finish field or finish action.",
         "Every beat is {text,action,animal,fact_ids}. Every fact_ids is 1 to 3 distinct supplied IDs.",
         "Non-final actions: approach|charge|bite|dodge|grapple|retreat. Their animal MUST be an exact selected name, NEVER null, even for general observations.",
-        "finish.action is finish. For favored its animal is result.outcome.animal; for even it is null.",
+        "Describe neutral hypothetical attempts and movements ONLY. No beat may say or imply who is winning, even the favored animal.",
+        "Do not describe an advantage, edge, domination, superior ability, injuries, successful restraint, inability to escape/shake an animal off, or one animal forcing the other back. Do not explain the verdict.",
         "Every digit-number in a beat's text MUST occur in at least one of THAT beat's cited evidence items. Cite both IDs when comparing two measurements.",
         "Spelled-out numbers except 'one' and 'two' are forbidden. Use digits for measurements. No percentages, percent signs, or percentage words.",
         "Beat text MUST NOT mention sources, source tiers, missing/unknown data, or excluded/not-compared factors. Omit these topics entirely.",
         "Evidence has kind scored, context, or gate. Only scored items may explain the ordinary outcome. Context is description ONLY, never an advantage, deciding reason, offset, or cause of winning.",
         "Do not attribute the result to speed, length, strength, style, or other traits not scored by the engine. Do not invent combat abilities or explanations.",
-        "An ordinary favored finish MUST cite at least one scored item and name the favored animal; no beat may name the other animal as winning.",
-        "For even, no beat may name a winner. The finish MUST say the scored factors (body mass, comparable bite force) don't separate these two. Do not call it a stalemate or say the animals are equally/evenly matched. This is uncertainty from limited scoring, not proof of an actual draw or equal abilities. The finish MUST NOT credit ANY advantage, including a size edge.",
-        "Exception: when result.deciding_factor is environmental_advantage, finish MUST cite gate evidence derived only from the engine outcome, not scored evidence.",
-        "An environmental finish MUST explicitly say the environment decided the fight. Do not mention or imply a physical advantage in that finish.",
+        "For even, no beat may name a winner. Do not call it a stalemate or say the animals are equally/evenly matched. Limited scoring is not proof of a draw or equal abilities.",
         "Never change the engine outcome. Give hypothetical movements, not scientific predictions.",
       ].join(" "),
     },
     { role: "user", content: JSON.stringify({
       animals: [{ name: a.name }, { name: b.name }],
-      result: { outcome: result.outcome, deciding_factor: result.deciding_factor },
+      environment,
       evidence: evidenceItems.map(({ id, text, kind }) => ({ id, text, kind })),
     }) },
   ];
@@ -119,6 +123,7 @@ export async function narrateMatchup(
     // Reserve immediately before each provider attempt, not once per fight.
     // Keep cap errors outside the validation retry handler: no call was made.
     (options.reserveProviderCall ?? reserveNarrationCall)();
+    options.onProviderAttempt?.();
     providerDiagnostics.length = 0;
     const diagnosticContext = {
       animals: [a.name, b.name], model, attempt: attempt + 1, expectedOutcome: result.outcome,
@@ -145,7 +150,8 @@ export async function narrateMatchup(
       const responseEnvelope = ProviderResponseSchema.parse(await response.json());
       rawModelText = responseEnvelope.choices[0]!.message.content;
       parsed = JSON.parse(rawModelText);
-      const envelope = envelopeSchema.parse(resolveEvidence(parsed, evidenceItems, a, b));
+      const resolved = resolveEvidence(parsed, evidenceItems, a, b);
+      const envelope = envelopeSchema.parse({ beats: [...resolved.beats, finish] });
       // Zod and the engine-outcome check remain authoritative after tool use.
       if (!narrationMatchesOutcome(result, envelope.beats)) {
         checks = [{ check: "outcome_winner_mismatch", path: ["beats", envelope.beats.length - 1, "animal"] }];
@@ -153,7 +159,8 @@ export async function narrateMatchup(
       }
       const textFailures = [
         ...narrationTextChecks(envelope.beats, result, a, b),
-        ...narrationGroundingChecks(envelope.beats, result, evidenceItems, a, b),
+        ...narrationGroundingChecks(envelope.beats, result, evidenceItems, a, b, environment),
+        ...nonFinishChecks(envelope.beats),
       ];
       if (textFailures.length) {
         checks = textFailures;
@@ -177,7 +184,7 @@ export async function narrateMatchup(
       }
       messages.push({
         role: "user",
-        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit a complete corrected {beats,finish}. Non-final actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two; no percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. An ordinary favored finish must cite scored evidence; an environmental finish must cite the engine gate and say the environment decided, never a physical advantage. An even finish says the scored factors (body mass, comparable bite force) don't separate these two, never stalemate or equally matched, and credits no advantage. finish.action must be "finish" and animal ${JSON.stringify(result.outcome.kind === "favored" ? result.outcome.animal : null)}. Match ${JSON.stringify(result.outcome)}.`,
+        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit a complete corrected {beats} containing 4–7 neutral non-finish beats ONLY. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two; no percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Never say or imply who is winning: no advantage, domination, successful restraint, or inability to escape. The server, not you, supplies the verdict.`,
       });
     }
   }
