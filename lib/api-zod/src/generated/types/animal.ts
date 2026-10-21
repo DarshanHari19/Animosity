@@ -8,7 +8,7 @@
 import type { AnimalArmor } from './animalArmor';
 import type { AnimalFieldSources } from './animalFieldSources';
 import type { AnimalFightingStyle } from './animalFightingStyle';
-import type { AnimalHabitatsItem } from './animalHabitatsItem';
+import type { AnimalFunctionsInItem } from './animalFunctionsInItem';
 import type { AnimalPrimaryWeapon } from './animalPrimaryWeapon';
 import type { AnimalProfile } from './animalProfile';
 import type { AnimalTemperament } from './animalTemperament';
@@ -32,6 +32,6 @@ export interface Animal {
   armor: AnimalArmor;
   temperament: AnimalTemperament;
   fighting_style: AnimalFightingStyle;
-  habitats: AnimalHabitatsItem[];
+  functions_in: AnimalFunctionsInItem[];
   field_sources: AnimalFieldSources;
 }

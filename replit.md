@@ -10,9 +10,14 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
   independent review before being treated as scientific facts.
 - The user will implement scoring. Preserve the throwing engine stub unless
   explicitly asked to implement it. Never add production mock scores or narration.
-- Winner identifiers are exact selected animal names, `no_contest`, or
-  `no_decisive_winner`. Narration repeats that identifier on its final finish
-  beat; non-winning tokens cannot identify animals in earlier beats.
+- Use structured outcomes: `favored` with an exact selected animal name,
+  `even`, `indeterminate`, or `no_contest`. Never add probability-based results.
+- Narrate only favored/even outcomes. A final finish beat identifies the favored
+  animal or has a null animal for even; other outcomes use explanations.
+- Identical selections are allowed in both API and UI and use the normal
+  route without forcing an even result. The Lion-vs-Lion scenario tests this route.
+- Environments are `land`, `shallow_water`, `deep_water`; animal capability is
+  recorded in `functions_in`. Mode defaults to `realistic`, encounter to `face_off`.
 
 ## Run and verify
 

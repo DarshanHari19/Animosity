@@ -14,7 +14,7 @@ paths:
   /animals:
     get:
       operationId: getAnimals
-      summary: List animal trait placeholders
+      summary: List user-provided animal profiles
       responses:
         "200":
           description: Animals
@@ -76,7 +76,7 @@ components:
     Animal:
       type: object
       additionalProperties: false
-      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_n, armor, temperament, fighting_style, habitats, field_sources]
+      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_n, armor, temperament, fighting_style, functions_in, field_sources]
       properties:
         name: { type: string, minLength: 1 }
         profile: { type: string, enum: [adult_male, adult_female] }
@@ -88,9 +88,9 @@ components:
         armor: { type: string, enum: [none, thick_hide, shell, scales] }
         temperament: { type: string, enum: [avoids, defensive, aggressive] }
         fighting_style: { type: string, enum: [ambush, sustained, bluff, grapple, charge] }
-        habitats:
+        functions_in:
           type: array
-          items: { type: string, enum: [land, water, both] }
+          items: { type: string, enum: [land, shallow_water, deep_water] }
         field_sources:
           type: object
           additionalProperties:
@@ -104,43 +104,90 @@ components:
         ref: { type: string }
     FightInput:
       type: object
-      required: [animalA, animalB, environment]
+      required: [animalA, animalB]
       additionalProperties: false
       properties:
         animalA: { type: string, minLength: 1 }
         animalB: { type: string, minLength: 1 }
-        environment: { type: string, enum: [land, water] }
+        environment: { type: string, enum: [land, shallow_water, deep_water], default: land }
+        mode: { type: string, enum: [realistic, forced_fight], default: realistic }
+        encounter: { type: string, enum: [face_off], default: face_off }
+    FavoredOutcome:
+      type: object
+      additionalProperties: false
+      required: [kind, animal]
+      properties:
+        kind: { type: string, enum: [favored] }
+        animal: { type: string, minLength: 1, description: Exact selected animal name }
+    EvenOutcome:
+      type: object
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [even] }
+    IndeterminateOutcome:
+      type: object
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [indeterminate] }
+    NoContestOutcome:
+      type: object
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [no_contest] }
+    Outcome:
+      oneOf:
+        - { $ref: "#/components/schemas/FavoredOutcome" }
+        - { $ref: "#/components/schemas/EvenOutcome" }
+        - { $ref: "#/components/schemas/IndeterminateOutcome" }
+        - { $ref: "#/components/schemas/NoContestOutcome" }
+    Factor:
+      type: object
+      additionalProperties: false
+      required: [name, value, reason]
+      properties:
+        name: { type: string, minLength: 1 }
+        value: { type: number }
+        reason: { type: string, minLength: 1 }
     MatchupResult:
       type: object
-      required: [winner, confidence, factors]
+      additionalProperties: false
+      required: [outcome, deciding_factor, evidence_quality, encounter_label, advantage_score, factors]
       properties:
-        winner:
-          description: Exact selected animal name, or a non-winning outcome.
-          anyOf:
-            - { type: string, enum: [no_contest, no_decisive_winner] }
-            - { type: string, minLength: 1 }
-        confidence: { type: number, minimum: 0, maximum: 1 }
+        outcome: { $ref: "#/components/schemas/Outcome" }
+        deciding_factor: { type: [string, "null"], enum: [fighting_ability, environmental_advantage, behavior, null] }
+        evidence_quality: { type: string, enum: [mostly_measured, mixed, mostly_estimated] }
+        encounter_label: { type: string, enum: [hypothetical, ranges_overlap, documented] }
+        advantage_score: { type: [number, "null"] }
         factors:
           type: array
-          items: { type: string, minLength: 1 }
+          items: { $ref: "#/components/schemas/Factor" }
     Beat:
       type: object
       required: [text, action, animal, fact_used]
       properties:
         text: { type: string, minLength: 1 }
         action: { type: string, enum: [approach, charge, bite, dodge, grapple, retreat, finish] }
-        animal: { type: string, minLength: 1 }
+        animal:
+          type: [string, "null"]
+          minLength: 1
+          description: Selected animal name; null only for the final even-matchup finish beat.
         fact_used: { type: string, minLength: 1 }
     FightResponse:
       type: object
-      required: [result, beats]
+      additionalProperties: false
+      required: [result, beats, explanation]
+      description: Favored/even outcomes have 5–8 beats and a null explanation. Indeterminate/no_contest outcomes have no beats and a one-line explanation.
       properties:
         result: { $ref: "#/components/schemas/MatchupResult" }
         beats:
           type: array
-          minItems: 5
+          minItems: 0
           maxItems: 8
           items: { $ref: "#/components/schemas/Beat" }
+        explanation: { type: [string, "null"], minLength: 1 }
     ApiFailure:
       type: object
       required: [error]

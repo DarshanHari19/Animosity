@@ -5,15 +5,19 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Factor } from './factor';
+import type { MatchupResultDecidingFactor } from './matchupResultDecidingFactor';
+import type { MatchupResultEncounterLabel } from './matchupResultEncounterLabel';
+import type { MatchupResultEvidenceQuality } from './matchupResultEvidenceQuality';
+import type { Outcome } from './outcome';
 
 export interface MatchupResult {
-  /** Exact selected animal name, or a non-winning outcome. */
-  winner: 'no_contest' | 'no_decisive_winner' | string;
-  /**
-     * @minimum 0
-     * @maximum 1
-     */
-  confidence: number;
-  /** @items.minLength 1 */
-  factors: string[];
+  outcome: Outcome;
+  /** @nullable */
+  deciding_factor: MatchupResultDecidingFactor;
+  evidence_quality: MatchupResultEvidenceQuality;
+  encounter_label: MatchupResultEncounterLabel;
+  /** @nullable */
+  advantage_score: number | null;
+  factors: Factor[];
 }

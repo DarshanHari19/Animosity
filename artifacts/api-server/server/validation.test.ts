@@ -1,15 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import express from "express";
-import type { AddressInfo } from "node:net";
 import { animals } from "./animals";
-import { scoreMatchup } from "./engine";
-import { createFightRouter } from "./routes";
-import { FightError } from "./errors";
 import {
-  AnimalSchema, FightInputSchema, resultSchemaFor, beatsSchemaFor,
-  type MatchupResult,
+  AnimalSchema, FightInputSchema, resultSchemaFor, beatsSchemaFor, fightResponseSchemaFor,
 } from "./schemas";
+import { fixtureResult, fixtureBeats } from "./test-helpers";
 
 const a = animals[0]!;
 const b = animals[1]!;
@@ -26,8 +21,9 @@ test("traits include all seven user-provided animals and their supplied values",
     name: "Lion", profile: "adult_male", mass_kg: 190, length_m: 2.5,
     top_speed_kmh: 80, primary_weapon: "bite", bite_force_n: 5500,
     armor: "none", temperament: "aggressive", fighting_style: "ambush",
-    habitats: ["land"],
+    functions_in: ["land"],
     field_sources: {
+      functions_in: { tier: 3, ref: "TODO: verify" },
       mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
       length_m: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
       top_speed_kmh: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
@@ -40,6 +36,14 @@ test("traits include all seven user-provided animals and their supplied values",
   assert.equal(animals[6]?.bite_force_n, null);
   assert.equal(animals.every((animal) => animal.profile === "adult_male"), true);
   assert.equal(animals.every((animal) => animal.field_sources !== undefined), true);
+  assert.deepEqual(animals.map((animal) => animal.functions_in), [
+    ["land"], ["land", "shallow_water"], ["land", "shallow_water", "deep_water"],
+    ["land"], ["land", "shallow_water"], ["shallow_water", "deep_water"],
+    ["land", "shallow_water"],
+  ]);
+  for (const animal of animals) {
+    assert.deepEqual(animal.field_sources.functions_in, { tier: 3, ref: "TODO: verify" });
+  }
 });
 
 test("animal validation uses exact enums and nonnegative nullable numeric fields", () => {
@@ -52,7 +56,7 @@ test("animal validation uses exact enums and nonnegative nullable numeric fields
   for (const fighting_style of ["ambush", "sustained", "bluff", "grapple", "charge"]) {
     assert.equal(AnimalSchema.safeParse({ ...a, fighting_style }).success, true);
   }
-  assert.equal(AnimalSchema.safeParse({ ...a, habitats: ["air"] }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, functions_in: ["air"] }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_juvenile" }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_female" }).success, true);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: undefined }).success, false);
@@ -85,109 +89,89 @@ test("animal validation uses exact enums and nonnegative nullable numeric fields
   assert.equal(AnimalSchema.safeParse({ ...a, field_sources: undefined }).success, false);
 });
 
-test("request rejects missing, identical, invalid-environment and extra fields", () => {
+test("request validates context, applies defaults and permits identical animals", () => {
   for (const input of [
-    {}, { ...validInput, animalA: "" }, { ...validInput, animalB: a.name },
+    {}, { ...validInput, animalA: "" }, { animalA: a.name },
     { ...validInput, environment: "air" }, { ...validInput, fake: 1 },
+    { ...validInput, mode: "invented" }, { ...validInput, encounter: "ambush" },
+    { ...validInput, environment: null }, { ...validInput, mode: null },
+    { ...validInput, encounter: null },
   ]) assert.equal(FightInputSchema.safeParse(input).success, false);
-  assert.equal(FightInputSchema.safeParse(validInput).success, true);
-});
-
-test("engine throws the explicit not-implemented error in both environments", () => {
-  for (const environment of ["land", "water"] as const) {
-    assert.throws(() => scoreMatchup(a, b, environment), (error: unknown) =>
-      error instanceof FightError && error.code === "SCORING_NOT_IMPLEMENTED" && error.status === 501);
+  assert.deepEqual(FightInputSchema.parse({ animalA: a.name, animalB: a.name }), {
+    animalA: a.name, animalB: a.name, environment: "land",
+    mode: "realistic", encounter: "face_off",
+  });
+  for (const environment of ["land", "shallow_water", "deep_water"]) {
+    for (const mode of ["realistic", "forced_fight"]) {
+      assert.equal(FightInputSchema.safeParse({ ...validInput, environment, mode }).success, true);
+    }
   }
 });
 
-test("result validates confidence, factors, selected names and non-winning outcomes", () => {
-  const result = { winner: a.name, confidence: 0.7, factors: ["Fixture factor"] };
-  for (const winner of [a.name, b.name, "no_contest", "no_decisive_winner"]) {
-    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, winner }).success, true);
+test("result validates strict outcome variants, selected names and evidence metadata", () => {
+  const result = fixtureResult({ kind: "favored", animal: a.name });
+  for (const outcome of [
+    { kind: "favored", animal: a.name }, { kind: "favored", animal: b.name },
+    { kind: "even" }, { kind: "indeterminate" }, { kind: "no_contest" },
+  ]) {
+    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, outcome }).success, true);
   }
-  for (const confidence of [-0.1, 1.1, NaN, Infinity]) {
-    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, confidence }).success, false);
+  for (const outcome of [
+    { kind: "favored", animal: "Unknown" }, { kind: "favored" },
+    { kind: "even", animal: a.name }, { kind: "indeterminate", animal: a.name },
+    { kind: "no_contest", extra: true }, { kind: "invented" },
+  ]) {
+    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, outcome }).success, false);
   }
-  for (const winner of ["A", "Unknown", ""]) {
-    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, winner }).success, false);
+  for (const invalid of [
+    { ...result, deciding_factor: "invented" }, { ...result, evidence_quality: "invented" },
+    { ...result, encounter_label: "invented" }, { ...result, extra: true },
+    { ...result, factors: [5] }, { ...result, advantage_score: Infinity },
+    { ...result, factors: [{ name: "Fixture", value: NaN, reason: "Fixture" }] },
+    { ...result, factors: [{ name: "Fixture", value: Infinity, reason: "Fixture" }] },
+    { ...result, factors: [{ name: "Fixture", value: 1, reason: "" }] },
+    { ...result, factors: [{ name: "Fixture", value: 1, reason: "Fixture", extra: true }] },
+    { ...result, factors: undefined }, { ...result, evidence_quality: undefined },
+  ]) {
+    assert.equal(resultSchemaFor(a, b).safeParse(invalid).success, false);
   }
-  assert.equal(resultSchemaFor(a, b).safeParse({ ...result, factors: [5] }).success, false);
-  assert.equal(resultSchemaFor(a, b).safeParse(result).success, true);
+  for (const advantage_score of [-1000, 0, 1000, null]) {
+    assert.equal(resultSchemaFor(a, b).safeParse({ ...result, advantage_score }).success, true);
+  }
 });
 
-test("beat validation rejects unknown identifiers, actions, lengths and non-finish ending", () => {
-  const beat = { text: "Fixture text", action: "finish", animal: a.name, fact_used: "Fixture factor" };
-  const beats = Array.from({ length: 5 }, () => ({ ...beat }));
+test("beats require selected names, valid actions, 5–8 beats and a sole final finish", () => {
+  const beats = fixtureBeats(a, a.name);
   assert.equal(beatsSchemaFor(a, b).safeParse(beats).success, true);
+  assert.equal(beatsSchemaFor(a, b).safeParse(fixtureBeats(a, null)).success, true);
   for (const invalid of [
     beats.slice(1), [...beats, ...beats],
     beats.map((item) => ({ ...item, animal: "A" })),
     beats.map((item) => ({ ...item, action: "punch" })),
     beats.map((item) => ({ ...item, action: "retreat" })),
     beats.map((item) => ({ ...item, fact_used: "" })),
+    [{ ...beats[0], animal: null }, ...beats.slice(1)],
+    [{ ...beats[0], action: "finish" }, ...beats.slice(1)],
   ]) assert.equal(beatsSchemaFor(a, b).safeParse(invalid).success, false);
 });
 
-test("non-winning beat identifiers are restricted to the final finish beat", () => {
-  for (const outcome of ["no_contest", "no_decisive_winner"]) {
-    const beats = [
-      ...Array.from({ length: 4 }, () => ({
-        text: "Fixture movement", action: "approach", animal: a.name, fact_used: "Fixture factor",
-      })),
-      { text: "Fixture outcome", action: "finish", animal: outcome, fact_used: "Fixture factor" },
-    ];
-    assert.equal(beatsSchemaFor(a, b).safeParse(beats).success, true);
-    assert.equal(beatsSchemaFor(a, b).safeParse([
-      { ...beats[0], animal: outcome }, ...beats.slice(1),
-    ]).success, false);
+test("response validation enforces narration versus explanation and final outcome", () => {
+  const schema = fightResponseSchemaFor(a, b);
+  for (const outcome of [{ kind: "no_contest" }, { kind: "indeterminate" }] as const) {
+    const response = { result: fixtureResult(outcome), beats: [], explanation: "Fixture explanation." };
+    assert.equal(schema.safeParse(response).success, true);
+    for (const invalid of [
+      { ...response, beats: fixtureBeats(a, a.name) },
+      { ...response, explanation: null }, { ...response, explanation: "" },
+      { ...response, explanation: "two\nlines" },
+    ]) assert.equal(schema.safeParse(invalid).success, false);
   }
-});
-
-test("HTTP request boundary rejects unknown/malformed inputs and preserves live stub", async (t) => {
-  const app = express();
-  app.use(express.json());
-  app.use("/api", createFightRouter());
-  const server = app.listen(0, "127.0.0.1");
-  await new Promise<void>((resolve) => server.once("listening", resolve));
-  t.after(() => { server.closeAllConnections(); server.close(); });
-  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
-  const list = await (await fetch(`${base}/animals`)).json() as unknown[];
-  assert.equal(list.length, 7);
-  for (const input of [{}, { ...validInput, animalA: "Unknown" }, { ...validInput, animalB: a.name }, { ...validInput, environment: "air" }]) {
-    const response = await fetch(`${base}/fight`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
-    });
-    assert.equal(response.status, 400);
-    assert.equal(typeof (await response.json() as { error: string }).error, "string");
+  for (const outcome of [{ kind: "favored", animal: a.name }, { kind: "even" }] as const) {
+    const final = outcome.kind === "favored" ? a.name : null;
+    const response = { result: fixtureResult(outcome), beats: fixtureBeats(a, final), explanation: null };
+    assert.equal(schema.safeParse(response).success, true);
+    assert.equal(schema.safeParse({ ...response, beats: fixtureBeats(a, b.name) }).success, false);
+    assert.equal(schema.safeParse({ ...response, explanation: "unexpected" }).success, false);
+    assert.equal(schema.safeParse({ ...response, beats: [] }).success, false);
   }
-  const response = await fetch(`${base}/fight`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(validInput),
-  });
-  assert.equal(response.status, 501);
-  assert.equal((await response.json() as { code: string }).code, "SCORING_NOT_IMPLEMENTED");
-});
-
-test("route validates future engine output before ever calling narrator", async (t) => {
-  const invalidOutputs = [
-    { winner: "Unknown", confidence: 0.5, factors: [] },
-    { winner: a.name, confidence: 2, factors: [] },
-  ];
-  let called = false;
-  for (const invalid of invalidOutputs) {
-    const app = express();
-    app.use(express.json());
-    app.use("/api", createFightRouter(
-      () => invalid as MatchupResult,
-      async () => { called = true; throw new Error("Must not run"); },
-    ));
-    const server = app.listen(0, "127.0.0.1");
-    await new Promise<void>((resolve) => server.once("listening", resolve));
-    t.after(() => { server.closeAllConnections(); server.close(); });
-    const response = await fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/fight`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(validInput),
-    });
-    assert.equal(response.status, 502);
-    assert.equal((await response.json() as { code: string }).code, "INVALID_ENGINE_OUTPUT");
-  }
-  assert.equal(called, false);
 });

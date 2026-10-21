@@ -11,5 +11,6 @@ export type FightInputEnvironment = typeof FightInputEnvironment[keyof typeof Fi
 
 export const FightInputEnvironment = {
   land: 'land',
-  water: 'water',
+  shallow_water: 'shallow_water',
+  deep_water: 'deep_water',
 } as const;

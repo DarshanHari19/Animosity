@@ -55,13 +55,13 @@ export const AnimalFightingStyle = {
   charge: 'charge',
 } as const;
 
-export type AnimalHabitatsItem = typeof AnimalHabitatsItem[keyof typeof AnimalHabitatsItem];
+export type AnimalFunctionsInItem = typeof AnimalFunctionsInItem[keyof typeof AnimalFunctionsInItem];
 
 
-export const AnimalHabitatsItem = {
+export const AnimalFunctionsInItem = {
   land: 'land',
-  water: 'water',
-  both: 'both',
+  shallow_water: 'shallow_water',
+  deep_water: 'deep_water',
 } as const;
 
 /**
@@ -103,7 +103,7 @@ export interface Animal {
   armor: AnimalArmor;
   temperament: AnimalTemperament;
   fighting_style: AnimalFightingStyle;
-  habitats: AnimalHabitatsItem[];
+  functions_in: AnimalFunctionsInItem[];
   field_sources: AnimalFieldSources;
 }
 
@@ -112,7 +112,23 @@ export type FightInputEnvironment = typeof FightInputEnvironment[keyof typeof Fi
 
 export const FightInputEnvironment = {
   land: 'land',
-  water: 'water',
+  shallow_water: 'shallow_water',
+  deep_water: 'deep_water',
+} as const;
+
+export type FightInputMode = typeof FightInputMode[keyof typeof FightInputMode];
+
+
+export const FightInputMode = {
+  realistic: 'realistic',
+  forced_fight: 'forced_fight',
+} as const;
+
+export type FightInputEncounter = typeof FightInputEncounter[keyof typeof FightInputEncounter];
+
+
+export const FightInputEncounter = {
+  face_off: 'face_off',
 } as const;
 
 export interface FightInput {
@@ -120,19 +136,109 @@ export interface FightInput {
   animalA: string;
   /** @minLength 1 */
   animalB: string;
-  environment: FightInputEnvironment;
+  environment?: FightInputEnvironment;
+  mode?: FightInputMode;
+  encounter?: FightInputEncounter;
 }
 
-export interface MatchupResult {
-  /** Exact selected animal name, or a non-winning outcome. */
-  winner: 'no_contest' | 'no_decisive_winner' | string;
+export type FavoredOutcomeKind = typeof FavoredOutcomeKind[keyof typeof FavoredOutcomeKind];
+
+
+export const FavoredOutcomeKind = {
+  favored: 'favored',
+} as const;
+
+export interface FavoredOutcome {
+  kind: FavoredOutcomeKind;
   /**
-     * @minimum 0
-     * @maximum 1
+     * Exact selected animal name
+     * @minLength 1
      */
-  confidence: number;
-  /** @items.minLength 1 */
-  factors: string[];
+  animal: string;
+}
+
+export type EvenOutcomeKind = typeof EvenOutcomeKind[keyof typeof EvenOutcomeKind];
+
+
+export const EvenOutcomeKind = {
+  even: 'even',
+} as const;
+
+export interface EvenOutcome {
+  kind: EvenOutcomeKind;
+}
+
+export type IndeterminateOutcomeKind = typeof IndeterminateOutcomeKind[keyof typeof IndeterminateOutcomeKind];
+
+
+export const IndeterminateOutcomeKind = {
+  indeterminate: 'indeterminate',
+} as const;
+
+export interface IndeterminateOutcome {
+  kind: IndeterminateOutcomeKind;
+}
+
+export type NoContestOutcomeKind = typeof NoContestOutcomeKind[keyof typeof NoContestOutcomeKind];
+
+
+export const NoContestOutcomeKind = {
+  no_contest: 'no_contest',
+} as const;
+
+export interface NoContestOutcome {
+  kind: NoContestOutcomeKind;
+}
+
+export type Outcome = FavoredOutcome | EvenOutcome | IndeterminateOutcome | NoContestOutcome;
+
+export interface Factor {
+  /** @minLength 1 */
+  name: string;
+  value: number;
+  /** @minLength 1 */
+  reason: string;
+}
+
+/**
+ * @nullable
+ */
+export type MatchupResultDecidingFactor = typeof MatchupResultDecidingFactor[keyof typeof MatchupResultDecidingFactor] | null;
+
+
+export const MatchupResultDecidingFactor = {
+  fighting_ability: 'fighting_ability',
+  environmental_advantage: 'environmental_advantage',
+  behavior: 'behavior',
+} as const;
+
+export type MatchupResultEvidenceQuality = typeof MatchupResultEvidenceQuality[keyof typeof MatchupResultEvidenceQuality];
+
+
+export const MatchupResultEvidenceQuality = {
+  mostly_measured: 'mostly_measured',
+  mixed: 'mixed',
+  mostly_estimated: 'mostly_estimated',
+} as const;
+
+export type MatchupResultEncounterLabel = typeof MatchupResultEncounterLabel[keyof typeof MatchupResultEncounterLabel];
+
+
+export const MatchupResultEncounterLabel = {
+  hypothetical: 'hypothetical',
+  ranges_overlap: 'ranges_overlap',
+  documented: 'documented',
+} as const;
+
+export interface MatchupResult {
+  outcome: Outcome;
+  /** @nullable */
+  deciding_factor: MatchupResultDecidingFactor;
+  evidence_quality: MatchupResultEvidenceQuality;
+  encounter_label: MatchupResultEncounterLabel;
+  /** @nullable */
+  advantage_score: number | null;
+  factors: Factor[];
 }
 
 export type BeatAction = typeof BeatAction[keyof typeof BeatAction];
@@ -152,19 +258,31 @@ export interface Beat {
   /** @minLength 1 */
   text: string;
   action: BeatAction;
-  /** @minLength 1 */
-  animal: string;
+  /**
+     * Selected animal name; null only for the final even-matchup finish beat.
+     * @minLength 1
+     * @nullable
+     */
+  animal: string | null;
   /** @minLength 1 */
   fact_used: string;
 }
 
+/**
+ * Favored/even outcomes have 5–8 beats and a null explanation. Indeterminate/no_contest outcomes have no beats and a one-line explanation.
+ */
 export interface FightResponse {
   result: MatchupResult;
   /**
-     * @minItems 5
+     * @minItems 0
      * @maxItems 8
      */
   beats: Beat[];
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  explanation: string | null;
 }
 
 export interface ApiFailure {

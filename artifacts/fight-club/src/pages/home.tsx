@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useCreateFight, useGetAnimals, getGetAnimalsQueryKey } from "@workspace/api-client-react";
-import type { FightInputEnvironment, FightResponse } from "@workspace/api-client-react";
+import type { FightInputEnvironment, FightInputMode, FightResponse } from "@workspace/api-client-react";
 import { StickFigure } from "@/components/stick-figure";
+import { MatchupResultCard } from "@/components/matchup-result";
 
 const BEAT_MS = 1500;
 
@@ -11,7 +12,7 @@ function errorMessage(err: unknown): string {
   return e?.data?.code ? `${msg} (${e.data.code})` : msg;
 }
 
-type Playback = { a: string; b: string; env: FightInputEnvironment; response: FightResponse };
+type Playback = { a: string; b: string; env: FightInputEnvironment; mode: FightInputMode; response: FightResponse };
 
 export default function Home() {
   const animals = useGetAnimals({ query: { queryKey: getGetAnimalsQueryKey() } });
@@ -19,6 +20,7 @@ export default function Home() {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [env, setEnv] = useState<FightInputEnvironment>("land");
+  const [mode, setMode] = useState<FightInputMode>("realistic");
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [shown, setShown] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function Home() {
   }, []);
 
   const list = animals.data ?? [];
-  const canFight = a !== "" && b !== "" && a !== b && !fight.isPending;
+  const canFight = a !== "" && b !== "" && !fight.isPending;
 
   async function onFight() {
     stop();
@@ -43,13 +45,17 @@ export default function Home() {
     setShown(0);
     setError(null);
     const id = ++requestId.current;
-    const sel = { a, b, env };
+    const sel = { a, b, env, mode };
     try {
-      const response = await fight.mutateAsync({ data: { animalA: sel.a, animalB: sel.b, environment: sel.env } });
+      const response = await fight.mutateAsync({ data: {
+        animalA: sel.a, animalB: sel.b, environment: sel.env,
+        mode: sel.mode, encounter: "face_off",
+      } });
       if (id !== requestId.current) return;
       setPlayback({ ...sel, response });
-      setShown(1);
       const total = response.beats.length;
+      setShown(Math.min(1, total));
+      if (total <= 1) return; // Explanation-only outcomes have no playback timer.
       let n = 1;
       timer.current = window.setInterval(() => {
         n += 1;
@@ -64,9 +70,8 @@ export default function Home() {
   const beats = playback?.response.beats ?? [];
   const current = shown > 0 ? beats[shown - 1] : undefined;
   // A non-winning finish should not put either figure in a defeated pose.
-  const currentAction = current?.animal === "no_contest" ||
-    current?.animal === "no_decisive_winner" ? null : current?.action ?? null;
-  const done = playback !== null && beats.length > 0 && shown >= beats.length;
+  const currentAction = current?.animal === null ? null : current?.action ?? null;
+  const done = playback !== null && shown >= beats.length;
   const result = playback?.response.result;
 
   return (
@@ -81,7 +86,7 @@ export default function Home() {
         <ul className="list-disc pl-5">
           <li>Seven adult-male trait profiles are loaded from user-provided data. Review field-level source notes and values before treating them as verified facts.</li>
           <li>The scoring engine is not implemented; Fight returns a 501 "scoring-not-implemented" error until it is written.</li>
-          <li>No results are simulated. Narration appears only from a real engine response.</li>
+          <li>No results are simulated. Favored/even outcomes receive narration; other outcomes receive an explanation.</li>
         </ul>
       </section>
 
@@ -111,11 +116,19 @@ export default function Home() {
           <label className="flex flex-col text-sm">Environment
             <select className="border p-1 bg-card" value={env} onChange={(e) => setEnv(e.target.value as FightInputEnvironment)} data-testid="select-environment">
               <option value="land">Land</option>
-              <option value="water">Water</option>
+              <option value="shallow_water">Shallow water</option>
+              <option value="deep_water">Deep water</option>
             </select>
           </label>
         </div>
-        {a !== "" && a === b && <p className="text-sm">Pick two different animals.</p>}
+        <fieldset className="space-y-1">
+          <legend className="text-sm">Mode</legend>
+          <div className="flex gap-4 text-sm">
+            <label><input type="radio" name="mode" value="realistic" checked={mode === "realistic"} onChange={() => setMode("realistic")} data-testid="mode-realistic" /> Realistic</label>
+            <label><input type="radio" name="mode" value="forced_fight" checked={mode === "forced_fight"} onChange={() => setMode("forced_fight")} data-testid="mode-forced-fight" /> Forced fight</label>
+          </div>
+          <p className="text-sm" data-testid="text-mode-caption">Forced fight: no retreat; environmental disadvantages count.</p>
+        </fieldset>
         <button className="border px-4 py-1 bg-primary text-primary-foreground disabled:opacity-50" onClick={onFight} disabled={!canFight} data-testid="button-fight">
           {fight.isPending ? "Fighting..." : "Fight"}
         </button>
@@ -124,7 +137,8 @@ export default function Home() {
 
       {playback && (
         <section className="space-y-3" data-testid="section-playback">
-          <h2 className="font-semibold">{playback.a} vs {playback.b} ({playback.env})</h2>
+          <h2 className="font-semibold">{playback.a} vs {playback.b} ({playback.env.replaceAll("_", " ")}, {playback.mode.replaceAll("_", " ")})</h2>
+          {beats.length > 0 && <>
           <svg viewBox="0 0 320 190" className="w-full border bg-card" role="img" aria-label="Stick figure fight">
             <StickFigure side="left" label={playback.a} action={currentAction} isActor={current?.animal === playback.a} />
             <StickFigure side="right" label={playback.b} action={currentAction} isActor={current?.animal === playback.b} />
@@ -132,21 +146,14 @@ export default function Home() {
           <ol className="list-decimal pl-5 space-y-2 text-sm">
             {beats.slice(0, shown).map((beat, i) => (
               <li key={i} data-testid={`text-beat-${i}`}>
-                <span className="font-semibold">{beat.animal}</span> [{beat.action}]: {beat.text}
+                <span className="font-semibold">{beat.animal ?? "No winner"}</span> [{beat.action}]: {beat.text}
                 <div className="text-muted-foreground">Fact: {beat.fact_used}</div>
               </li>
             ))}
           </ol>
+          </>}
           {done && result && (
-            <div className="border p-3 space-y-1" data-testid="card-result">
-              <p>{result.winner === "no_contest" || result.winner === "no_decisive_winner" ? "Outcome" : "Winner"}: <strong data-testid="text-winner">{result.winner.replaceAll("_", " ")}</strong></p>
-              <p data-testid="text-profile-assumption">Assumes adult males</p>
-              <p data-testid="text-confidence">Confidence: {(result.confidence * 100).toFixed(1)}%</p>
-              <p>Factors:</p>
-              <ul className="list-disc pl-5 text-sm">
-                {result.factors.map((f, i) => <li key={i} data-testid={`text-factor-${i}`}>{f}</li>)}
-              </ul>
-            </div>
+            <MatchupResultCard result={result} explanation={playback.response.explanation} />
           )}
         </section>
       )}

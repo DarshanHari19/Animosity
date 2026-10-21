@@ -49,26 +49,38 @@ The backend folder is **`artifacts/api-server/server/`**:
 - `profile` is `adult_male` or `adult_female`; the starter records use
   `adult_male`. `fighting_style` is one of `ambush`, `sustained`, `bluff`,
   `grapple`, or `charge`. The result card states “Assumes adult males.”
-- `engine.ts`: implement `scoreMatchup(a, b, environment)` yourself. The body is
+- `functions_in` lists `land`, `shallow_water`, and/or `deep_water`. The
+  supplied capability lists have tier-3 source entries marked `TODO: verify`;
+  these are not established scientific findings.
+- `engine.ts`: implement `scoreMatchup(a, b, { environment, mode, encounter })`
+  yourself. The body is
   deliberately a TODO and an explicit throw, not a hidden scoring formula.
   Validate data readiness and source quality in your scoring implementation.
 - `schemas.ts`: shared Zod-derived types used by the engine, narrator, and routes.
   Exact enums are defined by `lib/api-spec/openapi.yaml`; regenerate contract
   helpers after edits with `pnpm --filter @workspace/api-spec run codegen`.
 
-Return `{ winner, confidence, factors }`: `winner` must be **the exact selected
-animal name**, `"no_contest"`, or `"no_decisive_winner"`; never `"A"`, `"B"`,
-or a numeric ID. The final narration beat uses that same name or outcome token
-in `animal`; outcome tokens are allowed only on the final `finish` beat.
-`confidence` is finite and
-between 0 and 1; `factors` is a string array explaining your scoring. The
-API validates the output before sending it to the narrator.
+Return the following structured result; the API validates it before use:
 
-`server/engine.test.ts` records ten user-requested matchup expectations as
-comments, not established scientific facts. Each currently asserts
-`SCORING_NOT_IMPLEMENTED`; scoring remains deliberately unimplemented.
-The Lion-vs-Lion case exercises the engine directly; the API still rejects
-identical selections.
+- `outcome`: `{ kind: "favored", animal: "<exact selected name>" }`,
+  `{ kind: "even" }`, `{ kind: "indeterminate" }`, or `{ kind: "no_contest" }`.
+  Only `favored` includes `animal`.
+- `deciding_factor`: `fighting_ability`, `environmental_advantage`, `behavior`,
+  or `null`.
+- `evidence_quality`: `mostly_measured`, `mixed`, or `mostly_estimated`.
+- `encounter_label`: `hypothetical`, `ranges_overlap`, or `documented`.
+- `advantage_score`: a finite number or `null`, with no predefined bounds.
+- `factors`: an array of `{ name: string, value: number, reason: string }`,
+  with finite numeric values.
+
+`server/engine.test.ts` contains **15 future scoring cases inside
+`describe.skip`**, with real assertions to enable after scoring is implemented.
+All use the normal HTTP route, including Lion vs Lion; only narration is mocked.
+Blue whale and African elephant are test-only fixtures with zero/null unknown
+measurements, never selectable production animals. The scenarios are requested
+expectations, not established scientific facts. Active tests separately confirm
+that the real engine still throws `SCORING_NOT_IMPLEMENTED`, and cover schemas,
+route behavior and mocked provider responses without requiring a key.
 
 ## Configure narration
 
@@ -87,28 +99,44 @@ Defaults:
 The provider must return `{ "beats": [...] }` with 5–8 beats, each containing
 `text`, `action`, `animal`, and `fact_used`. Actions are exactly `approach`,
 `charge`, `bite`, `dodge`, `grapple`, `retreat`, and `finish`.
-`animal` must match one of the two selected names. `fact_used` must exactly
-copy an engine factor or a supplied, sourced trait evidence string; zero/null
-numeric traits and unsourced records are excluded from trait evidence.
+`animal` must match one of the two selected names, except that the final
+`finish` beat must use `animal: null` for an even matchup. Earlier beats cannot
+have null actors, and only the final beat may use `finish`. `fact_used` must
+exactly copy an evidence string: an engine factor serialized with
+`JSON.stringify({ name, value, reason })` in that field order, or a supplied,
+sourced trait reference. Zero/null numeric traits, tier-null entries, empty
+references and `TODO` references are excluded from trait evidence.
 The prompt forbids invented facts and requires text to agree with that evidence.
 Zod validates structure and evidence references; it cannot prove natural-language
 claims are scientifically true. Review sources and narration before relying on it.
 
-The final beat must have `action: "finish"` and `animal === result.winner`.
-The narrator explicitly checks this; a mismatched final winner receives **one**
-corrective retry. Another mismatch returns an error. Invalid JSON/schema,
+Only `favored` and `even` outcomes call the narrator. The final beat must have
+`action: "finish"` and identify the favored animal, or no animal (`null`) for
+an even matchup. The narrator explicitly checks this; a mismatched outcome
+receives **one** corrective retry. Another mismatch returns an error. Invalid JSON/schema,
 unsupported evidence, HTTP errors, and a 30-second request timeout return readable
 errors without fabricated fallback content or exposed provider details.
 
 ## Page and API
 
 - `GET /api/animals` returns the animal records for the selectors.
-- `POST /api/fight` accepts `{ animalA, animalB, environment }`, with exact animal
-  names and `environment` equal to `"land"` or `"water"`. Missing, unknown, and
-  identical selections are rejected. Success returns `{ result, beats }`.
+- `POST /api/fight` accepts `{ animalA, animalB, environment, mode, encounter }`.
+  Animal names are required; identical selections are allowed and passed
+  unchanged to the engine, with no special result substituted by the route.
+  Environment is `land`, `shallow_water`, or `deep_water` (default `land`).
+  Mode is `realistic` or `forced_fight` (default `realistic`); encounter is
+  `face_off` only (default `face_off`). Missing/unknown names, invalid enums,
+  null context fields and unexpected fields are rejected.
+- Success returns `{ result, beats, explanation }`. Favored/even results have
+  5–8 beats and a null explanation. Indeterminate/no-contest results have an
+  empty beats array and a one-line explanation derived from the engine factors,
+  without contacting an LLM.
 - The page is in `artifacts/fight-club/src/pages/home.tsx`. A successful response
-  reveals the first beat immediately, then one every 1.5 seconds. Both SVG
+  reveals the first narrated beat immediately, then one every 1.5 seconds. Both SVG
   figures have explicit poses for the seven actions. The end card follows the
-  last beat. Playback timers are cleared on restart and unmount, and late responses
+  last beat; explanation-only outcomes show their card immediately without a
+  playback timer. Even finishes do not show either figure defeated. The mode
+  caption reads “Forced fight: no retreat; environmental disadvantages count.”
+  There is no encounter picker yet. Playback timers are cleared on restart and unmount, and late responses
   are ignored. Until scoring is implemented, successful live playback is
   intentionally unavailable.

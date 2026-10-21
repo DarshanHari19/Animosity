@@ -5,12 +5,16 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { FightInputEncounter } from './fightInputEncounter';
 import type { FightInputEnvironment } from './fightInputEnvironment';
+import type { FightInputMode } from './fightInputMode';
 
 export interface FightInput {
   /** @minLength 1 */
   animalA: string;
   /** @minLength 1 */
   animalB: string;
-  environment: FightInputEnvironment;
+  environment?: FightInputEnvironment;
+  mode?: FightInputMode;
+  encounter?: FightInputEncounter;
 }

@@ -63,7 +63,7 @@ export const getGetAnimalsUrl = () => {
 }
 
 /**
- * @summary List animal trait placeholders
+ * @summary List user-provided animal profiles
  */
 export const getAnimals = async ( options?: Parameters<typeof customFetch>[1]): Promise<Animal[]> => {
 
@@ -110,7 +110,7 @@ export type GetAnimalsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List animal trait placeholders
+ * @summary List user-provided animal profiles
  */
 
 export function useGetAnimals<TData = Awaited<ReturnType<typeof getAnimals>>, TError = ErrorType<unknown>>(

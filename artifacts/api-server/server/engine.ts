@@ -1,13 +1,13 @@
-import type { Animal, Environment, MatchupResult } from "./schemas";
+import type { Animal, EngineContext, MatchupResult } from "./schemas";
 import { FightError } from "./errors";
 
 export function scoreMatchup(
   _a: Animal,
   _b: Animal,
-  _environment: Environment,
+  _context: EngineContext,
 ): MatchupResult {
-  // TODO: Write your scoring here after replacing placeholder traits with
-  // sourced data. winner must be a.name or b.name; confidence must be 0..1.
+  // TODO: Write scoring using environment, mode and encounter context.
+  // Return a structured outcome and evidence metadata; do not invent inputs.
   // Verify every supplied value/source before treating it as authoritative.
   throw new FightError(
     "SCORING_NOT_IMPLEMENTED",

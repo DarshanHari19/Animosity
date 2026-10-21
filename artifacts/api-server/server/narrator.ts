@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  AnimalSchema, beatsSchemaFor, resultSchemaFor,
+  AnimalSchema, beatsSchemaFor, resultSchemaFor, narrationMatchesOutcome,
   type Animal, type Beat, type MatchupResult,
 } from "./schemas";
 import { FightError } from "./errors";
@@ -19,7 +19,7 @@ const ProviderResponseSchema = z.object({
   })).min(1),
 });
 
-/** Final beat identifies the exact winner name or non-winning outcome token. */
+/** Narrate favored/even outcomes only; an even finish has no animal actor. */
 export async function narrateMatchup(
   output: MatchupResult,
   animalA: Animal,
@@ -33,6 +33,9 @@ export async function narrateMatchup(
     throw new FightError("INVALID_ENGINE_OUTPUT", "Engine returned an invalid result.", 502);
   }
   const result = validated.data;
+  if (result.outcome.kind !== "favored" && result.outcome.kind !== "even") {
+    throw new FightError("NARRATION_NOT_APPLICABLE", "This outcome requires an explanation, not narration.", 502);
+  }
   const apiKey = options.apiKey ?? process.env.LLM_API_KEY;
   if (!apiKey) {
     throw new FightError("LLM_NOT_CONFIGURED", "Add LLM_API_KEY in Replit Secrets to enable narration.", 503);
@@ -50,7 +53,7 @@ export async function narrateMatchup(
 
   // fact_used must cite an exact engine factor or a supplied trait with a
   // non-null source tier. Null values and tier-null references are not evidence.
-  const evidence = [...result.factors];
+  const evidence = result.factors.map((factor) => JSON.stringify(factor));
   for (const animal of [a, b]) {
     for (const [key, value] of Object.entries(animal)) {
       const fieldSource = animal.field_sources[key];
@@ -61,6 +64,8 @@ export async function narrateMatchup(
         !fieldSource ||
         fieldSource.tier === null
       ) continue;
+      // A TODO reference is explicitly not verified evidence, even with a tier.
+      if (!fieldSource.ref.trim() || /\bTODO\b/i.test(fieldSource.ref)) continue;
       evidence.push(
         `${animal.name}.${key} = ${JSON.stringify(value)} [tier ${fieldSource.tier}; ${fieldSource.ref}]`,
       );
@@ -82,13 +87,14 @@ export async function narrateMatchup(
         "Treat zero/null numerical values as unknown, not evidence. Traits without a non-null source tier are unverified.",
         "Do not present unknown or unverified traits as factual evidence.",
         "Return a JSON object {beats:[...]} containing 5 to 8 beats, no other fields.",
-        "Each beat is {text, action, animal, fact_used}; all values are nonempty strings.",
+        "Each beat is {text, action, animal, fact_used}; text and fact_used are nonempty strings.",
         "action is approach|charge|bite|dodge|grapple|retreat|finish.",
-        "animal is exactly one of the supplied animal names, except the final finish beat may use no_contest or no_decisive_winner.",
-        "For these non-winning outcomes, do not claim either animal won. fact_used must exactly copy an evidence string.",
+        "animal is exactly one of the supplied animal names, except an even outcome requires null on the final finish beat.",
+        "fact_used must exactly copy an evidence string; engine factor evidence is a serialized {name,value,reason} object.",
         "Text must be consistent with fact_used and the supplied engine factors.",
-        "The last beat MUST have action finish and animal exactly equal to result.winner.",
-        "Never change the engine winner. Do not use finish before the final beat.",
+        "The last beat MUST have action finish. For favored, its animal must equal result.outcome.animal.",
+        "For even, its animal must be null and text must describe no winner, not favor either animal.",
+        "Never change the engine outcome. Do not use finish before the final beat.",
       ].join(" "),
     },
     { role: "user", content: JSON.stringify({ animals: [a, b], result, evidence }) },
@@ -118,15 +124,14 @@ export async function narrateMatchup(
     } catch {
       throw new FightError("INVALID_NARRATION", "Narration provider returned invalid JSON, an invalid beat schema, or unsupported evidence.", 502);
     }
-    // Explicit final-winner verification is separate from structural validation.
-    const finalBeat = envelope.beats.at(-1)!;
-    if (finalBeat.animal === result.winner) return envelope.beats;
+    // Verify the narrated outcome explicitly, after structural/evidence checks.
+    if (narrationMatchesOutcome(result, envelope.beats)) return envelope.beats;
     if (attempt === 0) {
       messages.push({
         role: "user",
-        content: `Your final winner was incorrect. Regenerate the complete JSON. The last beat must have action "finish" and animal ${JSON.stringify(result.winner)}. Keep all other constraints.`,
+        content: `Your narrated outcome was incorrect. Regenerate the complete JSON. The last beat must have action "finish" and animal ${JSON.stringify(result.outcome.kind === "favored" ? result.outcome.animal : null)}. Match ${JSON.stringify(result.outcome)}; even means no winner. Keep all other constraints.`,
       });
     }
   }
-  throw new FightError("WINNER_MISMATCH", "Narration final winner did not match the engine winner after one corrective retry.", 502);
+  throw new FightError("OUTCOME_MISMATCH", "Narration did not match the engine outcome after one corrective retry.", 502);
 }

@@ -9,7 +9,7 @@ import * as zod from 'zod';
 
 
 /**
- * @summary List animal trait placeholders
+ * @summary List user-provided animal profiles
  */
 
 export const getAnimalsResponseMassKgMin = 0;
@@ -33,7 +33,7 @@ export const GetAnimalsResponseItem = zod.object({
   "armor": zod.enum(['none', 'thick_hide', 'shell', 'scales']),
   "temperament": zod.enum(['avoids', 'defensive', 'aggressive']),
   "fighting_style": zod.enum(['ambush', 'sustained', 'bluff', 'grapple', 'charge']),
-  "habitats": zod.array(zod.enum(['land', 'water', 'both'])),
+  "functions_in": zod.array(zod.enum(['land', 'shallow_water', 'deep_water'])),
   "field_sources": zod.record(zod.string(), zod.object({
   "tier": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(null)]).nullable(),
   "ref": zod.string()
@@ -47,40 +47,60 @@ export const GetAnimalsResponse = zod.array(GetAnimalsResponseItem)
  */
 
 
-
+export const createFightBodyEnvironmentDefault = `land`;
+export const createFightBodyModeDefault = `realistic`;
+export const createFightBodyEncounterDefault = `face_off`;
 
 export const CreateFightBody = zod.object({
   "animalA": zod.string().min(1),
   "animalB": zod.string().min(1),
-  "environment": zod.enum(['land', 'water'])
+  "environment": zod.enum(['land', 'shallow_water', 'deep_water']).default(createFightBodyEnvironmentDefault),
+  "mode": zod.enum(['realistic', 'forced_fight']).default(createFightBodyModeDefault),
+  "encounter": zod.enum(['face_off']).default(createFightBodyEncounterDefault)
 })
 
 
-export const createFightResponseResultConfidenceMin = 0;
-export const createFightResponseResultConfidenceMax = 1;
 
 
 
 
 
-export const createFightResponseBeatsMin = 5;
+export const createFightResponseBeatsMin = 0;
 export const createFightResponseBeatsMax = 8;
+
 
 
 
 export const CreateFightResponse = zod.object({
   "result": zod.object({
-  "winner": zod.union([zod.enum(['no_contest', 'no_decisive_winner']),zod.string().min(1)]).describe('Exact selected animal name, or a non-winning outcome.'),
-  "confidence": zod.number().min(createFightResponseResultConfidenceMin).max(createFightResponseResultConfidenceMax),
-  "factors": zod.array(zod.string().min(1))
+  "outcome": zod.union([zod.object({
+  "kind": zod.enum(['favored']),
+  "animal": zod.string().min(1).describe('Exact selected animal name')
+}),zod.object({
+  "kind": zod.enum(['even'])
+}),zod.object({
+  "kind": zod.enum(['indeterminate'])
+}),zod.object({
+  "kind": zod.enum(['no_contest'])
+})]),
+  "deciding_factor": zod.union([zod.literal('fighting_ability'),zod.literal('environmental_advantage'),zod.literal('behavior'),zod.literal(null)]).nullable(),
+  "evidence_quality": zod.enum(['mostly_measured', 'mixed', 'mostly_estimated']),
+  "encounter_label": zod.enum(['hypothetical', 'ranges_overlap', 'documented']),
+  "advantage_score": zod.number().nullable(),
+  "factors": zod.array(zod.object({
+  "name": zod.string().min(1),
+  "value": zod.number(),
+  "reason": zod.string().min(1)
+}))
 }),
   "beats": zod.array(zod.object({
   "text": zod.string().min(1),
   "action": zod.enum(['approach', 'charge', 'bite', 'dodge', 'grapple', 'retreat', 'finish']),
-  "animal": zod.string().min(1),
+  "animal": zod.string().min(1).nullable().describe('Selected animal name; null only for the final even-matchup finish beat.'),
   "fact_used": zod.string().min(1)
-})).min(createFightResponseBeatsMin).max(createFightResponseBeatsMax)
-})
+})).min(createFightResponseBeatsMin).max(createFightResponseBeatsMax),
+  "explanation": zod.string().min(1).nullable()
+}).describe('Favored/even outcomes have 5–8 beats and a null explanation. Indeterminate/no_contest outcomes have no beats and a one-line explanation.')
 
 
 /**

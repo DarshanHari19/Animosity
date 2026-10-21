@@ -11,8 +11,12 @@ export interface Beat {
   /** @minLength 1 */
   text: string;
   action: BeatAction;
-  /** @minLength 1 */
-  animal: string;
+  /**
+     * Selected animal name; null only for the final even-matchup finish beat.
+     * @minLength 1
+     * @nullable
+     */
+  animal: string | null;
   /** @minLength 1 */
   fact_used: string;
 }

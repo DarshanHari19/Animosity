@@ -16,36 +16,80 @@ export const AnimalSchema = GetAnimalsResponseItem.extend({
   field_sources: z.record(z.string(), FieldSourceSchema),
 }).strict();
 export type Animal = z.infer<typeof AnimalSchema>;
-export const EnvironmentSchema = z.enum(["land", "water"]);
+export const EnvironmentSchema = AnimalSchema.shape.functions_in.element;
 export type Environment = z.infer<typeof EnvironmentSchema>;
-export const FightInputSchema = CreateFightBody.strict().refine(
-  (input) => input.animalA !== input.animalB,
-  { message: "Choose two different animals.", path: ["animalB"] },
-);
-export const ResultSchema = CreateFightResponse.shape.result.strict();
+export const FightInputSchema = CreateFightBody.strict();
+export const EngineContextSchema = CreateFightBody.pick({
+  environment: true, mode: true, encounter: true,
+}).strict();
+export type EngineContext = z.infer<typeof EngineContextSchema>;
+
+const rawResult = CreateFightResponse.shape.result;
+export const OutcomeSchema = z.discriminatedUnion("kind", [
+  rawResult.shape.outcome.options[0].strict(),
+  rawResult.shape.outcome.options[1].strict(),
+  rawResult.shape.outcome.options[2].strict(),
+  rawResult.shape.outcome.options[3].strict(),
+]);
+export const ResultSchema = rawResult.extend({
+  outcome: OutcomeSchema,
+  advantage_score: z.number().finite().nullable(),
+  factors: z.array(rawResult.shape.factors.element.extend({
+    value: z.number().finite(),
+  }).strict()),
+}).strict();
 export type MatchupResult = z.infer<typeof ResultSchema>;
 export const BeatSchema = CreateFightResponse.shape.beats.element.strict();
 export type Beat = z.infer<typeof BeatSchema>;
-export const NonWinningOutcomeSchema = z.enum(["no_contest", "no_decisive_winner"]);
 
 export function resultSchemaFor(a: Animal, b: Animal) {
   return ResultSchema.refine(
-    (result) => result.winner === a.name || result.winner === b.name ||
-      NonWinningOutcomeSchema.safeParse(result.winner).success,
-    { message: "Engine winner must be a selected animal name, no_contest, or no_decisive_winner.", path: ["winner"] },
+    ({ outcome }) => outcome.kind !== "favored" ||
+      outcome.animal === a.name || outcome.animal === b.name,
+    { message: "Favored animal must be a selected animal name.", path: ["outcome", "animal"] },
   );
 }
 
 export function beatsSchemaFor(a: Animal, b: Animal) {
   return z.array(BeatSchema.extend({
-    animal: z.enum([a.name, b.name, ...NonWinningOutcomeSchema.options]),
-  })).min(5).max(8).refine(
-    (beats) => beats.at(-1)?.action === "finish",
-    { message: "The last beat must have action finish." },
-  ).refine(
-    (beats) => beats.every((beat, index) =>
-      !NonWinningOutcomeSchema.safeParse(beat.animal).success ||
-      (index === beats.length - 1 && beat.action === "finish")),
-    { message: "Non-winning outcome identifiers are allowed only on the final finish beat." },
-  );
+    animal: z.enum([a.name, b.name]).nullable(),
+  })).min(5).max(8).superRefine((beats, ctx) => {
+    beats.forEach((beat, index) => {
+      const final = index === beats.length - 1;
+      if ((beat.action === "finish") !== final || (!final && beat.animal === null)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom, path: [index],
+          message: "Only the final beat must finish; only that beat may have a null animal.",
+        });
+      }
+    });
+  });
+}
+
+// Structural validation permits either final identifier so a valid but wrong
+// outcome can receive a corrective retry instead of being a schema failure.
+export function narrationMatchesOutcome(result: MatchupResult, beats: Beat[]): boolean {
+  const final = beats.at(-1);
+  if (!final || final.action !== "finish") return false;
+  return result.outcome.kind === "favored"
+    ? final.animal === result.outcome.animal
+    : result.outcome.kind === "even" && final.animal === null;
+}
+
+export function fightResponseSchemaFor(a: Animal, b: Animal) {
+  return CreateFightResponse.extend({
+    result: resultSchemaFor(a, b),
+    beats: z.array(BeatSchema).max(8),
+  }).strict().superRefine(({ result, beats, explanation }, ctx) => {
+    const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
+    const valid = narrated
+      ? explanation === null && beatsSchemaFor(a, b).safeParse(beats).success &&
+        narrationMatchesOutcome(result, beats)
+      : beats.length === 0 && typeof explanation === "string" &&
+        explanation.trim().length > 0 && !/[\r\n]/.test(explanation);
+    if (!valid) ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Response must contain matching narration or a one-line explanation, according to its outcome.",
+    });
+  });
 }
