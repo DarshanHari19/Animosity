@@ -178,7 +178,7 @@ components:
           items: { $ref: "#/components/schemas/Factor" }
     Beat:
       type: object
-      required: [text, action, animal, fact_used]
+      required: [text, action, animal, facts_used]
       properties:
         text: { type: string, minLength: 1 }
         action: { type: string, enum: [approach, charge, bite, dodge, grapple, retreat, finish] }
@@ -186,7 +186,11 @@ components:
           type: [string, "null"]
           minLength: 1
           description: Selected animal name; null only for the final even-matchup finish beat.
-        fact_used: { type: string, minLength: 1 }
+        facts_used:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items: { type: string, minLength: 1 }
     FightResponse:
       type: object
       additionalProperties: false

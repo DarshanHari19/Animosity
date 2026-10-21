@@ -1,0 +1,64 @@
+import type { Animal, Beat, MatchupResult } from "./schemas";
+import type { EvidenceItem } from "./narration-evidence";
+import { isEnvironmental } from "./narration-evidence";
+import type { FailureCheck } from "./narration-diagnostics";
+
+const causal = /\b(?:because|due to|thanks to|decid(?:e|es|ed|ing)|determin(?:e|es|ed)|decisive|carried|carries|prevails?|wins?|winner|outcome|advantage|edge|favou?rs?|favou?red|offset|keeps)\b/i;
+const physical = /\b(?:size|mass|weight|heavier|outweighs|bite|speed|strength|power|reach|length|physical|bulk)\b/i;
+const advantage = /\b(?:advantage|edge|favou?rs?|favou?red|outweighs|heavier|stronger|faster|superior|offset)\b/i;
+const negative = /\b(?:no|not|neither|without|never)\b/i;
+const clauses = (text: string) => text.split(/[.!?;,]|\b(?:but|although|yet|while)\b/i);
+
+/** Conservative English checks supplement the prompt; no scoring is done here. */
+export function narrationGroundingChecks(
+  beats: Beat[], result: MatchupResult, evidence: EvidenceItem[], _a: Animal, _b: Animal,
+): FailureCheck[] {
+  const failures: FailureCheck[] = [];
+  const environmental = isEnvironmental(result);
+  beats.forEach((beat, index) => {
+    const messages: string[] = [];
+    const cited = evidence.filter((item) => beat.facts_used.includes(item.text));
+    const scored = cited.filter((item) => item.kind === "scored");
+    const final = index === beats.length - 1;
+    if (!environmental && cited.some((item) => item.kind === "gate")) {
+      messages.push("Gate evidence is allowed only for an engine environmental outcome.");
+    }
+    if (final && result.outcome.kind === "favored") {
+      if (environmental) {
+        if (!cited.some((item) => item.kind === "gate") || scored.length) {
+          messages.push("An environmental finish must cite the engine gate, not a scored factor.");
+        }
+        if (!/\benvironment(?:al)?\b/i.test(beat.text) ||
+          !/\b(?:decid(?:e|es|ed|ing)|determin(?:e|es|ed)|decisive|because|due to)\b/i.test(beat.text) ||
+          physical.test(beat.text)) {
+          messages.push("The finish must say the environment decided the fight, without a physical advantage.");
+        }
+      } else if (!scored.length) messages.push("An ordinary favored finish must cite a scored engine factor.");
+    }
+    if (final && result.outcome.kind === "even" &&
+      clauses(beat.text).some((clause) => advantage.test(clause) && !negative.test(clause))) {
+      messages.push("An even finish may not credit any advantage.");
+    }
+    for (const clause of clauses(beat.text)) {
+      if (!causal.test(clause) || negative.test(clause)) continue;
+      if (!scored.length && !cited.some((item) => environmental && item.kind === "gate")) {
+        messages.push("Context evidence is description only, not a reason for the outcome.");
+        break;
+      }
+      const scoredNames = scored.map((item) => {
+        try { return (JSON.parse(item.text) as { name?: string }).name; } catch { return undefined; }
+      });
+      if (/\b(?:speed|length|reach|strength|style|bluff|strike|grappling|armor|hide|claws|horns|tusks)\b/i.test(clause) ||
+        (/\bbite\b/i.test(clause) && !scoredNames.includes("Bite force"))) {
+        messages.push("An unscored trait is presented as a reason for the outcome.");
+        break;
+      }
+    }
+    if (messages.length) {
+      const path = ["beats", index, "text"];
+      failures.push({ check: "causal_grounding", path, text: beat.text,
+        issues: messages.map((message) => ({ path, message })) });
+    }
+  });
+  return failures;
+}

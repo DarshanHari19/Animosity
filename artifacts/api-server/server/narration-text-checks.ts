@@ -1,33 +1,13 @@
 import type { Animal, Beat, MatchupResult } from "./schemas";
 import type { FailureCheck } from "./narration-diagnostics";
 
-const smallNumbers: Record<string, number> = Object.fromEntries([
-  ...["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-    "seventeen", "eighteen", "nineteen"].map((word, value) => [word, value]),
-  ...["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
-    .map((word, index) => [word, (index + 2) * 10]),
-]);
-const scales: Record<string, number> = { hundred: 100, thousand: 1000, million: 1e6, billion: 1e9 };
-const numberWords = [...Object.keys(smallNumbers), ...Object.keys(scales)].join("|");
+const forbiddenNumbers = /\b(?:zero|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|half|quarter)\b/i;
+const forbiddenWording = /\b(?:sources?|sourced|unsourced|tiers?|missing|unverified|unavailable|unknown|excluded|unscored)\b|\b(?:not|cannot|could not|can't|couldn't)\s+(?:be\s+)?(?:compared|scored|counted|included)\b/i;
 
-/** Numeric literals and ordinary written cardinal numbers, not substring digits. */
+/** Digit-numbers only: "one" / "two" are allowed wording, not measurements. */
 function numbers(text: string): string[] {
-  const result = [...text.matchAll(/[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:e[+-]?\d+)?/gi)]
+  return [...text.matchAll(/[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:e[+-]?\d+)?/gi)]
     .map(([token]) => String(Number(token.replaceAll(",", ""))));
-  const written = new RegExp(`\\b(?:${numberWords})(?:[ -]+(?:and[ -]+)?(?:${numberWords}))*\\b`, "gi");
-  for (const [phrase] of text.matchAll(written)) {
-    let total = 0;
-    let group = 0;
-    for (const word of phrase.toLowerCase().split(/[ -]+/)) {
-      if (word === "and") continue;
-      if (word === "hundred") group = (group || 1) * 100;
-      else if (scales[word]) { total += (group || 1) * scales[word]!; group = 0; }
-      else group += smallNumbers[word]!;
-    }
-    result.push(String(total + group));
-  }
-  return result;
 }
 
 const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -52,10 +32,12 @@ export function narrationTextChecks(
   beats.forEach((beat, index) => {
     const path = ["beats", index, "text"];
     const messages: string[] = [];
-    const evidenceNumbers = new Set(numbers(beat.fact_used));
+    const evidenceNumbers = new Set(beat.facts_used.flatMap(numbers));
     for (const value of new Set(numbers(beat.text))) {
-      if (!evidenceNumbers.has(value)) messages.push(`Number ${value} is absent from this beat's fact_used.`);
+      if (!evidenceNumbers.has(value)) messages.push(`Number ${value} is absent from this beat's facts_used.`);
     }
+    if (forbiddenNumbers.test(beat.text)) messages.push("Spelled-out numbers other than one and two are forbidden; use digits.");
+    if (forbiddenWording.test(beat.text)) messages.push("Do not mention sources, tiers, missing data, or excluded comparisons.");
     if (percentage.test(beat.text)) messages.push("Percent signs and percentage words are forbidden.");
     const clauses = beat.text.split(/[.!?;,]/);
     if (result.outcome.kind === "even") {
@@ -70,7 +52,7 @@ export function narrationTextChecks(
       }
     }
     if (messages.length) failures.push({
-      check: "text_consistency", path,
+      check: "text_consistency", path, text: beat.text,
       issues: messages.map((message) => ({ path, message })),
     });
   });

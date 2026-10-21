@@ -19,9 +19,12 @@ const hasCode = (code: string) => (error: unknown) =>
   error instanceof FightError && error.code === code;
 
 // Test-only wire narration: never used by production scoring or narration.
-const wire = () => Response.json({ choices: [{ message: { content: JSON.stringify({
-  beats: fixtureBeats(a, a.name).map(({ fact_used: _unused, ...beat }) => ({ ...beat, fact_id: "E1" })),
-}) } }] });
+const wire = () => {
+  const encoded = fixtureBeats(a, a.name).map(({ facts_used: _unused, ...beat }) => ({ ...beat, fact_ids: ["E1"] }));
+  return Response.json({ choices: [{ message: { content: JSON.stringify({
+    beats: encoded.slice(0, -1), finish: encoded.at(-1),
+  }) } }] });
+};
 const badWire = () => Response.json({ choices: [{ message: { content: "not JSON" } }] });
 function transport(reserveProviderCall: () => void, replies: Array<() => Response | Promise<Response>>) {
   let calls = 0;

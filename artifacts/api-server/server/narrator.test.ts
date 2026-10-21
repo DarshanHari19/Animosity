@@ -17,12 +17,17 @@ type FixtureResponse = (evidence: EvidenceItem[]) => Response;
 // changes: exact fixture evidence is encoded as the corresponding fight-local ID.
 const provider = (beats: unknown): FixtureResponse => (evidence) => Response.json({
   choices: [{ message: { content: JSON.stringify({
-    beats: Array.isArray(beats) ? beats.map((beat) => {
-      const { fact_used, ...rest } = beat;
-      return { ...rest, fact_id: evidence.find(({ text }) => text === fact_used)?.id ?? "E_UNKNOWN" };
-    }) : beats,
+    ...fixtureWire(beats, evidence),
   }) } }],
 });
+function fixtureWire(beats: unknown, evidence: EvidenceItem[]) {
+  if (!Array.isArray(beats)) return { beats };
+  const encoded = beats.map(({ facts_used, ...rest }) => ({
+    ...rest, fact_ids: Array.isArray(facts_used)
+      ? facts_used.map((fact) => evidence.find(({ text }) => text === fact)?.id ?? "E_UNKNOWN") : [],
+  }));
+  return { beats: encoded.slice(0, -1), finish: encoded.at(-1) };
+}
 const errorCode = (code: string) => (error: unknown) =>
   error instanceof FightError && error.code === code;
 
@@ -103,7 +108,9 @@ test("indeterminate, no_contest and no_engagement reject direct narration before
 test("sourced trait evidence is accepted; unknown values and TODO references are excluded", async () => {
   const source = a.field_sources.mass_kg!;
   const fact = `${a.name}.mass_kg = ${a.mass_kg} [tier ${source.tier}; ${source.ref}]`;
-  const expected = beatsFor(a.name).map((beat) => ({ ...beat, fact_used: fact }));
+  const expected = beatsFor(a.name).map((beat, index) => ({
+    ...beat, facts_used: index === 4 ? [fact, JSON.stringify(fixtureFactor)] : [fact],
+  }));
   const mock = mockProvider([provider(expected)]);
   const unknownBite = { ...a, bite_force_n: null };
   assert.deepEqual(await narrateMatchup(result, unknownBite, b, mock.options), expected);
@@ -128,7 +135,7 @@ test("TODO references remain excluded even with a non-null source tier", async (
 
   const unverifiedFact = `${a.name}.mass_kg = ${a.mass_kg} [tier 3; ${pending.field_sources.mass_kg.ref}]`;
   const bad = provider(beatsFor(a.name).map((beat) => ({
-    ...beat, fact_used: unverifiedFact,
+    ...beat, facts_used: [unverifiedFact],
   })));
   const unsupported = mockProvider([bad, bad]);
   await assert.rejects(narrateMatchup(result, pending, b, unsupported.options), errorCode("INVALID_NARRATION"));
@@ -151,7 +158,7 @@ test("functions_in is never accepted as trait evidence, regardless of tier", asy
 
     const excludedFact = `${a.name}.functions_in = ${JSON.stringify(a.functions_in)} [tier ${tier}; ${ref}]`;
     const bad = provider(beatsFor(a.name).map((beat) => ({
-      ...beat, fact_used: excludedFact,
+      ...beat, facts_used: [excludedFact],
     })));
     const unsupported = mockProvider([bad, bad]);
     await assert.rejects(
@@ -172,7 +179,7 @@ test("invalid JSON, provider envelope, beat schema and evidence fail after one r
     provider(base.map((beat) => ({ ...beat, animal: "Unknown" }))),
     provider(base.map((beat) => ({ ...beat, action: "punch" }))),
     provider(base.map((beat) => ({ ...beat, action: "retreat" }))),
-    provider(base.map((beat) => ({ ...beat, fact_used: "Invented evidence" }))),
+    provider(base.map((beat) => ({ ...beat, facts_used: ["Invented evidence"] }))),
     provider(base.map((beat) => ({ ...beat, extra: "unexpected" }))),
     provider([{ ...base[0], animal: null }, ...base.slice(1)]),
     provider([{ ...base[0], action: "finish" }, ...base.slice(1)]),
@@ -186,7 +193,10 @@ test("invalid JSON, provider envelope, beat schema and evidence fail after one r
 
 const wire = (fact_id: string) => Response.json({
   choices: [{ message: { content: JSON.stringify({
-    beats: beatsFor(a.name).map(({ fact_used: _unused, ...beat }) => ({ ...beat, fact_id })),
+    ...(() => {
+      const encoded = beatsFor(a.name).map(({ facts_used: _unused, ...beat }) => ({ ...beat, fact_ids: [fact_id] }));
+      return { beats: encoded.slice(0, -1), finish: encoded.at(-1) };
+    })(),
   }) } }],
 });
 
@@ -198,12 +208,12 @@ test("unknown fact_id is rejected after exactly one corrective retry", async () 
   assert.match(mock.calls[1]!.messages.at(-1)!.content, /E_DOES_NOT_EXIST/);
 });
 
-test("resolved fact_used is the exact evidence text and fact_id never escapes to the API", async () => {
+test("resolved facts_used contains exact evidence text and fact_ids never escape to the API", async () => {
   const mock = mockProvider([wire("E1")]);
   const beats = await narrateMatchup(result, a, b, mock.options);
   for (const beat of beats) {
-    assert.equal(beat.fact_used, JSON.stringify(fixtureFactor));
-    assert.equal("fact_id" in beat, false);
+    assert.deepEqual(beat.facts_used, [JSON.stringify(fixtureFactor)]);
+    assert.equal("fact_ids" in beat, false);
   }
 });
 

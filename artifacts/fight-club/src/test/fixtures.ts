@@ -45,7 +45,7 @@ export function responseFixture(
       explanation: `${outcome.kind}: Fictional fixture reason only.`,
     };
   }
-  const fact_used = JSON.stringify(result.factors[0]);
+  const facts_used = [JSON.stringify(result.factors[0])];
   const actions: Beat["action"][] = ["approach", "charge", "dodge", "grapple", "finish"];
   return {
     result,
@@ -55,7 +55,7 @@ export function responseFixture(
         ? outcome.kind === "favored" ? outcome.animal : null
         : i % 2 === 0 ? "Lion" : "Grizzly bear",
       text: `Fictional beat ${i + 1}.`,
-      fact_used,
+      facts_used,
     })),
     explanation: null,
   };

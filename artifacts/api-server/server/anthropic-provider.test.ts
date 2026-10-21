@@ -4,8 +4,10 @@ import { createAnthropicProvider, type NarrationMessage } from "./anthropic-prov
 import { FightError } from "./errors";
 import { narrationTool } from "./narration-tool";
 import { animals } from "./animals";
+import { fixtureResult } from "./test-helpers";
 
-const tool = narrationTool(animals[0]!, animals[1]!, [{ id: "E1", text: "Test-only evidence." }]);
+const tool = narrationTool(animals[0]!, animals[1]!, [{ id: "E1", text: "Test-only evidence.", kind: "scored" }],
+  fixtureResult({ kind: "favored", animal: animals[0]!.name }));
 
 const messages: NarrationMessage[] = [
   { role: "system", content: "Test-only system instructions." },
@@ -37,10 +39,10 @@ test("Anthropic adapter forces one Haiku narration tool and normalizes only its 
   const subject = mock([Response.json({ content: [
     { type: "thinking", thinking: "Not narration." },
     { type: "text", text: "Not a fallback narration." },
-    { type: "tool_use", name: tool.name, input: { beats: [] } },
+    { type: "tool_use", name: tool.name, input: { beats: [], finish: {} } },
   ] })]);
   const response = await subject.provider(messages);
-  assert.deepEqual(await response.json(), { choices: [{ message: { content: '{"beats":[]}' } }] });
+  assert.deepEqual(await response.json(), { choices: [{ message: { content: '{"beats":[],"finish":{}}' } }] });
   assert.equal(subject.calls.length, 1);
   assert.equal(subject.calls[0]!.url, "https://anthropic.test.invalid/proxy/v1/messages");
   const init = subject.calls[0]!.init!;
@@ -56,8 +58,11 @@ test("Anthropic adapter forces one Haiku narration tool and normalizes only its 
   assert.deepEqual(body.tool_choice, {
     type: "tool", name: tool.name, disable_parallel_tool_use: true,
   });
-  assert.deepEqual(body.tools[0].input_schema.properties.beats.items.properties.fact_id.enum, ["E1"]);
+  assert.deepEqual(body.tools[0].input_schema.properties.beats.items.properties.fact_ids.items.enum, ["E1"]);
   assert.equal(body.tools[0].input_schema.properties.beats.items.additionalProperties, false);
+  assert.equal(body.tools[0].input_schema.properties.beats.items.properties.animal.type, "string");
+  assert.equal(body.tools[0].input_schema.properties.beats.items.properties.action.enum.includes("finish"), false);
+  assert.deepEqual(body.tools[0].input_schema.properties.finish.properties.animal.enum, [animals[0]!.name]);
 });
 
 test("invalid Anthropic envelopes and JSON keep INVALID_NARRATION", async () => {

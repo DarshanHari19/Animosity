@@ -126,26 +126,38 @@ to your Replit credits.
 - Legacy `LLM_API_KEY`, `LLM_API_URL`, and `LLM_MODEL` are no longer read.
 
 The backend assigns stable fight-local IDs (`E1`, `E2`, …) to the filtered
-evidence and sends `{id,text}` items. Anthropic must call exactly one forced
-`submit_narration` tool whose schema limits `fact_id` to those IDs. Free text
-is not accepted as a fallback. The server resolves each ID to the exact evidence
-text before returning the existing public `fact_used` field; IDs never reach
-the UI. Zod and the existing outcome checks remain the final authority.
+evidence and sends `{id,text,kind}` items. Anthropic must call exactly one forced
+`submit_narration` tool whose schema limits `fact_ids` to those IDs. Free text
+is not accepted as a fallback. Each beat cites **1–3 distinct IDs**. The server
+resolves them in order to the public **`facts_used: string[]`** field, displayed
+by the UI. This replaces the old singular `fact_used`; IDs never reach the UI.
+Zod and the existing outcome checks remain the final authority.
 SDK automatic retries are disabled so they cannot add hidden attempts.
 
-The tool input must contain `{ "beats": [...] }` with 5–8 beats, each containing
-`text`, `action`, `animal`, and `fact_id`. Public beats contain `fact_used`
-instead of `fact_id`. Actions are exactly `approach`,
-`charge`, `bite`, `dodge`, `grapple`, `retreat`, and `finish`.
-`animal` must match one of the two selected names, except that the final
-`finish` beat must use `animal: null` for an even matchup. Earlier beats cannot
-have null actors, and only the final beat may use `finish`. `fact_used` must
+The tool input is `{ "beats": [4–7 non-final beats], "finish": {one finish beat} }`.
+Every wire beat has `text`, `action`, `animal`, and `fact_ids`. The tool schema
+forbids null actors and the finish action in the non-final array, and fixes the
+separate finish actor to the favored name or null for even. The server maps this
+to the existing 5–8 public beats array. Public actions remain `approach`, `charge`,
+`bite`, `dodge`, `grapple`, `retreat`, and `finish`. Each `facts_used` entry must
 exactly copy an evidence string: an engine factor serialized with
 `JSON.stringify({ name, value, reason })` in that field order, or a supplied,
 sourced trait reference. `functions_in` is excluded from narrator evidence
 regardless of tier. Zero/null numeric traits, tier-null entries, empty
 references and `TODO` references are excluded from trait evidence.
 The prompt forbids invented facts and requires text to agree with that evidence.
+Evidence is tagged `scored` for engine comparisons that ran (including equal
+comparisons), or `context` for sourced descriptive traits. Factors marked
+"Not compared" and their excluded bite traits are removed from the model's
+evidence entirely. Unverified raw animal records are not sent to the model.
+Only scored evidence may explain ordinary outcomes; an ordinary favored finish
+must cite scored evidence. An even finish may not credit any advantage.
+
+The only exception is an environmental-favored engine outcome: a `gate` item
+copies only its existing outcome and deciding-factor fields. Its finish must
+cite that gate, not scored evidence, and explicitly say the environment decided
+the fight without implying physical superiority. No scores or engine factors
+are invented for gates.
 Zod validates structure and evidence references; it cannot prove natural-language
 claims are scientifically true. Review sources and narration before relying on it.
 
@@ -153,7 +165,8 @@ Only `favored` and `even` outcomes call the narrator. `no_engagement` never does
 The final beat must have
 `action: "finish"` and identify the favored animal, or no animal (`null`) for
 an even matchup. Any validation failure (JSON, schema, unknown evidence ID, or
-outcome mismatch) receives **one** corrective retry identifying the failed check.
+outcome mismatch, wording or grounding) receives **one** corrective retry
+identifying the failed check and offending text.
 A second validation failure returns `INVALID_NARRATION`. Provider HTTP/network
 failures remain `LLM_PROVIDER_FAILURE` without retries. The per-request timeout
 is 30 seconds. Raw failed model output is logged only on the server, never in
@@ -162,10 +175,14 @@ client error responses; no fallback narration is fabricated.
 After Zod validation, deterministic text checks reject unsupported numbers,
 percent signs/percentage words, claims that the other animal wins a favored
 matchup, and positive winner claims in an even matchup. Numbers are compared
-as whole numeric values (including ordinary written cardinal numbers), only
-against that beat's resolved evidence—not other beats. Winner checks use
+as whole digit-number values, against any of that beat's 1–3 resolved citations,
+never uncited evidence. Written cardinal numbers other than "one" and "two" are
+forbidden; the latter are allowed as ordinary wording such as "one another".
+Beat text cannot mention sources, tiers, missing data or excluded comparisons.
+Winner and causal-grounding checks use
 explicit English claim patterns and negation, not a semantic language model.
 These failures use the same single retry and then `INVALID_NARRATION`.
+These deterministic English checks are conservative, not semantic fact proof.
 
 ## Page and API
 - `POST /api/fight` allows **10 requests per minute per IP**, including invalid

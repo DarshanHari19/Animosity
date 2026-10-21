@@ -190,7 +190,7 @@ describe("Home playback", () => {
       await advance(1);
       expect(beatItems()).toHaveLength(i + 1);
       expect(screen.getByTestId(`text-beat-${i}`)).toHaveTextContent(response.beats[i].text);
-      expect(screen.getByTestId(`text-beat-${i}`)).toHaveTextContent(`Fact: ${response.beats[i].fact_used}`);
+      expect(screen.getByTestId(`text-beat-${i}`)).toHaveTextContent(`Facts: ${response.beats[i].facts_used.join(" | ")}`);
     }
     expect(screen.getByTestId("card-result")).toBeInTheDocument();
     expect(vi.getTimerCount()).toBe(0);

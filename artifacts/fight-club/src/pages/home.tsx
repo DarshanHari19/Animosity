@@ -147,7 +147,7 @@ export default function Home() {
             {beats.slice(0, shown).map((beat, i) => (
               <li key={i} data-testid={`text-beat-${i}`}>
                 <span className="font-semibold">{beat.animal ?? "No winner"}</span> [{beat.action}]: {beat.text}
-                <div className="text-muted-foreground">Fact: {beat.fact_used}</div>
+                <div className="text-muted-foreground">Facts: {beat.facts_used.join(" | ")}</div>
               </li>
             ))}
           </ol>

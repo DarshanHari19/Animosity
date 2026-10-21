@@ -47,5 +47,9 @@ Narration uses Replit-managed Anthropic AI Integrations and a Claude Haiku-class
 model; no personal LLM_API_KEY. Credentials stay on the backend. Preserve the
 narrator's final Zod/outcome validation and single corrective retry for any
 validation failure; disable SDK automatic retries. Force the narration tool
-with fight-local evidence IDs and resolve exact evidence text server-side.
+  with 4–7 named non-final beats plus one separate outcome-specific finish.
+  Resolve 1–3 evidence IDs per beat into public `facts_used: string[]`.
+  Ordinary favored finishes require scored evidence; environmental finishes
+  require gate evidence copied only from engine outcome fields and must say the
+  environment decided, not imply physical superiority. Never call gates scored.
 The database template is unused.

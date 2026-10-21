@@ -1,56 +1,62 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { BeatSchema, type Animal } from "./schemas";
+import { BeatSchema, type Animal, type MatchupResult } from "./schemas";
+import type { EvidenceItem } from "./narration-evidence";
+export type { EvidenceItem } from "./narration-evidence";
 
-export type EvidenceItem = { id: string; text: string };
 export const NARRATION_TOOL_NAME = "submit_narration";
-const WireEnvelopeSchema = z.object({
-  beats: z.array(BeatSchema.omit({ fact_used: true }).extend({
-    fact_id: z.string().min(1),
-  }).strict()).min(5).max(8),
-}).strict();
+const actionSchema = BeatSchema.shape.action.exclude(["finish"]);
+const actions = actionSchema.options;
+const idsSchema = z.array(z.string().min(1)).min(1).max(3)
+  .refine((ids) => new Set(ids).size === ids.length, "Citations must use distinct IDs.");
 
-export function narrationTool(a: Animal, b: Animal, evidence: EvidenceItem[]): Anthropic.Tool {
+export function narrationTool(a: Animal, b: Animal, evidence: EvidenceItem[], result: MatchupResult): Anthropic.Tool {
+  const properties = {
+    text: { type: "string", minLength: 1 },
+    fact_ids: { type: "array", minItems: 1, maxItems: 3, uniqueItems: true,
+      items: { type: "string", enum: evidence.map(({ id }) => id) } },
+  };
+  const required = ["text", "action", "animal", "fact_ids"];
   return {
     name: NARRATION_TOOL_NAME,
-    description: "Submit 5–8 beats. Only the last beat may finish or have a null animal. " +
-      "An even finish has a null animal; a favored finish names the favored animal. " +
-      "Cite each beat using one supplied evidence ID, never paraphrased evidence.",
+    description: "Submit 4–7 non-final beats and one separate finish. Every non-final actor is a selected animal. Cite 1–3 evidence IDs per beat.",
     input_schema: {
-      type: "object", additionalProperties: false, required: ["beats"],
+      type: "object", additionalProperties: false, required: ["beats", "finish"],
       properties: {
-        beats: {
-          type: "array", minItems: 5, maxItems: 8,
-          items: {
-            type: "object", additionalProperties: false,
-            required: ["text", "action", "animal", "fact_id"],
-            properties: {
-              text: { type: "string", minLength: 1 },
-              action: { type: "string", enum: BeatSchema.shape.action.options },
-              animal: { anyOf: [
-                { type: "string", enum: [...new Set([a.name, b.name])] }, { type: "null" },
-              ] },
-              fact_id: { type: "string", enum: evidence.map(({ id }) => id) },
-            },
-          },
+        beats: { type: "array", minItems: 4, maxItems: 7, items: {
+          type: "object", additionalProperties: false, required,
+          properties: { ...properties, action: { type: "string", enum: actions },
+            animal: { type: "string", enum: [...new Set([a.name, b.name])] } },
+        } },
+        finish: { type: "object", additionalProperties: false, required,
+          properties: { ...properties, action: { type: "string", enum: ["finish"] },
+            animal: result.outcome.kind === "favored"
+              ? { type: "string", enum: [result.outcome.animal] } : { type: "null" } },
         },
       },
     },
   };
 }
 
-/** IDs are resolved without fuzzy matching, replacement facts, or model text. */
-export function resolveEvidence(input: unknown, evidence: EvidenceItem[]) {
-  const wire = WireEnvelopeSchema.parse(input);
+/** No fuzzy matching, replacement facts, or legacy-wire fallback. */
+export function resolveEvidence(input: unknown, evidence: EvidenceItem[], a: Animal, b: Animal) {
+  const base = BeatSchema.omit({ facts_used: true }).extend({ fact_ids: idsSchema });
+  const actor = z.enum([a.name, b.name]);
+  const wire = z.object({
+    beats: z.array(base.extend({ action: actionSchema, animal: actor }).strict()).min(4).max(7),
+    // Tool constrains this to the expected actor; the final outcome check also
+    // independently rejects a malicious wrong/null final actor after Zod.
+    finish: base.extend({ action: z.literal("finish"), animal: actor.nullable() }).strict(),
+  }).strict().parse(input);
   const byId = new Map(evidence.map(({ id, text }) => [id, text]));
-  return { beats: wire.beats.map(({ fact_id, ...beat }, index) => {
-    const fact_used = byId.get(fact_id);
-    if (fact_used === undefined) {
-      throw new z.ZodError([{
-        code: z.ZodIssueCode.custom, path: ["beats", index, "fact_id"],
-        message: `Unknown fact_id: ${fact_id}`,
+  return { beats: [...wire.beats, wire.finish].map(({ fact_ids, ...beat }, index) => ({
+    ...beat,
+    facts_used: fact_ids.map((id, citation) => {
+      const text = byId.get(id);
+      if (text === undefined) throw new z.ZodError([{
+        code: "custom", path: ["beats", index, "fact_ids", citation], message: `Unknown fact_id: ${id}`,
       }]);
-    }
-    return { ...beat, fact_used };
-  }) };
+      return text;
+    }),
+  })) };
 }

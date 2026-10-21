@@ -3,11 +3,12 @@ import { logger } from "../src/lib/logger";
 
 export type FailureCheck = {
   check: "JSON_parse" | "Zod_schema" | "fact_used_not_in_evidence" |
-    "unknown_fact_id" | "outcome_winner_mismatch" | "provider_failure" | "text_consistency";
+    "unknown_fact_id" | "outcome_winner_mismatch" | "provider_failure" | "text_consistency" | "causal_grounding";
   path?: Array<string | number>;
   issues?: Array<{ path: Array<string | number>; message: string }>;
   fact_used?: string;
   fact_id?: string;
+  text?: string;
 };
 
 /** Inspect an already-rejected response; this never accepts or changes beats. */
@@ -17,7 +18,7 @@ export function failedChecks(error: unknown, parsed: unknown, evidence: string[]
   if (unknownIds.length) return unknownIds.map(({ path, message }) => ({
     check: "unknown_fact_id", path, fact_id: message.slice("Unknown fact_id: ".length),
   }));
-  const evidenceMessage = "Every fact_used must exactly cite supplied evidence.";
+  const evidenceMessage = "Every facts_used entry must exactly cite supplied evidence.";
   const structural = error.issues.filter((issue) => issue.message !== evidenceMessage);
   const checks: FailureCheck[] = structural.length ? [{
     check: "Zod_schema",
@@ -28,16 +29,26 @@ export function failedChecks(error: unknown, parsed: unknown, evidence: string[]
       Array.isArray(parsed.beats)) {
     const beats: unknown[] = parsed.beats;
     beats.forEach((beat, index) => {
-      if (typeof beat === "object" && beat !== null && "fact_used" in beat &&
-          typeof beat.fact_used === "string" && !evidence.includes(beat.fact_used)) {
-        checks.push({
-          check: "fact_used_not_in_evidence", path: ["beats", index, "fact_used"],
-          fact_used: beat.fact_used,
-        });
+      if (typeof beat === "object" && beat !== null && "facts_used" in beat && Array.isArray(beat.facts_used)) {
+        for (const fact of beat.facts_used) if (typeof fact === "string" && !evidence.includes(fact)) {
+          checks.push({ check: "fact_used_not_in_evidence", path: ["beats", index, "facts_used"], fact_used: fact });
+        }
       }
     });
   }
   return checks;
+}
+
+/** Add the offending beat text to diagnostics and corrective instructions. */
+export function withOffendingText(checks: FailureCheck[], parsed: unknown, raw: string | null): FailureCheck[] {
+  const wire = parsed as { beats?: Array<{ text?: unknown }>; finish?: { text?: unknown } } | null;
+  return checks.map((check) => {
+    const path = check.path ?? check.issues?.[0]?.path;
+    const index = path?.[0] === "beats" && typeof path[1] === "number" ? path[1] : undefined;
+    const text = index !== undefined ? (wire?.beats?.[index]?.text ?? wire?.finish?.text)
+      : path?.[0] === "finish" ? wire?.finish?.text : undefined;
+    return { ...check, text: check.text ?? (typeof text === "string" ? text : raw?.slice(0, 500) ?? undefined) };
+  });
 }
 
 /** Server-only: never include these diagnostic fields in an HTTP response. */

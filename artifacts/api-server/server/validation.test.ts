@@ -186,7 +186,9 @@ test("beats require selected names, valid actions, 5–8 beats and a sole final 
     beats.map((item) => ({ ...item, animal: "A" })),
     beats.map((item) => ({ ...item, action: "punch" })),
     beats.map((item) => ({ ...item, action: "retreat" })),
-    beats.map((item) => ({ ...item, fact_used: "" })),
+    beats.map((item) => ({ ...item, facts_used: [] })),
+    beats.map((item) => ({ ...item, facts_used: [""] })),
+    beats.map((item) => ({ ...item, facts_used: ["a", "b", "c", "d"] })),
     [{ ...beats[0], animal: null }, ...beats.slice(1)],
     [{ ...beats[0], action: "finish" }, ...beats.slice(1)],
   ]) assert.equal(beatsSchemaFor(a, b).safeParse(invalid).success, false);

@@ -16,12 +16,12 @@ export function fixtureResult(outcome: MatchupResult["outcome"]): MatchupResult 
 }
 
 export function fixtureBeats(a: Animal, finalAnimal: string | null): Beat[] {
-  const fact_used = JSON.stringify(fixtureFactor);
+  const facts_used = [JSON.stringify(fixtureFactor)];
   return [
     ...Array.from({ length: 4 }, (): Beat => ({
-      text: "Hypothetical fixture movement.", action: "approach", animal: a.name, fact_used,
+      text: "Hypothetical fixture movement.", action: "approach", animal: a.name, facts_used,
     })),
-    { text: "Fixture conclusion.", action: "finish", animal: finalAnimal, fact_used },
+    { text: "Fixture conclusion.", action: "finish", animal: finalAnimal, facts_used },
   ];
 }
 

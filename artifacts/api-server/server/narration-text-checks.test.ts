@@ -8,8 +8,8 @@ const a = animals[0]!;
 const b = animals[1]!;
 const favored = fixtureResult({ kind: "favored", animal: a.name });
 const even = fixtureResult({ kind: "even" });
-function check(text: string, fact_used = "Test-only evidence: 1", result = favored) {
-  const beat = { ...fixtureBeats(a, a.name)[0]!, text, fact_used };
+function check(text: string, fact = "Test-only evidence: 1", result = favored) {
+  const beat = { ...fixtureBeats(a, a.name)[0]!, text, facts_used: [fact] };
   return narrationTextChecks([beat], result, a, b);
 }
 
@@ -18,8 +18,8 @@ test("numbers must match this beat's evidence as whole numeric values", () => {
   assert.ok(check("It has mass 19 kg.", "Test-only evidence: 190 kg").length);
   assert.equal(check("Its mass is 1,500 kg.", "Test-only evidence: 1500 kg").length, 0);
   assert.equal(check("The ratio is 7.9 to 1.", "Test-only evidence: 7.9 to 1").length, 0);
-  assert.equal(check("Two hundred kilograms.", "Test-only evidence: 200 kg").length, 0);
-  assert.ok(check("Two animals engage.", "Test-only evidence: 190 kg").length);
+  assert.ok(check("Two hundred kilograms.", "Test-only evidence: 200 kg").length);
+  assert.equal(check("Two animals engage with one another.", "Test-only evidence: 190 kg").length, 0);
 });
 
 test("percent signs and percentage words are rejected even when their numbers are supported", () => {

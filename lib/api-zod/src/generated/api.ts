@@ -68,6 +68,8 @@ export const createFightResponseResultOutcomeFiveAnimalsMax = 2;
 
 
 
+export const createFightResponseBeatsItemFactsUsedMax = 3;
+
 export const createFightResponseBeatsMin = 0;
 export const createFightResponseBeatsMax = 8;
 
@@ -103,7 +105,7 @@ export const CreateFightResponse = zod.object({
   "text": zod.string().min(1),
   "action": zod.enum(['approach', 'charge', 'bite', 'dodge', 'grapple', 'retreat', 'finish']),
   "animal": zod.string().min(1).nullable().describe('Selected animal name; null only for the final even-matchup finish beat.'),
-  "fact_used": zod.string().min(1)
+  "facts_used": zod.array(zod.string().min(1)).min(1).max(createFightResponseBeatsItemFactsUsedMax)
 })).min(createFightResponseBeatsMin).max(createFightResponseBeatsMax),
   "explanation": zod.string().min(1).nullable()
 }).describe('Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.')

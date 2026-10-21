@@ -281,8 +281,12 @@ export interface Beat {
      * @nullable
      */
   animal: string | null;
-  /** @minLength 1 */
-  fact_used: string;
+  /**
+     * @minItems 1
+     * @maxItems 3
+     * @items.minLength 1
+     */
+  facts_used: string[];
 }
 
 /**
