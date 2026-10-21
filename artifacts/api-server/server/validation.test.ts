@@ -113,6 +113,8 @@ test("result validates strict outcome variants, selected names and evidence meta
   for (const outcome of [
     { kind: "favored", animal: a.name }, { kind: "favored", animal: b.name },
     { kind: "even" }, { kind: "indeterminate" }, { kind: "no_contest" },
+    { kind: "no_engagement", animals: [a.name] },
+    { kind: "no_engagement", animals: [a.name, b.name] },
   ]) {
     assert.equal(resultSchemaFor(a, b).safeParse({ ...result, outcome }).success, true);
   }
@@ -120,6 +122,8 @@ test("result validates strict outcome variants, selected names and evidence meta
     { kind: "favored", animal: "Unknown" }, { kind: "favored" },
     { kind: "even", animal: a.name }, { kind: "indeterminate", animal: a.name },
     { kind: "no_contest", extra: true }, { kind: "invented" },
+    { kind: "no_engagement", animals: [] }, { kind: "no_engagement", animals: ["Unknown"] },
+    { kind: "no_engagement", animals: [a.name, a.name] },
   ]) {
     assert.equal(resultSchemaFor(a, b).safeParse({ ...result, outcome }).success, false);
   }

@@ -140,7 +140,7 @@ export const getCreateFightUrl = () => {
 }
 
 /**
- * @summary Score and narrate a matchup (scoring intentionally unimplemented)
+ * @summary Score a v1 matchup and narrate eligible outcomes
  */
 export const createFight = async (fightInput: FightInput, options?: Parameters<typeof customFetch>[1]): Promise<FightResponse> => {
 
@@ -206,7 +206,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateFightMutationVariables = {data: BodyType<FightInput>}
 
     /**
- * @summary Score and narrate a matchup (scoring intentionally unimplemented)
+ * @summary Score a v1 matchup and narrate eligible outcomes
  */
 export const useCreateFight = <TError = ErrorType<ApiFailure>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFight>>, TError,CreateFightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

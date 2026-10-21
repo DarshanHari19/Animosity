@@ -10,7 +10,7 @@ export type MatchupResultEvidenceQuality = typeof MatchupResultEvidenceQuality[k
 
 
 export const MatchupResultEvidenceQuality = {
-  mostly_measured: 'mostly_measured',
+  mostly_higher_tier: 'mostly_higher_tier',
   mixed: 'mixed',
-  mostly_estimated: 'mostly_estimated',
+  mostly_lower_tier_or_unknown: 'mostly_lower_tier_or_unknown',
 } as const;

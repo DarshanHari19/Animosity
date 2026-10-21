@@ -40,12 +40,20 @@ export function createFightRouter(
       const result = output.data;
       const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
       const beats = narrated ? await narrate(result, a, b) : [];
-      const label = result.outcome.kind === "no_contest" ? "No contest" : "Indeterminate";
-      const reasons = result.factors.map((factor) => factor.reason.replace(/\s+/g, " ").trim()).join(" ");
-      const explanation = narrated ? null : [
-        `${label}.`,
-        reasons.trim() || "The engine supplied no additional explanation.",
-      ].join(" ");
+      let explanation: string | null = null;
+      const place = environment.replaceAll("_", " ");
+      if (result.outcome.kind === "no_engagement") {
+        explanation = result.outcome.animals.length === 2
+          ? "Both animals back off in this realistic encounter."
+          : `${result.outcome.animals[0]} backs off in this realistic encounter.`;
+      } else if (result.outcome.kind === "indeterminate") {
+        explanation = `Neither animal can function in ${place}; no numerical factors were scored.`;
+      } else if (result.outcome.kind === "no_contest") {
+        const unable = [a, b].filter((animal) => !animal.functions_in.includes(environment));
+        explanation = `No contest: ${unable.map((animal) => animal.name).join(" and ")} cannot function in ${place} in realistic mode.`;
+      } else if (result.deciding_factor === "environmental_advantage" && result.outcome.kind === "favored") {
+        explanation = `${result.outcome.animal} is favored because the other animal cannot function in ${place}; forced fight counts this environmental disadvantage.`;
+      }
       const response = fightResponseSchemaFor(a, b).safeParse({ result, beats, explanation });
       if (!response.success) {
         throw new FightError("INVALID_NARRATION", "Response does not match the selected animals and engine outcome.", 502);

@@ -3,12 +3,13 @@ import { test } from "node:test";
 import { animals } from "./animals";
 import { startFightServer, fixtureResult, fixtureBeats } from "./test-helpers";
 import type { EngineContext, MatchupResult } from "./schemas";
+import { scoreMatchup } from "./engine";
 
 const a = animals[0]!;
 const b = animals[1]!;
 const input = { animalA: a.name, animalB: b.name };
 
-test("HTTP boundary rejects unknown/invalid inputs and exposes the real stub", async (t) => {
+test("HTTP boundary rejects unknown/invalid requests and reports step 0 errors", async (t) => {
   const server = await startFightServer(t);
   const list = await (await server.getAnimals()).json() as unknown[];
   assert.equal(list.length, 7);
@@ -20,11 +21,14 @@ test("HTTP boundary rejects unknown/invalid inputs and exposes the real stub", a
     assert.equal(response.status, 400);
     assert.equal(typeof (await response.json() as { error: string }).error, "string");
   }
-  // Both distinct and identical selections reach the real engine, not a shortcut.
+  const invalidMass = { ...a, mass_kg: 0 };
+  const invalidServer = await startFightServer(t, scoreMatchup, undefined, [invalidMass, b]);
   for (const animalB of [b.name, a.name]) {
-    const response = await server.post({ ...input, animalB });
-    assert.equal(response.status, 501);
-    assert.equal((await response.json() as { code: string }).code, "SCORING_NOT_IMPLEMENTED");
+    const response = await invalidServer.post({ ...input, animalB });
+    assert.equal(response.status, 400);
+    const body = await response.json() as { code: string; error: string };
+    assert.equal(body.code, "INVALID_SCORING_INPUT");
+    assert.match(body.error, /Lion\.mass_kg/);
   }
 });
 
@@ -52,19 +56,19 @@ test("route forwards defaults and explicit context; identical inputs preserve en
   ]);
 });
 
-test("indeterminate and no_contest skip the narrator and return one-line explanations", async (t) => {
-  for (const kind of ["indeterminate", "no_contest"] as const) {
-    const result = fixtureResult({ kind });
-    result.factors[0]!.reason = "Fixture\nreason only";
+test("indeterminate, no_contest and no_engagement skip narration and explain the gate", async (t) => {
+  for (const kind of ["indeterminate", "no_contest", "no_engagement"] as const) {
+    const result = fixtureResult(kind === "no_engagement" ? { kind, animals: [a.name] } : { kind });
+    result.factors = [];
     const server = await startFightServer(t, () => result, async () => {
       assert.fail("Narrator must not be called");
     });
-    const response = await server.post(input);
+    const response = await server.post({ ...input, environment: "deep_water" });
     assert.equal(response.status, 200);
     const body = await response.json() as { result: MatchupResult; beats: unknown[]; explanation: string };
     assert.deepEqual(body.result, result);
     assert.deepEqual(body.beats, []);
-    assert.match(body.explanation, /Fixture reason only/);
+    assert.match(body.explanation, kind === "no_engagement" ? /Lion backs off/ : /cannot function|Neither animal can function/);
     assert.doesNotMatch(body.explanation, /[\r\n]/);
   }
 });
@@ -112,4 +116,15 @@ test("route rejects mismatched or malformed narration", async (t) => {
     assert.equal(response.status, 502);
     assert.equal((await response.json() as { code: string }).code, "INVALID_NARRATION");
   }
+});
+
+test("environmental favored results include an explanation without numerical factors", async (t) => {
+  const result = fixtureResult({ kind: "favored", animal: a.name });
+  result.deciding_factor = "environmental_advantage";
+  result.factors = [];
+  const server = await startFightServer(t, () => result, async () => fixtureBeats(a, a.name));
+  const response = await server.post({ ...input, mode: "forced_fight" });
+  assert.equal(response.status, 200);
+  const body = await response.json() as { explanation: string };
+  assert.match(body.explanation, /environmental disadvantage/);
 });

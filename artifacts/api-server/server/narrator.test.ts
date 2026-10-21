@@ -78,10 +78,11 @@ test("favored outcomes retry an incorrectly even narration", async () => {
   assert.equal(mock.calls.length, 2);
 });
 
-test("indeterminate and no_contest reject direct narration before provider access", async () => {
-  for (const kind of ["indeterminate", "no_contest"] as const) {
+test("indeterminate, no_contest and no_engagement reject direct narration before provider access", async () => {
+  for (const kind of ["indeterminate", "no_contest", "no_engagement"] as const) {
     const mock = mockProvider([]);
-    await assert.rejects(narrateMatchup(fixtureResult({ kind }), a, b, mock.options),
+    await assert.rejects(narrateMatchup(fixtureResult(kind === "no_engagement"
+      ? { kind, animals: [a.name] } : { kind }), a, b, mock.options),
       errorCode("NARRATION_NOT_APPLICABLE"));
     assert.equal(mock.calls.length, 0);
   }

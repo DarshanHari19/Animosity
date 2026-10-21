@@ -38,4 +38,6 @@ export * from './matchupResultEncounterLabel';
 export * from './matchupResultEvidenceQuality';
 export * from './noContestOutcome';
 export * from './noContestOutcomeKind';
+export * from './noEngagementOutcome';
+export * from './noEngagementOutcomeKind';
 export * from './outcome';

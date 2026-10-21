@@ -190,7 +190,24 @@ export interface NoContestOutcome {
   kind: NoContestOutcomeKind;
 }
 
-export type Outcome = FavoredOutcome | EvenOutcome | IndeterminateOutcome | NoContestOutcome;
+export type NoEngagementOutcomeKind = typeof NoEngagementOutcomeKind[keyof typeof NoEngagementOutcomeKind];
+
+
+export const NoEngagementOutcomeKind = {
+  no_engagement: 'no_engagement',
+} as const;
+
+export interface NoEngagementOutcome {
+  kind: NoEngagementOutcomeKind;
+  /**
+     * @minItems 1
+     * @maxItems 2
+     * @items.minLength 1
+     */
+  animals: string[];
+}
+
+export type Outcome = FavoredOutcome | EvenOutcome | IndeterminateOutcome | NoContestOutcome | NoEngagementOutcome;
 
 export interface Factor {
   /** @minLength 1 */
@@ -216,9 +233,9 @@ export type MatchupResultEvidenceQuality = typeof MatchupResultEvidenceQuality[k
 
 
 export const MatchupResultEvidenceQuality = {
-  mostly_measured: 'mostly_measured',
+  mostly_higher_tier: 'mostly_higher_tier',
   mixed: 'mixed',
-  mostly_estimated: 'mostly_estimated',
+  mostly_lower_tier_or_unknown: 'mostly_lower_tier_or_unknown',
 } as const;
 
 export type MatchupResultEncounterLabel = typeof MatchupResultEncounterLabel[keyof typeof MatchupResultEncounterLabel];
@@ -269,7 +286,7 @@ export interface Beat {
 }
 
 /**
- * Favored/even outcomes have 5–8 beats and a null explanation. Indeterminate/no_contest outcomes have no beats and a one-line explanation.
+ * Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.
  */
 export interface FightResponse {
   result: MatchupResult;

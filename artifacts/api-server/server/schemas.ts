@@ -30,6 +30,7 @@ export const OutcomeSchema = z.discriminatedUnion("kind", [
   rawResult.shape.outcome.options[1].strict(),
   rawResult.shape.outcome.options[2].strict(),
   rawResult.shape.outcome.options[3].strict(),
+  rawResult.shape.outcome.options[4].strict(),
 ]);
 export const ResultSchema = rawResult.extend({
   outcome: OutcomeSchema,
@@ -44,9 +45,18 @@ export type Beat = z.infer<typeof BeatSchema>;
 
 export function resultSchemaFor(a: Animal, b: Animal) {
   return ResultSchema.refine(
-    ({ outcome }) => outcome.kind !== "favored" ||
-      outcome.animal === a.name || outcome.animal === b.name,
-    { message: "Favored animal must be a selected animal name.", path: ["outcome", "animal"] },
+    ({ outcome }) => {
+      if (outcome.kind === "favored") return outcome.animal === a.name || outcome.animal === b.name;
+      if (outcome.kind !== "no_engagement") return true;
+      const remaining = [a.name, b.name];
+      return outcome.animals.every((name) => {
+        const index = remaining.indexOf(name);
+        if (index === -1) return false;
+        remaining.splice(index, 1);
+        return true;
+      });
+    },
+    { message: "Outcome animal identifiers must match the selected animals.", path: ["outcome"] },
   );
 }
 
@@ -82,11 +92,13 @@ export function fightResponseSchemaFor(a: Animal, b: Animal) {
     beats: z.array(BeatSchema).max(8),
   }).strict().superRefine(({ result, beats, explanation }, ctx) => {
     const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
+    const hasExplanation = typeof explanation === "string" &&
+      explanation.trim().length > 0 && !/[\r\n]/.test(explanation);
     const valid = narrated
-      ? explanation === null && beatsSchemaFor(a, b).safeParse(beats).success &&
+      ? (result.deciding_factor === "environmental_advantage" ? hasExplanation : explanation === null) &&
+        beatsSchemaFor(a, b).safeParse(beats).success &&
         narrationMatchesOutcome(result, beats)
-      : beats.length === 0 && typeof explanation === "string" &&
-        explanation.trim().length > 0 && !/[\r\n]/.test(explanation);
+      : beats.length === 0 && hasExplanation;
     if (!valid) ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Response must contain matching narration or a one-line explanation, according to its outcome.",

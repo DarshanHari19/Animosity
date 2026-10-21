@@ -9,7 +9,7 @@ import type { Beat } from './beat';
 import type { MatchupResult } from './matchupResult';
 
 /**
- * Favored/even outcomes have 5–8 beats and a null explanation. Indeterminate/no_contest outcomes have no beats and a one-line explanation.
+ * Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.
  */
 export interface FightResponse {
   result: MatchupResult;

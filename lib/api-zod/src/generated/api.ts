@@ -43,7 +43,7 @@ export const GetAnimalsResponse = zod.array(GetAnimalsResponseItem)
 
 
 /**
- * @summary Score and narrate a matchup (scoring intentionally unimplemented)
+ * @summary Score a v1 matchup and narrate eligible outcomes
  */
 
 
@@ -59,6 +59,9 @@ export const CreateFightBody = zod.object({
   "encounter": zod.enum(['face_off']).default(createFightBodyEncounterDefault)
 })
 
+
+
+export const createFightResponseResultOutcomeFiveAnimalsMax = 2;
 
 
 
@@ -82,9 +85,12 @@ export const CreateFightResponse = zod.object({
   "kind": zod.enum(['indeterminate'])
 }),zod.object({
   "kind": zod.enum(['no_contest'])
+}),zod.object({
+  "kind": zod.enum(['no_engagement']),
+  "animals": zod.array(zod.string().min(1)).min(1).max(createFightResponseResultOutcomeFiveAnimalsMax)
 })]),
   "deciding_factor": zod.union([zod.literal('fighting_ability'),zod.literal('environmental_advantage'),zod.literal('behavior'),zod.literal(null)]).nullable(),
-  "evidence_quality": zod.enum(['mostly_measured', 'mixed', 'mostly_estimated']),
+  "evidence_quality": zod.enum(['mostly_higher_tier', 'mixed', 'mostly_lower_tier_or_unknown']),
   "encounter_label": zod.enum(['hypothetical', 'ranges_overlap', 'documented']),
   "advantage_score": zod.number().nullable(),
   "factors": zod.array(zod.object({
@@ -100,7 +106,7 @@ export const CreateFightResponse = zod.object({
   "fact_used": zod.string().min(1)
 })).min(createFightResponseBeatsMin).max(createFightResponseBeatsMax),
   "explanation": zod.string().min(1).nullable()
-}).describe('Favored/even outcomes have 5–8 beats and a null explanation. Indeterminate/no_contest outcomes have no beats and a one-line explanation.')
+}).describe('Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.')
 
 
 /**

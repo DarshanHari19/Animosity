@@ -9,5 +9,6 @@ import type { EvenOutcome } from './evenOutcome';
 import type { FavoredOutcome } from './favoredOutcome';
 import type { IndeterminateOutcome } from './indeterminateOutcome';
 import type { NoContestOutcome } from './noContestOutcome';
+import type { NoEngagementOutcome } from './noEngagementOutcome';
 
-export type Outcome = FavoredOutcome | EvenOutcome | IndeterminateOutcome | NoContestOutcome;
+export type Outcome = FavoredOutcome | EvenOutcome | IndeterminateOutcome | NoContestOutcome | NoEngagementOutcome;

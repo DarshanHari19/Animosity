@@ -85,8 +85,8 @@ export default function Home() {
         <strong>Starter limitations</strong>
         <ul className="list-disc pl-5">
           <li>Seven adult-male trait profiles are loaded from user-provided data. Review field-level source notes and values before treating them as verified facts.</li>
-          <li>The scoring engine is not implemented; Fight returns a 501 "scoring-not-implemented" error until it is written.</li>
-          <li>No results are simulated. Favored/even outcomes receive narration; other outcomes receive an explanation.</li>
+          <li>v1 scores body mass and, where comparable, bite force only. These hypothetical results are not scientific predictions.</li>
+          <li>Favored/even outcomes require a configured narration provider; other outcomes receive an explanation without an LLM call.</li>
         </ul>
       </section>
 

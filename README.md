@@ -3,12 +3,12 @@
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
 No database, authentication, hit points, or game loop.
 
-**This is intentionally not a working scientific simulator yet.** The seven
+**This is a limited hypothetical model, not a scientific prediction.** The seven
 animal profiles and trait values were entered from user-provided data; their
 sources and measurements have not been independently verified. The scoring
-engine throws `SCORING_NOT_IMPLEMENTED` (HTTP 501). No fake results or fallback
-narration are substituted. A valid Fight request reaches that error before
-contacting an LLM.
+v1 engine scores body mass and, when source tiers match, bite force only.
+No fake results or fallback narration are substituted. Favored/even outcomes
+require a configured LLM provider; gate outcomes can return explanations without it.
 
 ## Run
 
@@ -52,10 +52,11 @@ The backend folder is **`artifacts/api-server/server/`**:
 - `functions_in` lists `land`, `shallow_water`, and/or `deep_water`. The
   supplied capability lists have tier-3 source entries marked `TODO: verify`;
   these are not established scientific findings.
-- `engine.ts`: implement `scoreMatchup(a, b, { environment, mode, encounter })`
-  yourself. The body is
-  deliberately a TODO and an explicit throw, not a hidden scoring formula.
-  Validate data readiness and source quality in your scoring implementation.
+- `engine.ts`: `scoreMatchup(a, b, { environment, mode, encounter })` implements
+  the exact v1 rules: validate inputs, check function, check realistic behavior,
+  then score mass and comparable bites. Both masses must be finite and positive
+  before any gate; comparable bites must also be finite and positive. Invalid
+  inputs return a named field error, never a fallback result.
 - `schemas.ts`: shared Zod-derived types used by the engine, narrator, and routes.
   Exact enums are defined by `lib/api-spec/openapi.yaml`; regenerate contract
   helpers after edits with `pnpm --filter @workspace/api-spec run codegen`.
@@ -63,24 +64,42 @@ The backend folder is **`artifacts/api-server/server/`**:
 Return the following structured result; the API validates it before use:
 
 - `outcome`: `{ kind: "favored", animal: "<exact selected name>" }`,
-  `{ kind: "even" }`, `{ kind: "indeterminate" }`, or `{ kind: "no_contest" }`.
-  Only `favored` includes `animal`.
+  `{ kind: "even" }`, `{ kind: "indeterminate" }`, `{ kind: "no_contest" }`,
+  or `{ kind: "no_engagement", animals: ["<animal that backs off>"] }`.
+  Only `favored` includes `animal`; `no_engagement` lists one or both animals.
 - `deciding_factor`: `fighting_ability`, `environmental_advantage`, `behavior`,
   or `null`.
-- `evidence_quality`: `mostly_measured`, `mixed`, or `mostly_estimated`.
+- `evidence_quality`: `mostly_higher_tier`, `mixed`, or
+  `mostly_lower_tier_or_unknown`. This describes source tiers, not measurement
+  quality or method comparability.
 - `encounter_label`: `hypothetical`, `ranges_overlap`, or `documented`.
 - `advantage_score`: a finite number or `null`, with no predefined bounds.
 - `factors`: an array of `{ name: string, value: number, reason: string }`,
   with finite numeric values.
 
-`server/engine.test.ts` contains **15 future scoring cases inside
-`describe.skip`**, with real assertions to enable after scoring is implemented.
-All use the normal HTTP route, including Lion vs Lion; only narration is mocked.
-Blue whale and African elephant are test-only fixtures with zero/null unknown
-measurements, never selectable production animals. The scenarios are requested
-expectations, not established scientific facts. Active tests separately confirm
-that the real engine still throws `SCORING_NOT_IMPLEMENTED`, and cover schemas,
-route behavior and mocked provider responses without requiring a key.
+The numerical score is
+`0.8 * (log2(massA) - log2(massB))`, plus
+`0.5 * (log2(biteA) - log2(biteB))` only when both bites and equal non-null
+source tiers are present. Otherwise the bite factor is zero. Cutoffs are
+`>= 0.5` for A favored, `<= -0.5` for B favored, and even otherwise; with bite
+excluded this requires roughly a 1.54x mass advantage. No other physical traits
+contribute. Matching tiers do not establish that measurement methods match, and
+bites are not compared against defenses.
+
+Function gates run before realistic behavior gates, and gates have no numerical
+score. Forced fight skips retreat behavior. Source quality counts only the fields
+consulted at each stage: function always, behavior fields when checked, mass when
+scored, and bites only when compared. Missing tiers count as lower-tier; a tier-1/2
+share at least two-thirds is mostly higher-tier, at most one-third mostly lower-tier
+or unknown, and otherwise mixed. Encounter labels are always hypothetical.
+
+`server/engine.test.ts` enables all 15 route scenarios, including Lion vs Lion,
+and adds a swap-order check for each. Only narration is mocked. Blue whale and
+African elephant remain test-only fixtures with zero/null unknown measurements,
+never selectable production animals. Their zero masses now fail Step 0 even on
+environment-gated matchups; positive fixture masses must be supplied, not invented.
+The scenario expectations are not established scientific findings. Additional
+tests cover exact scoring rules, validation, routes and mocked provider responses.
 
 ## Configure narration
 
@@ -110,7 +129,8 @@ The prompt forbids invented facts and requires text to agree with that evidence.
 Zod validates structure and evidence references; it cannot prove natural-language
 claims are scientifically true. Review sources and narration before relying on it.
 
-Only `favored` and `even` outcomes call the narrator. The final beat must have
+Only `favored` and `even` outcomes call the narrator. `no_engagement` never does.
+The final beat must have
 `action: "finish"` and identify the favored animal, or no animal (`null`) for
 an even matchup. The narrator explicitly checks this; a mismatched outcome
 receives **one** corrective retry. Another mismatch returns an error. Invalid JSON/schema,
@@ -129,8 +149,10 @@ errors without fabricated fallback content or exposed provider details.
   null context fields and unexpected fields are rejected.
 - Success returns `{ result, beats, explanation }`. Favored/even results have
   5–8 beats and a null explanation. Indeterminate/no-contest results have an
-  empty beats array and a one-line explanation derived from the engine factors,
-  without contacting an LLM.
+  empty beats array and a one-line explanation of the applicable gate,
+  without contacting an LLM. This also applies to no-engagement outcomes.
+  Environmental favored results retain narration and include an explanation
+  on the result card instead of the numerical scoring-scope note.
 - The page is in `artifacts/fight-club/src/pages/home.tsx`. A successful response
   reveals the first narrated beat immediately, then one every 1.5 seconds. Both SVG
   figures have explicit poses for the seven actions. The end card follows the
@@ -138,5 +160,5 @@ errors without fabricated fallback content or exposed provider details.
   playback timer. Even finishes do not show either figure defeated. The mode
   caption reads “Forced fight: no retreat; environmental disadvantages count.”
   There is no encounter picker yet. Playback timers are cleared on restart and unmount, and late responses
-  are ignored. Until scoring is implemented, successful live playback is
-  intentionally unavailable.
+  are ignored. Numerical results show the v1 scoring-scope note; gate results
+  show explanations. Favored/even live playback requires a configured provider.

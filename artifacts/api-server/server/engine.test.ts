@@ -1,18 +1,42 @@
 import assert from "node:assert/strict";
-import { describe, test } from "node:test";
+import { describe, test, type TestContext } from "node:test";
 import { animals } from "./animals";
 import { scoreMatchup } from "./engine";
 import { FightError } from "./errors";
 import { AnimalSchema, type Animal, type EngineContext, type MatchupResult } from "./schemas";
 import { startFightServer, fixtureBeats } from "./test-helpers";
 
-test("engine remains an explicit stub in every environment and mode", () => {
-  for (const environment of ["land", "shallow_water", "deep_water"] as const) {
-    for (const mode of ["realistic", "forced_fight"] as const) {
+test("step 0 rejects invalid mass for either animal before any gate", () => {
+  for (const value of [0, -1, NaN, Infinity, -Infinity]) {
+    for (const index of [0, 1]) {
+      const pair = [animals[0]!, animals[1]!];
+      const bad = { ...pair[index]!, mass_kg: value, functions_in: [] };
+      pair[index] = bad;
+      for (const mode of ["realistic", "forced_fight"] as const) {
+        assert.throws(
+          () => scoreMatchup(pair[0]!, pair[1]!, { environment: "deep_water", mode, encounter: "face_off" }),
+          (error: unknown) => error instanceof FightError && error.status === 400 &&
+            error.code === "INVALID_SCORING_INPUT" &&
+            error.message.includes(`${bad.name}.mass_kg`),
+        );
+      }
+    }
+  }
+});
+
+test("step 0 rejects invalid comparable bites before an environment gate", () => {
+  for (const value of [0, -1, NaN, Infinity, -Infinity]) {
+    for (const index of [0, 1]) {
+      const pair = [animals[0]!, {
+        ...animals[1]!, bite_force_n: 100,
+        field_sources: { bite_force_n: { tier: 2 as const, ref: "Test fixture" } },
+      }];
+      const bad = { ...pair[index]!, bite_force_n: value, functions_in: [] };
+      pair[index] = bad;
       assert.throws(
-        () => scoreMatchup(animals[0]!, animals[1]!, { environment, mode, encounter: "face_off" }),
-        (error: unknown) => error instanceof FightError &&
-          error.code === "SCORING_NOT_IMPLEMENTED" && error.status === 501,
+        () => scoreMatchup(pair[0]!, pair[1]!, { environment: "land", mode: "realistic", encounter: "face_off" }),
+        (error: unknown) => error instanceof FightError && error.code === "INVALID_SCORING_INPUT" &&
+          error.message.includes(`${bad.name}.bite_force_n`),
       );
     }
   }
@@ -62,7 +86,7 @@ const scenarios: Scenario[] = [
     expected: { kind: "favored", animal: "Rhinoceros" }, deciding: "fighting_ability" },
   { title: "8. Gorilla vs Grizzly: realistic behavior", a: "Gorilla", b: "Grizzly bear",
     context: { environment: "land", mode: "realistic" },
-    expected: { kind: "even" }, deciding: "behavior" },
+    expected: { kind: "no_engagement", animals: ["Gorilla"] }, deciding: "behavior" },
   // TODO: Tune the forced fight; either Grizzly favored or even is acceptable.
   { title: "9. Gorilla vs Grizzly: forced tuning", a: "Gorilla", b: "Grizzly bear",
     context: { environment: "land", mode: "forced_fight" },
@@ -84,9 +108,7 @@ const scenarios: Scenario[] = [
     context: { environment: "land", mode: "forced_fight" }, expected: { kind: "indeterminate" } },
 ];
 
-test("future suite defines exactly 15 valid route scenarios", () => {
-  // Node skips a describe.skip body entirely, so its reporter does not list the
-  // child tests. Verify their definitions here without running any scoring.
+test("suite defines exactly 15 route scenarios", () => {
   assert.equal(scenarios.length, 15);
   scenarios.forEach((scenario, index) => {
     assert.ok(scenario.title.startsWith(`${index + 1}. `));
@@ -95,20 +117,32 @@ test("future suite defines exactly 15 valid route scenarios", () => {
   });
 });
 
-// Requested expectations, not established scientific findings. Un-skip after
-// implementing scoring. Every case (including 11) exercises the HTTP route,
+// Requested expectations, not established scientific findings.
+// Every case (including 11) exercises the HTTP route,
 // real engine and result validation; only external narration is mocked.
-describe.skip("Future scoring methodology", () => {
+async function runScenario(t: TestContext, scenario: Scenario, swapped = false): Promise<MatchupResult> {
+  const server = await startFightServer(t, scoreMatchup, async (result, a) =>
+    fixtureBeats(a, result.outcome.kind === "favored" ? result.outcome.animal : null),
+  catalog);
+  const response = await server.post({
+    animalA: swapped ? scenario.b : scenario.a,
+    animalB: swapped ? scenario.a : scenario.b, ...scenario.context,
+  });
+  const body = await response.json() as { result: MatchupResult; error?: string };
+  assert.equal(response.status, 200, body.error);
+  return body.result;
+}
+
+function canonicalOutcome(outcome: MatchupResult["outcome"]) {
+  return outcome.kind === "no_engagement"
+    ? { kind: outcome.kind, animals: [...new Set(outcome.animals)].sort() }
+    : outcome;
+}
+
+describe("Scoring methodology", () => {
   for (const scenario of scenarios) {
     test(scenario.title, async (t) => {
-      const server = await startFightServer(t, scoreMatchup, async (result, a) =>
-        fixtureBeats(a, result.outcome.kind === "favored" ? result.outcome.animal : null),
-      catalog);
-      const response = await server.post({
-        animalA: scenario.a, animalB: scenario.b, ...scenario.context,
-      });
-      assert.equal(response.status, 200);
-      const { result } = await response.json() as { result: MatchupResult };
+      const result = await runScenario(t, scenario);
       if (scenario.expected.kind === "tuning") {
         assert.ok(result.outcome.kind === "even" ||
           (result.outcome.kind === "favored" && result.outcome.animal === scenario.expected.animal));
@@ -116,6 +150,18 @@ describe.skip("Future scoring methodology", () => {
         assert.deepEqual(result.outcome, scenario.expected);
       }
       if (scenario.deciding !== undefined) assert.equal(result.deciding_factor, scenario.deciding);
+    });
+    test(`${scenario.title} (swapped order)`, async (t) => {
+      const swapped = await runScenario(t, scenario, true);
+      const forward = await runScenario(t, scenario);
+      assert.deepEqual(canonicalOutcome(swapped.outcome), canonicalOutcome(forward.outcome));
+      assert.equal(swapped.advantage_score, forward.advantage_score === null
+        ? null : forward.advantage_score === 0 ? 0 : -forward.advantage_score);
+      assert.equal(swapped.factors.length, forward.factors.length);
+      forward.factors.forEach((factor, index) => {
+        assert.equal(swapped.factors[index]!.name, factor.name);
+        assert.equal(swapped.factors[index]!.value, factor.value === 0 ? 0 : -factor.value);
+      });
     });
   }
 });

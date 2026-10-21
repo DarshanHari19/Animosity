@@ -8,10 +8,12 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 - Use the user-provided seven animal records in `traits.json`. Do not replace or
   silently alter their values; remind users that sources and measurements need
   independent review before being treated as scientific facts.
-- The user will implement scoring. Preserve the throwing engine stub unless
-  explicitly asked to implement it. Never add production mock scores or narration.
+- The user explicitly authorized the v1 scoring rules. Score only mass and
+  comparable bites, with the specified function and behavior gates. Do not
+  add weights or physical factors. Never add production mock scores or narration.
 - Use structured outcomes: `favored` with an exact selected animal name,
-  `even`, `indeterminate`, or `no_contest`. Never add probability-based results.
+  `even`, `indeterminate`, `no_contest`, or `no_engagement` with the names that
+  back off. Never add probability-based results.
 - Narrate only favored/even outcomes. A final finish beat identifies the favored
   animal or has a null animal for even; other outcomes use explanations.
 - Identical selections are allowed in both API and UI and use the normal
@@ -30,7 +32,7 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 ## Locations
 
 - API contract: `lib/api-spec/openapi.yaml`
-- Traits, schemas, engine stub, narrator and focused tests: `artifacts/api-server/server/`
+- Traits, schemas, scoring engine, narrator and focused tests: `artifacts/api-server/server/`
 - Express entry: `artifacts/api-server/src/`
 - React page and SVG poses: `artifacts/fight-club/src/`
 
