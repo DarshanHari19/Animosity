@@ -5,6 +5,7 @@ import {
 } from "./schemas";
 import { FightError } from "./errors";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
+import { failedChecks, logNarrationFailure, type FailureCheck } from "./narration-diagnostics";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -56,8 +57,12 @@ export async function narrateMatchup(
   } catch {
     throw new FightError("LLM_CONFIGURATION", "The managed Anthropic integration URL is invalid.", 503);
   }
+  const providerDiagnostics: Array<{ checks: FailureCheck[]; rawModelText: string | null }> = [];
   const provider = options.fetch ? null : createAnthropicProvider({
     apiKey, baseURL: url.toString(), model,
+    onInvalidResponse: (checks, rawModelText) => {
+      providerDiagnostics.push({ checks, rawModelText });
+    },
   });
 
   // fact_used must cite an exact engine factor or a supplied trait with a
@@ -113,6 +118,10 @@ export async function narrateMatchup(
   ];
 
   for (let attempt = 0; attempt < 2; attempt++) {
+    providerDiagnostics.length = 0;
+    const diagnosticContext = {
+      animals: [a.name, b.name], model, attempt: attempt + 1, expectedOutcome: result.outcome,
+    };
     let response: Response;
     try {
       // Preserve the normalized test transport and the narrator's existing
@@ -125,22 +134,35 @@ export async function narrateMatchup(
         redirect: "error",
       }) : await provider!(messages);
     } catch (error) {
+      const providerDiagnostic = providerDiagnostics.at(-1);
+      logNarrationFailure(diagnosticContext,
+        providerDiagnostic?.checks ?? [{ check: "provider_failure" }],
+        providerDiagnostic?.rawModelText ?? null);
       if (error instanceof FightError) throw error;
       // Do not echo provider errors, headers, URLs, or bodies: they may contain secrets.
       throw new FightError("LLM_PROVIDER_FAILURE", "Narration provider request failed or timed out.", 502);
     }
     if (!response.ok) {
+      logNarrationFailure(diagnosticContext, [{ check: "provider_failure" }], null);
       throw new FightError("LLM_PROVIDER_FAILURE", `Narration provider returned HTTP ${response.status}.`, 502);
     }
     let envelope: z.infer<typeof envelopeSchema>;
+    let rawModelText: string | null = null;
+    let parsed: unknown;
     try {
       const provider = ProviderResponseSchema.parse(await response.json());
-      envelope = envelopeSchema.parse(JSON.parse(provider.choices[0]!.message.content));
-    } catch {
+      rawModelText = provider.choices[0]!.message.content;
+      parsed = JSON.parse(rawModelText);
+      envelope = envelopeSchema.parse(parsed);
+    } catch (error) {
+      logNarrationFailure(diagnosticContext, failedChecks(error, parsed, evidence), rawModelText);
       throw new FightError("INVALID_NARRATION", "Narration provider returned invalid JSON, an invalid beat schema, or unsupported evidence.", 502);
     }
     // Verify the narrated outcome explicitly, after structural/evidence checks.
     if (narrationMatchesOutcome(result, envelope.beats)) return envelope.beats;
+    logNarrationFailure(diagnosticContext, [{
+      check: "outcome_winner_mismatch", path: ["beats", envelope.beats.length - 1, "animal"],
+    }], rawModelText);
     if (attempt === 0) {
       messages.push({
         role: "user",
