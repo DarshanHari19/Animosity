@@ -42,19 +42,20 @@ test("step 0 rejects invalid comparable bites before an environment gate", () =>
   }
 });
 
-// Only functions_in is specified for these fixtures. Other values are
-// nonfactual test scaffolding, including zero/null numerical unknowns.
+// The 2 kg Blue whale and 1 kg African elephant masses are synthetic,
+// test-only values, NOT real measurements. Different masses catch accidental
+// numerical scoring in gated outcomes. Other zero/null values are unknowns.
 // These animals must never be added to the production selectable catalog.
-function fixtureAnimal(name: string, functions_in: Animal["functions_in"]): Animal {
+function fixtureAnimal(name: string, mass_kg: number, functions_in: Animal["functions_in"]): Animal {
   return AnimalSchema.parse({
-    name, profile: "adult_male", mass_kg: 0, length_m: 0, top_speed_kmh: 0,
+    name, profile: "adult_male", mass_kg, length_m: 0, top_speed_kmh: 0,
     primary_weapon: "strike", bite_force_n: null, armor: "none",
     temperament: "avoids", fighting_style: "bluff", functions_in,
     field_sources: { functions_in: { tier: 3, ref: "TODO: verify" } },
   });
 }
-const whale = fixtureAnimal("Blue whale", ["deep_water"]);
-const elephant = fixtureAnimal("African elephant", ["land", "shallow_water"]);
+const whale = fixtureAnimal("Blue whale", 2, ["deep_water"]);
+const elephant = fixtureAnimal("African elephant", 1, ["land", "shallow_water"]);
 const catalog = [...animals, whale, elephant];
 
 type Scenario = {
@@ -130,6 +131,16 @@ async function runScenario(t: TestContext, scenario: Scenario, swapped = false):
   });
   const body = await response.json() as { result: MatchupResult; error?: string };
   assert.equal(response.status, 200, body.error);
+  // This helper runs for both original and swapped requests for every case.
+  // Use the expected gate, so accidentally scoring that gate cannot evade this check.
+  if (["no_contest", "indeterminate", "no_engagement"].includes(scenario.expected.kind) ||
+      scenario.deciding === "environmental_advantage") {
+    assert.deepEqual(
+      { advantage_score: body.result.advantage_score, factors: body.result.factors },
+      { advantage_score: null, factors: [] },
+      "Gated outcomes must have no numerical score or factors in either order.",
+    );
+  }
   return body.result;
 }
 

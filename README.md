@@ -98,9 +98,11 @@ or unknown, and otherwise mixed. Encounter labels are always hypothetical.
 
 `server/engine.test.ts` enables all 15 route scenarios, including Lion vs Lion,
 and adds a swap-order check for each. Only narration is mocked. Blue whale and
-African elephant remain test-only fixtures with zero/null unknown measurements,
-never selectable production animals. Their zero masses now fail Step 0 even on
-environment-gated matchups; positive fixture masses must be supplied, not invented.
+African elephant remain test-only fixtures, never selectable production animals.
+Their masses are explicitly synthetic: 2 kg for Blue whale and 1 kg for African
+elephant, not real measurements. The differing masses help catch accidental
+numerical scoring at gates; every gated route case asserts a null score and no
+factors in both orders. Other zero/null fixture values remain unknowns.
 The scenario expectations are not established scientific findings. Additional
 tests cover exact scoring rules, validation, routes and mocked provider responses.
 

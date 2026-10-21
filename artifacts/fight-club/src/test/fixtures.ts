@@ -24,7 +24,7 @@ export function resultFixture(outcome: MatchupResult["outcome"] = {
   return {
     outcome,
     deciding_factor: "environmental_advantage",
-    evidence_quality: "mostly_estimated",
+    evidence_quality: "mostly_lower_tier_or_unknown",
     encounter_label: "ranges_overlap",
     advantage_score: null,
     factors: [
@@ -38,7 +38,7 @@ export function responseFixture(
   outcome: MatchupResult["outcome"] = { kind: "favored", animal: "Lion" },
 ): FightResponse {
   const result = resultFixture(outcome);
-  if (outcome.kind === "indeterminate" || outcome.kind === "no_contest") {
+  if (outcome.kind === "indeterminate" || outcome.kind === "no_contest" || outcome.kind === "no_engagement") {
     return {
       result,
       beats: [],

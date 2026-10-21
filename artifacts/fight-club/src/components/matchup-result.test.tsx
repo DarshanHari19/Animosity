@@ -11,7 +11,7 @@ describe("MatchupResultCard", () => {
     expect(Array.from(card.children, (child) => child.textContent)).toEqual([
       "Lion favored",
       "Deciding factor: environmental advantage",
-      "Evidence quality: mostly estimated",
+      "Evidence quality: Mostly lower-tier or unknown sources",
       "Encounter: ranges overlap",
       "Assumes adult males",
       "Fixture explanation.",
@@ -35,6 +35,8 @@ describe("MatchupResultCard", () => {
     [{ kind: "even" }, "Even matchup"],
     [{ kind: "indeterminate" }, "Indeterminate"],
     [{ kind: "no_contest" }, "No contest"],
+    [{ kind: "no_engagement", animals: ["Gorilla"] }, "No fight: Gorilla backs off"],
+    [{ kind: "no_engagement", animals: ["Lion", "Grizzly bear"] }, "No fight: both animals back off"],
   ];
   it.each(outcomes)("labels %j without probabilities or a substitute winner", (outcome, label) => {
     render(<MatchupResultCard result={resultFixture(outcome)} explanation={null} />);
@@ -53,7 +55,7 @@ describe("MatchupResultCard", () => {
     };
     render(<MatchupResultCard result={result} explanation={null} />);
     expect(Array.from(screen.getByTestId("card-result").children, (child) => child.textContent)).toEqual([
-      "Even matchup", "Deciding factor: None", "Evidence quality: mixed",
+      "Even matchup", "Deciding factor: None", "Evidence quality: Mixed sources",
       "Encounter: hypothetical", "Assumes adult males",
     ]);
     expect(screen.queryByText("Factors:")).not.toBeInTheDocument();

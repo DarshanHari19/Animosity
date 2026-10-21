@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { expect } from "expect";
 import { animals } from "./animals";
 import { scoreMatchup } from "./engine";
 import type { Animal, EngineContext } from "./schemas";
@@ -23,10 +24,10 @@ test("v1 uses exactly the specified log2 mass and comparable bite factors", () =
   const a = animal("A", { mass_kg: 400, bite_force_n: 1600 });
   const b = animal("B", { mass_kg: 100, bite_force_n: 400 });
   const result = scoreMatchup(a, b, forced);
-  assert.deepEqual(result.factors.map(({ name, value }) => ({ name, value })), [
-    { name: "Size", value: 1.6 }, { name: "Bite force", value: 1 },
-  ]);
-  assert.equal(result.advantage_score, 2.6);
+  assert.deepEqual(result.factors.map(({ name }) => name), ["Size", "Bite force"]);
+  expect(result.factors[0]!.value).toBeCloseTo(1.6, 12);
+  expect(result.factors[1]!.value).toBeCloseTo(1, 12);
+  expect(result.advantage_score).toBeCloseTo(2.6, 12);
   assert.deepEqual(result.outcome, { kind: "favored", animal: "A" });
   assert.equal(result.deciding_factor, "fighting_ability");
   assert.equal(result.encounter_label, "hypothetical");
