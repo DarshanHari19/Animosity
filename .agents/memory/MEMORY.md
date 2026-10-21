@@ -1,0 +1,1 @@
+- [Identical animal selections](identical-selections.md) — identical animals are valid API/UI inputs; use the normal route and preserve the engine outcome.
