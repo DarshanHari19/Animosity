@@ -4,8 +4,11 @@ A minimal React + Vite page and Node + Express TypeScript API, with Zod validati
 No database, authentication, hit points, or game loop.
 
 **This is a limited hypothetical model, not a scientific prediction.** The seven
-animal profiles and trait values were entered from user-provided data; their
-sources and measurements have not been independently verified. The scoring
+animal profiles and trait values were entered from user-provided data. The
+`functions_in` references have been reviewed against zoological sources, with
+uncertainties recorded; other trait sources and numerical measurements have not
+been independently verified or changed. Habitat evidence does not validate
+fighting ability or the model's binary environment gates. The scoring
 v1 engine scores body mass and, when source tiers match, bite force only.
 No fake results or fallback narration are substituted. Favored/even outcomes
 require a configured LLM provider; gate outcomes can return explanations without it.
@@ -52,9 +55,11 @@ The backend folder is **`artifacts/api-server/server/`**:
 - `profile` is `adult_male` or `adult_female`; the starter records use
   `adult_male`. `fighting_style` is one of `ambush`, `sustained`, `bluff`,
   `grapple`, or `charge`. The result card states “Assumes adult males.”
-- `functions_in` lists `land`, `shallow_water`, and/or `deep_water`. The
-  supplied capability lists have tier-3 source entries marked `TODO: verify`;
-  these are not established scientific findings.
+- `functions_in` lists `land`, `shallow_water`, and/or `deep_water`. All seven
+  supplied lists are retained, but their references now distinguish reviewed
+  habitat/locomotion evidence from unresolved model assumptions. See the
+  functions_in review in [SOURCES.md](SOURCES.md); these are not established
+  fighting capabilities. [METHODOLOGY.md](METHODOLOGY.md) defines the engine rules.
 - `engine.ts`: `scoreMatchup(a, b, { environment, mode, encounter })` implements
   the exact v1 rules: validate inputs, check function, check realistic behavior,
   then score mass and comparable bites. Both masses must be finite and positive
@@ -128,7 +133,8 @@ The provider must return `{ "beats": [...] }` with 5–8 beats, each containing
 have null actors, and only the final beat may use `finish`. `fact_used` must
 exactly copy an evidence string: an engine factor serialized with
 `JSON.stringify({ name, value, reason })` in that field order, or a supplied,
-sourced trait reference. Zero/null numeric traits, tier-null entries, empty
+sourced trait reference. `functions_in` is excluded from narrator evidence
+regardless of tier. Zero/null numeric traits, tier-null entries, empty
 references and `TODO` references are excluded from trait evidence.
 The prompt forbids invented facts and requires text to agree with that evidence.
 Zod validates structure and evidence references; it cannot prove natural-language

@@ -23,7 +23,7 @@ test("traits include all seven user-provided animals and their supplied values",
     armor: "none", temperament: "aggressive", fighting_style: "ambush",
     functions_in: ["land"],
     field_sources: {
-      functions_in: { tier: 3, ref: "TODO: verify" },
+      functions_in: a.field_sources.functions_in!,
       mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
       length_m: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
       top_speed_kmh: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
@@ -41,9 +41,42 @@ test("traits include all seven user-provided animals and their supplied values",
     ["land"], ["land", "shallow_water"], ["shallow_water", "deep_water"],
     ["land", "shallow_water"],
   ]);
-  for (const animal of animals) {
-    assert.deepEqual(animal.field_sources.functions_in, { tier: 3, ref: "TODO: verify" });
-  }
+  assert.deepEqual(
+    animals.map(({ mass_kg, length_m, top_speed_kmh, bite_force_n }) =>
+      [mass_kg, length_m, top_speed_kmh, bite_force_n]),
+    [
+      [190, 2.5, 80, 5500], [270, 2.0, 56, null], [450, 5.0, 29, 16400],
+      [180, 1.7, 40, null], [1500, 3.5, 30, null], [750, 3.8, 40, null],
+      [2300, 3.8, 50, null],
+    ],
+    "Source review must not silently change the supplied measurements",
+  );
+});
+
+test("capability sources distinguish reviewed habitat evidence from unresolved model lists", () => {
+  const expected = [
+    { tier: null, urls: ["https://www.sfzoo.org/african-lion/", "https://pmc.ncbi.nlm.nih.gov/articles/PMC11236087/"] },
+    { tier: null, urls: [
+      "https://www.nps.gov/katm/learn/photosmultimedia/brown-bear-frequently-asked-questions.htm",
+      "https://www.nps.gov/katm/learn/nature/natscimamm.htm",
+    ] },
+    { tier: 3, urls: ["https://australian.museum/learn/animals/reptiles/estuarine-crocodile/"] },
+    { tier: null, urls: ["https://denverzoo.org/animals/western-lowland-gorilla/", "https://pmc.ncbi.nlm.nih.gov/articles/PMC1236726/"] },
+    { tier: 3, urls: ["https://animals.sandiegozoo.org/animals/hippo"] },
+    { tier: 3, urls: [
+      "https://www.aquariumofpacific.org/onlinelearningcenter/species/great_white_shark",
+      "https://www.montereybayaquarium.org/animals-the-ocean/animals-a-to-z/white-shark",
+    ] },
+    { tier: null, urls: ["https://www.marylandzoo.org/animal/southern-white-rhinoceros/"] },
+  ];
+  animals.forEach((animal, index) => {
+    const source = animal.field_sources.functions_in!;
+    const reviewed = expected[index]!;
+    assert.equal(source.tier, reviewed.tier, animal.name);
+    for (const url of reviewed.urls) {
+      assert.ok(source.ref.includes(url), `${animal.name}: ${url}`);
+    }
+  });
 });
 
 test("animal validation uses exact enums and nonnegative nullable numeric fields", () => {

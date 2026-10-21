@@ -100,6 +100,53 @@ test("sourced trait evidence is accepted; unknown values and TODO references are
   assert.equal(payload.evidence.some((item) => item.includes("TODO")), false);
 });
 
+test("TODO references remain excluded even with a non-null source tier", async () => {
+  const pending = {
+    ...a,
+    field_sources: {
+      ...a.field_sources,
+      mass_kg: { tier: 3 as const, ref: "TODO: verify measurement" },
+    },
+  };
+  const mock = mockProvider([provider(beatsFor(a.name))]);
+  await narrateMatchup(result, pending, b, mock.options);
+  const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: string[] };
+  assert.equal(payload.evidence.some((fact) => fact.includes(`${a.name}.mass_kg`)), false);
+  assert.equal(payload.evidence.some((fact) => /\bTODO\b/i.test(fact)), false);
+
+  const unverifiedFact = `${a.name}.mass_kg = ${a.mass_kg} [tier 3; ${pending.field_sources.mass_kg.ref}]`;
+  const unsupported = mockProvider([provider(beatsFor(a.name).map((beat) => ({
+    ...beat, fact_used: unverifiedFact,
+  })))]);
+  await assert.rejects(narrateMatchup(result, pending, b, unsupported.options), errorCode("INVALID_NARRATION"));
+});
+
+test("functions_in is never accepted as trait evidence, regardless of tier", async () => {
+  for (const tier of [1, 2, 3, null] as const) {
+    const ref = "Test-only capability reference";
+    const subject = {
+      ...a,
+      field_sources: {
+        ...a.field_sources,
+        functions_in: { tier, ref },
+      },
+    };
+    const mock = mockProvider([provider(beatsFor(a.name))]);
+    await narrateMatchup(result, subject, b, mock.options);
+    const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: string[] };
+    assert.equal(payload.evidence.some((fact) => fact.includes(".functions_in")), false);
+
+    const excludedFact = `${a.name}.functions_in = ${JSON.stringify(a.functions_in)} [tier ${tier}; ${ref}]`;
+    const unsupported = mockProvider([provider(beatsFor(a.name).map((beat) => ({
+      ...beat, fact_used: excludedFact,
+    })))]);
+    await assert.rejects(
+      narrateMatchup(result, subject, b, unsupported.options),
+      errorCode("INVALID_NARRATION"),
+    );
+  }
+});
+
 test("invalid JSON, provider envelope, beat schema and evidence fail clearly", async () => {
   const base = beatsFor(a.name);
   const invalidResponses = [

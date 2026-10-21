@@ -4,6 +4,9 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 
 ## Scope rules
 
+- `SOURCES.md` and `METHODOLOGY.md` are the source of truth for source tiers and
+  engine rules. Do not redefine tiers or change supplied capability lists;
+  `functions_in` is model-gating metadata, never narrator evidence.
 - User explicitly wants no database, auth, hit points, game loop, or styling beyond basic layout.
 - Use the user-provided seven animal records in `traits.json`. Do not replace or
   silently alter their values; remind users that sources and measurements need
