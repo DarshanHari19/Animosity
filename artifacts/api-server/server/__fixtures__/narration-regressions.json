@@ -1,0 +1,1262 @@
+{
+  "description": "Exact model outputs recovered from server diagnostics on 2026-10-21. Verdicts apply after structural migration to the new wire format, preserving original text, actors, and citation identity (without adding citations). Removed evidence must not silently acquire a new identity. These are test-only model responses, never production narration or scoring.",
+  "cases": [
+    {
+      "name": "Lion vs Grizzly bear attempt 1",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Lion",
+        "Grizzly bear"
+      ],
+      "attempt": 1,
+      "expected_outcome": {
+        "kind": "even"
+      },
+      "recorded_checks": [
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            2,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                2,
+                "text"
+              ],
+              "message": "Number 56 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            5,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                5,
+                "text"
+              ],
+              "message": "Number 1 is absent from this beat's fact_used."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "In this hypothetical encounter, the Lion opens by closing distance, drawing on its ambush style against the Grizzly bear.",
+            "action": "approach",
+            "animal": "Lion",
+            "fact_id": "E3"
+          },
+          {
+            "text": "The Grizzly bear, defensive and built for grappling, holds its ground as the Lion comes in.",
+            "action": "grapple",
+            "animal": "Grizzly bear",
+            "fact_id": "E7"
+          },
+          {
+            "text": "The Lion's top speed of 80 km/h gives it a rush, while the Grizzly's top speed of 56 km/h limits how quickly it can respond.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_id": "E5"
+          },
+          {
+            "text": "The Grizzly bear outweighs the Lion by roughly 1.4 to 1, a size edge that weighs against the Lion in this matchup.",
+            "action": "dodge",
+            "animal": "Grizzly bear",
+            "fact_id": "E1"
+          },
+          {
+            "text": "The Lion's bite is a notable weapon, with a bite force value of 5500 N drawn from a tier 2 source, but the bite-force comparison could not be made against the Grizzly bear because its value is missing.",
+            "action": "bite",
+            "animal": "Lion",
+            "fact_id": "E6"
+          },
+          {
+            "text": "Neither animal gains a decisive advantage: the size edge and the Lion's speed and bite roughly offset one another, and the evidence is largely lower-tier or unknown.",
+            "action": "finish",
+            "animal": null,
+            "fact_id": "E2"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":-0.4055679909759071,\"reason\":\"Grizzly bear outweighs Lion about 1.4 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E4",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E5",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E6",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        },
+        {
+          "id": "E7",
+          "text": "Grizzly bear.mass_kg = 270 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E8",
+          "text": "Grizzly bear.length_m = 2 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E9",
+          "text": "Grizzly bear.top_speed_kmh = 56 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "citations",
+          "wording",
+          "causal_grounding"
+        ]
+      }
+    },
+    {
+      "name": "Lion vs Grizzly bear attempt 2",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Lion",
+        "Grizzly bear"
+      ],
+      "attempt": 2,
+      "expected_outcome": {
+        "kind": "even"
+      },
+      "recorded_checks": [
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            1,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                1,
+                "text"
+              ],
+              "message": "Number 80 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            4,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                4,
+                "text"
+              ],
+              "message": "Number 2 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            6,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                6,
+                "text"
+              ],
+              "message": "Number 270 is absent from this beat's fact_used."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "The Lion waits in ambush while the Grizzly bear, at 270 kg, holds the greater mass in this hypothetical matchup.",
+            "action": "approach",
+            "animal": "Lion",
+            "fact_id": "E7"
+          },
+          {
+            "text": "The Lion's top speed of 80 km/h gives it a rapid opening charge, though the Grizzly bear's own top speed of 56 km/h keeps it in the contest.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_id": "E9"
+          },
+          {
+            "text": "The Lion's bite force is recorded at 5500 N from a tier 2 source, a strong weapon, but it cannot be compared directly against the Grizzly bear's missing value.",
+            "action": "bite",
+            "animal": "Lion",
+            "fact_id": "E6"
+          },
+          {
+            "text": "The Grizzly bear's size advantage shows in the scoring, but the margin is not decisive enough to name a winner.",
+            "action": "grapple",
+            "animal": "Grizzly bear",
+            "fact_id": "E1"
+          },
+          {
+            "text": "The Lion's length of 2.5 m and the Grizzly bear's length of 2 m leave the two animals closely matched on body dimensions.",
+            "action": "dodge",
+            "animal": "Lion",
+            "fact_id": "E4"
+          },
+          {
+            "text": "Bite force was not compared because the values lack matching source tiers, so the engine records no deciding factor.",
+            "action": "retreat",
+            "animal": "Grizzly bear",
+            "fact_id": "E2"
+          },
+          {
+            "text": "The Grizzly bear's length of 2 m and mass of 270 kg were set against the Lion's profile, and neither side gained a decisive edge; the encounter ends without a winner.",
+            "action": "finish",
+            "animal": null,
+            "fact_id": "E8"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":-0.4055679909759071,\"reason\":\"Grizzly bear outweighs Lion about 1.4 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E4",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E5",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E6",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        },
+        {
+          "id": "E7",
+          "text": "Grizzly bear.mass_kg = 270 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E8",
+          "text": "Grizzly bear.length_m = 2 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E9",
+          "text": "Grizzly bear.top_speed_kmh = 56 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "citations",
+          "wording"
+        ]
+      }
+    },
+    {
+      "name": "Lion vs Lion attempt 1",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Lion",
+        "Lion"
+      ],
+      "attempt": 1,
+      "expected_outcome": {
+        "kind": "even"
+      },
+      "recorded_checks": [
+        {
+          "check": "Zod_schema",
+          "issues": [
+            {
+              "path": [
+                "beats",
+                0
+              ],
+              "message": "Only the final beat must finish; only that beat may have a null animal."
+            },
+            {
+              "path": [
+                "beats",
+                1
+              ],
+              "message": "Only the final beat must finish; only that beat may have a null animal."
+            },
+            {
+              "path": [
+                "beats",
+                2
+              ],
+              "message": "Only the final beat must finish; only that beat may have a null animal."
+            },
+            {
+              "path": [
+                "beats",
+                3
+              ],
+              "message": "Only the final beat must finish; only that beat may have a null animal."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "Two adult male lions meet in a hypothetical matchup. Both are listed at 190 kg, so the engine finds no size advantage on either side.",
+            "action": "approach",
+            "animal": null,
+            "fact_id": "E1"
+          },
+          {
+            "text": "Both lions carry the same supplied bite force of 5500 N, with the bite listed as their primary weapon. The engine notes this compares bites to bites, not bites against defenses.",
+            "action": "charge",
+            "animal": null,
+            "fact_id": "E2"
+          },
+          {
+            "text": "Each lion is listed at 2.5 m in length and a top speed of 80 km/h, so neither gains a speed or reach advantage in this model.",
+            "action": "dodge",
+            "animal": null,
+            "fact_id": "E4"
+          },
+          {
+            "text": "Both bite forces are recorded at tier 2 and both profiles are equally matched, so the exchange stays locked with neither lion gaining ground.",
+            "action": "grapple",
+            "animal": null,
+            "fact_id": "E6"
+          },
+          {
+            "text": "Neither lion can break the stalemate under the supplied factors, and the engine records no winner. The encounter ends evenly.",
+            "action": "finish",
+            "animal": null,
+            "fact_id": "E5"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":0,\"reason\":\"Lion and Lion have equal supplied body mass.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Lion: 5500 N; Lion: 5500 N. Matching source tiers do not guarantee matching measurement methods; this compares bites to bites, not bites against defenses.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E4",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E5",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E6",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        },
+        {
+          "id": "E7",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E8",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E9",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E10",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "actors",
+          "citations",
+          "wording"
+        ]
+      }
+    },
+    {
+      "name": "Lion vs Lion attempt 2",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Lion",
+        "Lion"
+      ],
+      "attempt": 2,
+      "expected_outcome": {
+        "kind": "even"
+      },
+      "recorded_checks": [
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            0,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                0,
+                "text"
+              ],
+              "message": "Number 2 is absent from this beat's fact_used."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "Two adult male lions circle each other in a hypothetical encounter, each weighing the same supplied body mass of 190 kg.",
+            "action": "approach",
+            "animal": "Lion",
+            "fact_id": "E3"
+          },
+          {
+            "text": "Both lions carry matching supplied body lengths of 2.5 m, so neither gains a size edge from the data.",
+            "action": "approach",
+            "animal": "Lion",
+            "fact_id": "E4"
+          },
+          {
+            "text": "The first lion closes in with a supplied top speed of 80 km/h, matching the other lion's supplied speed.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_id": "E5"
+          },
+          {
+            "text": "The second lion meets the charge with the same supplied top speed, and neither can outrun the other on the data.",
+            "action": "dodge",
+            "animal": "Lion",
+            "fact_id": "E9"
+          },
+          {
+            "text": "Both lions have an identical supplied bite force of 5500 N, though this compares bite to bite, not bite against a defense.",
+            "action": "bite",
+            "animal": "Lion",
+            "fact_id": "E6"
+          },
+          {
+            "text": "Neither lion holds a decisive advantage in size or bite force, so the engine records no winner for this hypothetical matchup.",
+            "action": "retreat",
+            "animal": "Lion",
+            "fact_id": "E2"
+          },
+          {
+            "text": "The encounter ends evenly: the engine's factor comparison yields no advantage score for either lion.",
+            "action": "finish",
+            "animal": null,
+            "fact_id": "E1"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":0,\"reason\":\"Lion and Lion have equal supplied body mass.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Lion: 5500 N; Lion: 5500 N. Matching source tiers do not guarantee matching measurement methods; this compares bites to bites, not bites against defenses.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E4",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E5",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E6",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        },
+        {
+          "id": "E7",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E8",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E9",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E10",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "accept",
+        "rule_families": []
+      }
+    },
+    {
+      "name": "Hippopotamus vs Lion attempt 1",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Hippopotamus",
+        "Lion"
+      ],
+      "attempt": 1,
+      "expected_outcome": {
+        "kind": "favored",
+        "animal": "Hippopotamus"
+      },
+      "recorded_checks": [
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            1,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                1,
+                "text"
+              ],
+              "message": "Number 190 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            2,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                2,
+                "text"
+              ],
+              "message": "Number 2.5 is absent from this beat's fact_used."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "In this hypothetical matchup, the Hippopotamus and the Lion meet on open ground, and the engine's assessment begins with size, where the Hippopotamus holds a clear advantage.",
+            "action": "approach",
+            "animal": "Hippopotamus",
+            "fact_id": "E1"
+          },
+          {
+            "text": "The Hippopotamus is far heavier, at 1500 kg against the Lion's 190 kg, a mass gap that shapes how the encounter unfolds.",
+            "action": "approach",
+            "animal": "Hippopotamus",
+            "fact_id": "E3"
+          },
+          {
+            "text": "The Lion, at 2.5 m long and capable of 80 km/h, relies on speed and an ambush style to close distance quickly.",
+            "action": "dodge",
+            "animal": "Lion",
+            "fact_id": "E8"
+          },
+          {
+            "text": "The Hippopotamus, with a top speed of 30 km/h and an aggressive charging style, drives forward to meet the attack head-on.",
+            "action": "charge",
+            "animal": "Hippopotamus",
+            "fact_id": "E5"
+          },
+          {
+            "text": "Bite force could not be compared, since the Hippopotamus value lacks a usable source, so the bite exchange does not settle the contest.",
+            "action": "bite",
+            "animal": "Lion",
+            "fact_id": "E2"
+          },
+          {
+            "text": "Ultimately the size advantage carried the encounter, and the Hippopotamus is favored to prevail in this hypothetical contest.",
+            "action": "finish",
+            "animal": "Hippopotamus",
+            "fact_id": "E1"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":2.3847129416418364,\"reason\":\"Hippopotamus outweighs Lion about 7.9 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Hippopotamus.mass_kg = 1500 [tier 3; https://en.wikipedia.org/wiki/Hippopotamus]"
+        },
+        {
+          "id": "E4",
+          "text": "Hippopotamus.length_m = 3.5 [tier 3; https://en.wikipedia.org/wiki/Hippopotamus]"
+        },
+        {
+          "id": "E5",
+          "text": "Hippopotamus.top_speed_kmh = 30 [tier 3; https://en.wikipedia.org/wiki/Hippopotamus]"
+        },
+        {
+          "id": "E6",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E7",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E8",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E9",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "citations",
+          "wording"
+        ]
+      }
+    },
+    {
+      "name": "Saltwater crocodile vs Lion attempt 1",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Saltwater crocodile",
+        "Lion"
+      ],
+      "attempt": 1,
+      "expected_outcome": {
+        "kind": "favored",
+        "animal": "Saltwater crocodile"
+      },
+      "recorded_checks": [
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            1,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                1,
+                "text"
+              ],
+              "message": "Number 190 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            2,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                2,
+                "text"
+              ],
+              "message": "Number 5 is absent from this beat's fact_used."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "In this hypothetical matchup, the Lion closes distance quickly, its top speed listed at 80 km/h.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_id": "E9"
+          },
+          {
+            "text": "The Saltwater crocodile sets an ambush and holds its ground, a bulk of 450 kg against the Lion's 190 kg.",
+            "action": "approach",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E3"
+          },
+          {
+            "text": "The Lion's frame is noticeably smaller, at about 2.5 m in length, next to the crocodile's roughly 5 m.",
+            "action": "dodge",
+            "animal": "Lion",
+            "fact_id": "E8"
+          },
+          {
+            "text": "The crocodile's bite is the decisive weapon, with a recorded bite force of 16400 N.",
+            "action": "bite",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E6"
+          },
+          {
+            "text": "The Lion's bite is far weaker by comparison, so its attacks cannot match the crocodile's grip.",
+            "action": "bite",
+            "animal": "Lion",
+            "fact_id": "E10"
+          },
+          {
+            "text": "The engine's size advantage, about 2.4 to 1 in the crocodile's favor, carried the encounter.",
+            "action": "grapple",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E1"
+          },
+          {
+            "text": "The Saltwater crocodile prevails in this hypothetical encounter on fighting ability, with evidence mostly lower-tier.",
+            "action": "finish",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E1"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":0.9951404663088717,\"reason\":\"Saltwater crocodile outweighs Lion about 2.4 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Saltwater crocodile.mass_kg = 450 [tier 3; https://en.wikipedia.org/wiki/Saltwater_crocodile]"
+        },
+        {
+          "id": "E4",
+          "text": "Saltwater crocodile.length_m = 5 [tier 3; https://en.wikipedia.org/wiki/Saltwater_crocodile]"
+        },
+        {
+          "id": "E5",
+          "text": "Saltwater crocodile.top_speed_kmh = 29 [tier 3; https://en.wikipedia.org/wiki/Saltwater_crocodile (short burst only)]"
+        },
+        {
+          "id": "E6",
+          "text": "Saltwater crocodile.bite_force_n = 16400 [tier 1; Erickson et al. 2012, PLoS ONE, doi:10.1371/journal.pone.0031781]"
+        },
+        {
+          "id": "E7",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E8",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E9",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E10",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "citations",
+          "wording",
+          "causal_grounding"
+        ]
+      }
+    },
+    {
+      "name": "Saltwater crocodile vs Lion attempt 2",
+      "environment": "land",
+      "mode": "realistic",
+      "animals": [
+        "Saltwater crocodile",
+        "Lion"
+      ],
+      "attempt": 2,
+      "expected_outcome": {
+        "kind": "favored",
+        "animal": "Saltwater crocodile"
+      },
+      "recorded_checks": [
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            1,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                1,
+                "text"
+              ],
+              "message": "Number 2 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            2,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                2,
+                "text"
+              ],
+              "message": "Number 2.5 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            3,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                3,
+                "text"
+              ],
+              "message": "Number 29 is absent from this beat's fact_used."
+            }
+          ]
+        },
+        {
+          "check": "text_consistency",
+          "path": [
+            "beats",
+            4,
+            "text"
+          ],
+          "issues": [
+            {
+              "path": [
+                "beats",
+                4,
+                "text"
+              ],
+              "message": "Number 2 is absent from this beat's fact_used."
+            },
+            {
+              "path": [
+                "beats",
+                4,
+                "text"
+              ],
+              "message": "Number 5500 is absent from this beat's fact_used."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "In this hypothetical encounter, the Saltwater crocodile approaches as the heavier combatant, carrying a mass figure of 450 kg against the Lion's build.",
+            "action": "approach",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E3"
+          },
+          {
+            "text": "The Lion weighs 190 kg and stands as the lighter of the two, so the size gap shapes the early exchange.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_id": "E7"
+          },
+          {
+            "text": "At about 5 m long, the crocodile holds a clear length advantage over the Lion's 2.5 m frame.",
+            "action": "approach",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E4"
+          },
+          {
+            "text": "The Lion's short-burst top speed of 80 km/h gives it quickness, though the crocodile's burst speed of 29 km/h is not the deciding factor here.",
+            "action": "dodge",
+            "animal": "Lion",
+            "fact_id": "E9"
+          },
+          {
+            "text": "The crocodile's bite force of 16400 N is a tier 1 measurement, far above the Lion's tier 2 estimate of 5500 N, and it drives the bite exchange.",
+            "action": "bite",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E6"
+          },
+          {
+            "text": "The Lion's bite force of 5500 N is only a tier 2 estimate, so its bite offers less certain power in the close fight.",
+            "action": "bite",
+            "animal": "Lion",
+            "fact_id": "E10"
+          },
+          {
+            "text": "Weighing size, bite power, and fighting ability together, the Saltwater crocodile prevails as the favored animal in this hypothetical matchup.",
+            "action": "finish",
+            "animal": "Saltwater crocodile",
+            "fact_id": "E1"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":0.9951404663088717,\"reason\":\"Saltwater crocodile outweighs Lion about 2.4 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Saltwater crocodile.mass_kg = 450 [tier 3; https://en.wikipedia.org/wiki/Saltwater_crocodile]"
+        },
+        {
+          "id": "E4",
+          "text": "Saltwater crocodile.length_m = 5 [tier 3; https://en.wikipedia.org/wiki/Saltwater_crocodile]"
+        },
+        {
+          "id": "E5",
+          "text": "Saltwater crocodile.top_speed_kmh = 29 [tier 3; https://en.wikipedia.org/wiki/Saltwater_crocodile (short burst only)]"
+        },
+        {
+          "id": "E6",
+          "text": "Saltwater crocodile.bite_force_n = 16400 [tier 1; Erickson et al. 2012, PLoS ONE, doi:10.1371/journal.pone.0031781]"
+        },
+        {
+          "id": "E7",
+          "text": "Lion.mass_kg = 190 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E8",
+          "text": "Lion.length_m = 2.5 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E9",
+          "text": "Lion.top_speed_kmh = 80 [tier 3; https://en.wikipedia.org/wiki/Lion]"
+        },
+        {
+          "id": "E10",
+          "text": "Lion.bite_force_n = 5500 [tier 2; Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "citations",
+          "wording",
+          "causal_grounding"
+        ]
+      }
+    },
+    {
+      "name": "Gorilla vs Grizzly bear attempt 1",
+      "environment": "land",
+      "mode": "forced_fight",
+      "animals": [
+        "Gorilla",
+        "Grizzly bear"
+      ],
+      "attempt": 1,
+      "expected_outcome": {
+        "kind": "even"
+      },
+      "recorded_checks": [
+        {
+          "check": "Zod_schema",
+          "issues": [
+            {
+              "path": [
+                "beats",
+                4
+              ],
+              "message": "Only the final beat must finish; only that beat may have a null animal."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "A hypothetical matchup begins: a Gorilla and a Grizzly bear circle each other on land, both adult males with no shared history to guide them.",
+            "action": "approach",
+            "animal": "Gorilla",
+            "fact_id": "E3"
+          },
+          {
+            "text": "The Grizzly bear closes distance, drawing on its heavier build; it outweighs the Gorilla by roughly 1.5 to 1.",
+            "action": "charge",
+            "animal": "Grizzly bear",
+            "fact_id": "E6"
+          },
+          {
+            "text": "The Gorilla's reach and length are comparable to the bear's, so neither side can establish a clean advantage on frame alone.",
+            "action": "dodge",
+            "animal": "Gorilla",
+            "fact_id": "E4"
+          },
+          {
+            "text": "The bear's top speed of 56 km/h is faster than the Gorilla's 40 km/h, but the gap does not produce a decisive opening in this encounter.",
+            "action": "approach",
+            "animal": "Grizzly bear",
+            "fact_id": "E8"
+          },
+          {
+            "text": "Bite force could not be compared, since its values are unsourced, so that factor is left out of the contest entirely.",
+            "action": "grapple",
+            "animal": null,
+            "fact_id": "E2"
+          },
+          {
+            "text": "The size factor favors the bear slightly, but the overall assessment remains within the margin of uncertainty and the encounter ends without a winner.",
+            "action": "finish",
+            "animal": null,
+            "fact_id": "E1"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":-0.4679700005769256,\"reason\":\"Grizzly bear outweighs Gorilla about 1.5 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Gorilla.mass_kg = 180 [tier 3; https://en.wikipedia.org/wiki/Gorilla]"
+        },
+        {
+          "id": "E4",
+          "text": "Gorilla.length_m = 1.7 [tier 3; https://en.wikipedia.org/wiki/Gorilla]"
+        },
+        {
+          "id": "E5",
+          "text": "Gorilla.top_speed_kmh = 40 [tier 3; https://en.wikipedia.org/wiki/Gorilla]"
+        },
+        {
+          "id": "E6",
+          "text": "Grizzly bear.mass_kg = 270 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E7",
+          "text": "Grizzly bear.length_m = 2 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E8",
+          "text": "Grizzly bear.top_speed_kmh = 56 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "actors",
+          "citations",
+          "wording",
+          "even_finish_advantage"
+        ]
+      }
+    },
+    {
+      "name": "Gorilla vs Grizzly bear attempt 2",
+      "environment": "land",
+      "mode": "forced_fight",
+      "animals": [
+        "Gorilla",
+        "Grizzly bear"
+      ],
+      "attempt": 2,
+      "expected_outcome": {
+        "kind": "even"
+      },
+      "recorded_checks": [
+        {
+          "check": "Zod_schema",
+          "issues": [
+            {
+              "path": [
+                "beats",
+                4
+              ],
+              "message": "Only the final beat must finish; only that beat may have a null animal."
+            }
+          ]
+        }
+      ],
+      "raw_output": {
+        "beats": [
+          {
+            "text": "The hypothetical encounter opens with a Gorilla and a Grizzly bear sizing each other up on land, with the Gorilla's bluff-based style and the Grizzly's defensive grappling approach setting the tone.",
+            "action": "approach",
+            "animal": "Gorilla",
+            "fact_id": "E3"
+          },
+          {
+            "text": "The Grizzly bear is the heavier of the two, with a mass figure that places it well above the Gorilla's.",
+            "action": "approach",
+            "animal": "Grizzly bear",
+            "fact_id": "E6"
+          },
+          {
+            "text": "The Gorilla's top speed gives it a quick burst to close distance, though its frame is lighter and shorter in the comparison.",
+            "action": "charge",
+            "animal": "Gorilla",
+            "fact_id": "E5"
+          },
+          {
+            "text": "The Grizzly bear's greater length and mass weigh against the Gorilla in the size comparison, pushing the balance toward the bear's side.",
+            "action": "grapple",
+            "animal": "Grizzly bear",
+            "fact_id": "E1"
+          },
+          {
+            "text": "Bite force could not be compared because the available values are missing or come from different source tiers, so that factor contributes nothing to the outcome.",
+            "action": "dodge",
+            "animal": null,
+            "fact_id": "E2"
+          },
+          {
+            "text": "The Grizzly bear's top speed and length are both recorded, but the Gorilla's strength in the bluff-and-strike style keeps the exchange from breaking decisively either way.",
+            "action": "retreat",
+            "animal": "Gorilla",
+            "fact_id": "E8"
+          },
+          {
+            "text": "The engine finds the encounter evenly matched, with no decisive factor separating the two animals in this hypothetical.",
+            "action": "finish",
+            "animal": null,
+            "fact_id": "E1"
+          }
+        ]
+      },
+      "recorded_evidence": [
+        {
+          "id": "E1",
+          "text": "{\"name\":\"Size\",\"value\":-0.4679700005769256,\"reason\":\"Grizzly bear outweighs Gorilla about 1.5 to 1.\"}"
+        },
+        {
+          "id": "E2",
+          "text": "{\"name\":\"Bite force\",\"value\":0,\"reason\":\"Not compared: bite-force values are missing or have different source tiers.\"}"
+        },
+        {
+          "id": "E3",
+          "text": "Gorilla.mass_kg = 180 [tier 3; https://en.wikipedia.org/wiki/Gorilla]"
+        },
+        {
+          "id": "E4",
+          "text": "Gorilla.length_m = 1.7 [tier 3; https://en.wikipedia.org/wiki/Gorilla]"
+        },
+        {
+          "id": "E5",
+          "text": "Gorilla.top_speed_kmh = 40 [tier 3; https://en.wikipedia.org/wiki/Gorilla]"
+        },
+        {
+          "id": "E6",
+          "text": "Grizzly bear.mass_kg = 270 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E7",
+          "text": "Grizzly bear.length_m = 2 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        },
+        {
+          "id": "E8",
+          "text": "Grizzly bear.top_speed_kmh = 56 [tier 3; https://en.wikipedia.org/wiki/Grizzly_bear]"
+        }
+      ],
+      "expected_under_new_rules": {
+        "verdict": "reject",
+        "rule_families": [
+          "actors",
+          "citations",
+          "wording",
+          "causal_grounding"
+        ]
+      }
+    }
+  ]
+}

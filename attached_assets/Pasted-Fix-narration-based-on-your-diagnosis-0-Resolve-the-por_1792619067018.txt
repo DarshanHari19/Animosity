@@ -1,0 +1,19 @@
+Fix narration based on your diagnosis.
+
+0. Resolve the "port already in use" startup failure so the managed workflow serves the current code. Confirm the live server matches the latest checkpoint before any live test.
+
+1. Regression fixtures first: add the exact failing outputs you logged (Lion vs Grizzly bear, Lion vs Lion, Hippopotamus vs Lion attempt 1, Saltwater crocodile vs Lion, Gorilla vs Grizzly bear) as test fixtures, each with its expected verdict under the rules below. Write these before changing code.
+
+2. Actors, enforced in the tool schema: split the wire format into non-final beats (animal required, enum of the two fighters, not nullable) and one finish beat (favored animal, or null for even). Map back to the existing public beats array.
+
+3. Citations: a beat cites 1 to 3 evidence IDs. Every digit-number in beat text must appear in at least one cited item. Public API: replace fact_used with facts_used: string[]; update OpenAPI, generated types, and UI.
+
+4. Wording: spelled-out numbers other than "one" and "two" are rejected, so measurements must be digits. Beats may not mention source tiers, sources, missing data, or excluded comparisons.
+
+5. Causal grounding: tag each evidence item "scored" (engine factors that ran) or "context" (sourced traits the engine didn't score). Prompt rule: only scored items may be presented as a reason for the outcome; context is description only. For favored outcomes, the finish beat must cite at least one scored item. For even, the finish beat may not credit any advantage. Remove from narration evidence any trait the engine excluded from a comparison (for example, bite force when tiers differ).
+
+6. State the actor, citation, wording, and causal rules explicitly in the prompt. The retry message names the failed check and the offending text.
+
+Approved: protocol-shape and contract test updates for steps 2 and 3, same conditions as before (every guarantee still checked; give me a per-test list of old assertion, new assertion, guarantee kept). Don't change engine.ts, traits.json, METHODOLOGY.md, SOURCES.md, or engine test expectations. Stop and report if anything needs them.
+
+7. Run all tests, then live: Lion vs Lion, Hippopotamus vs Lion, Saltwater crocodile vs Lion, Lion vs Grizzly bear (all land, realistic), Gorilla vs Grizzly bear (land, forced fight), Gorilla vs Gorilla (land, realistic). Report each attempt: pass or fail and the failed check. Paste the full beats of every fight that passes.
