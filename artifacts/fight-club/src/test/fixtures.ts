@@ -1,0 +1,75 @@
+import type {
+  Animal, Beat, FightResponse, MatchupResult,
+} from "@workspace/api-client-react";
+
+// Fictional test-only data. Never import this module into the app or scorer.
+export const animals: Animal[] = ["Lion", "Grizzly bear"].map((name) => ({
+  name,
+  profile: "adult_male",
+  mass_kg: 0,
+  length_m: 0,
+  top_speed_kmh: 0,
+  primary_weapon: "bite",
+  bite_force_n: null,
+  armor: "none",
+  temperament: "defensive",
+  fighting_style: "grapple",
+  functions_in: ["land"],
+  field_sources: {},
+}));
+
+export function resultFixture(outcome: MatchupResult["outcome"] = {
+  kind: "favored", animal: "Lion",
+}): MatchupResult {
+  return {
+    outcome,
+    deciding_factor: "environmental_advantage",
+    evidence_quality: "mostly_estimated",
+    encounter_label: "ranges_overlap",
+    advantage_score: null,
+    factors: [
+      { name: "Fixture factor", value: 1, reason: "Fictional fixture reason only." },
+      { name: "Second fixture", value: -1, reason: "Another fictional reason." },
+    ],
+  };
+}
+
+export function responseFixture(
+  outcome: MatchupResult["outcome"] = { kind: "favored", animal: "Lion" },
+): FightResponse {
+  const result = resultFixture(outcome);
+  if (outcome.kind === "indeterminate" || outcome.kind === "no_contest") {
+    return {
+      result,
+      beats: [],
+      explanation: `${outcome.kind}: Fictional fixture reason only.`,
+    };
+  }
+  const fact_used = JSON.stringify(result.factors[0]);
+  const actions: Beat["action"][] = ["approach", "charge", "dodge", "grapple", "finish"];
+  return {
+    result,
+    beats: actions.map((action, i) => ({
+      action,
+      animal: action === "finish"
+        ? outcome.kind === "favored" ? outcome.animal : null
+        : i % 2 === 0 ? "Lion" : "Grizzly bear",
+      text: `Fictional beat ${i + 1}.`,
+      fact_used,
+    })),
+    explanation: null,
+  };
+}
+
+export function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
+}
+
+export function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status, headers: { "Content-Type": "application/json" },
+  });
+}

@@ -1,0 +1,1 @@
+- [DOM test dependency compatibility](dom-test-dependencies.md) — package installs may accept unsupported Node engines; check runtime compatibility before upgrading.

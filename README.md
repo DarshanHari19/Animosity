@@ -30,10 +30,13 @@ Replit already provides that routing; no custom Vite proxy is needed there.
 ```sh
 pnpm run typecheck
 pnpm --filter @workspace/api-server test
+pnpm --filter @workspace/fight-club test
 ```
 
 Tests use fictional fixtures and mocked LLM responses only. They do not call
 an LLM, require a key, or replace scoring in production.
+Frontend regression tests use test-only HTTP responses with the real API hooks
+and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`.
 
 ## Fill in the science
 
