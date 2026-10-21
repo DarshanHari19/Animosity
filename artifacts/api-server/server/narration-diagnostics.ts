@@ -3,15 +3,20 @@ import { logger } from "../src/lib/logger";
 
 export type FailureCheck = {
   check: "JSON_parse" | "Zod_schema" | "fact_used_not_in_evidence" |
-    "outcome_winner_mismatch" | "provider_failure";
+    "unknown_fact_id" | "outcome_winner_mismatch" | "provider_failure" | "text_consistency";
   path?: Array<string | number>;
   issues?: Array<{ path: Array<string | number>; message: string }>;
   fact_used?: string;
+  fact_id?: string;
 };
 
 /** Inspect an already-rejected response; this never accepts or changes beats. */
 export function failedChecks(error: unknown, parsed: unknown, evidence: string[]): FailureCheck[] {
   if (!(error instanceof z.ZodError)) return [{ check: "JSON_parse" }];
+  const unknownIds = error.issues.filter(({ message }) => message.startsWith("Unknown fact_id: "));
+  if (unknownIds.length) return unknownIds.map(({ path, message }) => ({
+    check: "unknown_fact_id", path, fact_id: message.slice("Unknown fact_id: ".length),
+  }));
   const evidenceMessage = "Every fact_used must exactly cite supplied evidence.";
   const structural = error.issues.filter((issue) => issue.message !== evidenceMessage);
   const checks: FailureCheck[] = structural.length ? [{

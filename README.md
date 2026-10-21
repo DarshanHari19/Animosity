@@ -1,4 +1,4 @@
-# Fight Club
+# Animosity
 
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
 No database, authentication, hit points, or game loop.
@@ -125,13 +125,17 @@ to your Replit credits.
   with an instruction to enable the Anthropic AI integration, not to add a key.
 - Legacy `LLM_API_KEY`, `LLM_API_URL`, and `LLM_MODEL` are no longer read.
 
-The provider adapter converts Anthropic text blocks into the narrator's
-existing internal response envelope. The beat schema, evidence filtering,
-`fact_used` checks, error codes, and single corrective retry are unchanged.
+The backend assigns stable fight-local IDs (`E1`, `E2`, …) to the filtered
+evidence and sends `{id,text}` items. Anthropic must call exactly one forced
+`submit_narration` tool whose schema limits `fact_id` to those IDs. Free text
+is not accepted as a fallback. The server resolves each ID to the exact evidence
+text before returning the existing public `fact_used` field; IDs never reach
+the UI. Zod and the existing outcome checks remain the final authority.
 SDK automatic retries are disabled so they cannot add hidden attempts.
 
-The provider must return `{ "beats": [...] }` with 5–8 beats, each containing
-`text`, `action`, `animal`, and `fact_used`. Actions are exactly `approach`,
+The tool input must contain `{ "beats": [...] }` with 5–8 beats, each containing
+`text`, `action`, `animal`, and `fact_id`. Public beats contain `fact_used`
+instead of `fact_id`. Actions are exactly `approach`,
 `charge`, `bite`, `dodge`, `grapple`, `retreat`, and `finish`.
 `animal` must match one of the two selected names, except that the final
 `finish` beat must use `animal: null` for an even matchup. Earlier beats cannot
@@ -148,10 +152,20 @@ claims are scientifically true. Review sources and narration before relying on i
 Only `favored` and `even` outcomes call the narrator. `no_engagement` never does.
 The final beat must have
 `action: "finish"` and identify the favored animal, or no animal (`null`) for
-an even matchup. The narrator explicitly checks this; a mismatched outcome
-receives **one** corrective retry. Another mismatch returns an error. Invalid JSON/schema,
-unsupported evidence, HTTP errors, and a 30-second request timeout return readable
-errors without fabricated fallback content or exposed provider details.
+an even matchup. Any validation failure (JSON, schema, unknown evidence ID, or
+outcome mismatch) receives **one** corrective retry identifying the failed check.
+A second validation failure returns `INVALID_NARRATION`. Provider HTTP/network
+failures remain `LLM_PROVIDER_FAILURE` without retries. The per-request timeout
+is 30 seconds. Raw failed model output is logged only on the server, never in
+client error responses; no fallback narration is fabricated.
+
+After Zod validation, deterministic text checks reject unsupported numbers,
+percent signs/percentage words, claims that the other animal wins a favored
+matchup, and positive winner claims in an even matchup. Numbers are compared
+as whole numeric values (including ordinary written cardinal numbers), only
+against that beat's resolved evidence—not other beats. Winner checks use
+explicit English claim patterns and negation, not a semantic language model.
+These failures use the same single retry and then `INVALID_NARRATION`.
 
 ## Page and API
 

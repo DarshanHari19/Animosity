@@ -1,8 +1,9 @@
-# Fight Club
+# Animosity
 
 Minimal fact-based animal matchup starter. See README.md for setup and limitations.
 
 ## Scope rules
+- Animosity is the display name; keep existing folder names and the Replit project name unchanged.
 
 - `SOURCES.md` and `METHODOLOGY.md` are the source of truth for source tiers and
   engine rules. Do not redefine tiers or change supplied capability lists;
@@ -41,5 +42,7 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 
 Narration uses Replit-managed Anthropic AI Integrations and a Claude Haiku-class
 model; no personal LLM_API_KEY. Credentials stay on the backend. Preserve the
-narrator's validation and single corrective retry; disable SDK automatic retries.
+narrator's final Zod/outcome validation and single corrective retry for any
+validation failure; disable SDK automatic retries. Force the narration tool
+with fight-local evidence IDs and resolve exact evidence text server-side.
 The database template is unused.

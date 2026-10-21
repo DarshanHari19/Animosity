@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
 import { FightError } from "./errors";
+import { narrationTool } from "./narration-tool";
+import { animals } from "./animals";
+
+const tool = narrationTool(animals[0]!, animals[1]!, [{ id: "E1", text: "Test-only evidence." }]);
 
 const messages: NarrationMessage[] = [
   { role: "system", content: "Test-only system instructions." },
@@ -15,6 +19,7 @@ function mock(responses: Array<Response | Error>) {
     provider: createAnthropicProvider({
       apiKey: "test-only-dummy", baseURL: "https://anthropic.test.invalid/proxy",
       model: "claude-haiku-5-5",
+      tool,
       fetch: async (url, init) => {
         calls.push({ url: String(url), init });
         const response = responses.shift();
@@ -28,10 +33,11 @@ function mock(responses: Array<Response | Error>) {
 const errorCode = (code: string) => (error: unknown) =>
   error instanceof FightError && error.code === code && error.status === 502;
 
-test("Anthropic adapter sends Haiku native messages and normalizes only text blocks", async () => {
+test("Anthropic adapter forces one Haiku narration tool and normalizes only its input", async () => {
   const subject = mock([Response.json({ content: [
     { type: "thinking", thinking: "Not narration." },
-    { type: "text", text: '{"beats":' }, { type: "text", text: "[]}" },
+    { type: "text", text: "Not a fallback narration." },
+    { type: "tool_use", name: tool.name, input: { beats: [] } },
   ] })]);
   const response = await subject.provider(messages);
   assert.deepEqual(await response.json(), { choices: [{ message: { content: '{"beats":[]}' } }] });
@@ -46,12 +52,24 @@ test("Anthropic adapter sends Haiku native messages and normalizes only text blo
   assert.deepEqual(body.messages, messages.slice(1));
   assert.equal(init.redirect, "error");
   assert.equal(body.response_format, undefined);
+  assert.deepEqual(body.tools, [tool]);
+  assert.deepEqual(body.tool_choice, {
+    type: "tool", name: tool.name, disable_parallel_tool_use: true,
+  });
+  assert.deepEqual(body.tools[0].input_schema.properties.beats.items.properties.fact_id.enum, ["E1"]);
+  assert.equal(body.tools[0].input_schema.properties.beats.items.additionalProperties, false);
 });
 
 test("invalid Anthropic envelopes and JSON keep INVALID_NARRATION", async () => {
   for (const response of [
     Response.json({}), Response.json({ content: [] }),
     Response.json({ content: [{ type: "text", text: 0 }] }),
+    Response.json({ content: [{ type: "text", text: '{"beats":[]}' }] }),
+    Response.json({ content: [{ type: "tool_use", name: "wrong_tool", input: {} }] }),
+    Response.json({ content: [
+      { type: "tool_use", name: tool.name, input: {} },
+      { type: "tool_use", name: tool.name, input: {} },
+    ] }),
     new Response("not JSON", { headers: { "Content-Type": "application/json" } }),
   ]) {
     const subject = mock([response]);

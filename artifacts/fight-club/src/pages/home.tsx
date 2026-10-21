@@ -77,7 +77,7 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-2xl p-4 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Fight Club</h1>
+        <h1 className="text-2xl font-bold">Animosity</h1>
         <p className="text-sm text-muted-foreground">Fact-based animal matchups.</p>
       </header>
 

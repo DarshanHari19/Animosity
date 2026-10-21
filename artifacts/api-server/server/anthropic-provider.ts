@@ -6,7 +6,10 @@ import type { FailureCheck } from "./narration-diagnostics";
 export type NarrationMessage = { role: "system" | "user"; content: string };
 
 const MessageSchema = z.object({
-  content: z.array(z.object({ type: z.string(), text: z.string().optional() })),
+  content: z.array(z.object({
+    type: z.string(), text: z.string().optional(),
+    name: z.string().optional(), input: z.unknown().optional(),
+  })),
 });
 const invalidResponse = () => new FightError(
   "INVALID_NARRATION",
@@ -14,9 +17,10 @@ const invalidResponse = () => new FightError(
   502,
 );
 
-/** Normalize Anthropic responses to the narrator's existing transport envelope. */
+/** Only a single call to the forced tool is accepted; free text is not a fallback. */
 export function createAnthropicProvider(config: {
   apiKey: string; baseURL: string; model: string; fetch?: typeof fetch;
+  tool: Anthropic.Tool;
   onInvalidResponse?: (checks: FailureCheck[], rawModelText: string | null) => void;
 }) {
   const client = new Anthropic({
@@ -34,6 +38,8 @@ export function createAnthropicProvider(config: {
         model: config.model,
         max_tokens: 8192,
         thinking: { type: "disabled" },
+        tools: [config.tool],
+        tool_choice: { type: "tool", name: config.tool.name, disable_parallel_tool_use: true },
         system: messages.filter(({ role }) => role === "system").map(({ content }) => content).join("\n"),
         messages: messages.filter(({ role }) => role === "user")
           .map(({ content }) => ({ role: "user" as const, content })),
@@ -63,15 +69,20 @@ export function createAnthropicProvider(config: {
       }], text || null);
       throw invalidResponse();
     }
-    const content = parsed.data.content.filter((block) => block.type === "text")
-      .map((block) => block.text ?? "").join("");
-    if (!content) {
+    const calls = parsed.data.content.filter((block) => block.type === "tool_use");
+    const callSchema = z.object({
+      type: z.literal("tool_use"), name: z.literal(config.tool.name),
+      input: z.record(z.string(), z.unknown()),
+    });
+    const call = callSchema.safeParse(calls[0]);
+    if (calls.length !== 1 || !call.success) {
       config.onInvalidResponse?.([{
         check: "Zod_schema",
-        issues: [{ path: ["content"], message: "No model text was returned." }],
-      }], content);
+        issues: [{ path: ["content"],
+          message: "Expected exactly one call to the forced narration tool with an object input." }],
+      }], JSON.stringify(message));
       throw invalidResponse();
     }
-    return Response.json({ choices: [{ message: { content } }] });
+    return Response.json({ choices: [{ message: { content: JSON.stringify(call.data.input) } }] });
   };
 }
