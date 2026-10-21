@@ -168,6 +168,23 @@ explicit English claim patterns and negation, not a semantic language model.
 These failures use the same single retry and then `INVALID_NARRATION`.
 
 ## Page and API
+- `POST /api/fight` allows **10 requests per minute per IP**, including invalid
+  requests and explanation-only outcomes. Further requests return HTTP 429 with
+  `FIGHT_RATE_LIMITED` and a `Retry-After` header. Other endpoints are unaffected.
+- `NARRATION_DAILY_CAP` is a backend environment variable (default **200**).
+  It limits **provider calls**, not fights: corrective retries, failed provider
+  requests, and timeouts each consume a call. All narrated outcomes count,
+  including environmental-favored outcomes. No-contest, no-engagement, and
+  indeterminate outcomes never consume or check this budget. A blocked first
+  attempt or retry returns HTTP 429, `NARRATION_DAILY_CAP_REACHED`, without a
+  provider call or fallback narration. Zero disables provider calls; invalid
+  values return HTTP 503, `NARRATION_CAP_CONFIGURATION`.
+- Both limits are **in memory, per server process**, with no database. The daily
+  budget resets at midnight **UTC**; restarting the server resets both limits.
+  Multiple server replicas have separate budgets, so this is not a persistent
+  account-wide billing limit. IP resolution trusts one immediate reverse-proxy
+  hop, not arbitrary forwarded-header chains; review that setting if changing
+  the deployment topology. Expired IP windows are pruned without background timers.
 
 - `GET /api/animals` returns the animal records for the selectors.
 - `POST /api/fight` accepts `{ animalA, animalB, environment, mode, encounter }`.

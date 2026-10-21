@@ -5,6 +5,9 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+// Trust only the immediate reverse proxy, not arbitrary client-supplied chains.
+// Revisit this hop count if the deployment's proxy topology changes.
+app.set("trust proxy", 1);
 
 app.use(
   pinoHttp({
@@ -26,8 +29,6 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 

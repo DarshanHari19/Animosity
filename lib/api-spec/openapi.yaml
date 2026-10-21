@@ -43,13 +43,18 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiFailure" }
+        "429":
+          description: Per-IP fight request limit or daily narration provider-call cap reached
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiFailure" }
         "502":
           description: Invalid engine or narrator output, or provider failure
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiFailure" }
         "503":
-          description: Narrator configuration missing
+          description: Narrator configuration missing or daily cap configuration invalid
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiFailure" }

@@ -4,6 +4,9 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 
 ## Scope rules
 - Animosity is the display name; keep existing folder names and the Replit project name unchanged.
+- The daily narration cap counts every provider call, including retries and
+  environmental-favored narration. Never cap/check that budget for no_contest,
+  no_engagement, or indeterminate. Request-rate limiting still applies to POSTs.
 
 - `SOURCES.md` and `METHODOLOGY.md` are the source of truth for source tiers and
   engine rules. Do not redefine tiers or change supplied capability lists;

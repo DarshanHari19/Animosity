@@ -8,6 +8,7 @@ import { createAnthropicProvider, type NarrationMessage } from "./anthropic-prov
 import { failedChecks, logNarrationFailure, type FailureCheck } from "./narration-diagnostics";
 import { narrationTool, resolveEvidence } from "./narration-tool";
 import { narrationTextChecks } from "./narration-text-checks";
+import { reserveNarrationCall } from "./limits";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -15,6 +16,7 @@ type Options = {
   apiKey?: string;
   endpoint?: string;
   model?: string;
+  reserveProviderCall?: () => void;
 };
 
 const ProviderResponseSchema = z.object({
@@ -124,6 +126,9 @@ export async function narrateMatchup(
   ];
 
   for (let attempt = 0; attempt < 2; attempt++) {
+    // Reserve immediately before each provider attempt, not once per fight.
+    // Keep cap errors outside the validation retry handler: no call was made.
+    (options.reserveProviderCall ?? reserveNarrationCall)();
     providerDiagnostics.length = 0;
     const diagnosticContext = {
       animals: [a.name, b.name], model, attempt: attempt + 1, expectedOutcome: result.outcome,

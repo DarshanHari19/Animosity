@@ -1,22 +1,24 @@
-import { Router, type IRouter } from "express";
+import { Router, json, urlencoded, type IRouter } from "express";
 import { GetAnimalsResponse } from "@workspace/api-zod";
 import { animals } from "./animals";
 import { scoreMatchup } from "./engine";
 import { narrateMatchup } from "./narrator";
 import { FightInputSchema, resultSchemaFor, fightResponseSchemaFor, type Animal } from "./schemas";
 import { FightError } from "./errors";
+import { createFightRateLimiter } from "./limits";
 
 // Injection enables focused boundary tests, never a production fallback.
 export function createFightRouter(
   score: typeof scoreMatchup = scoreMatchup,
   narrate: typeof narrateMatchup = narrateMatchup,
   catalog: readonly Animal[] = animals,
+  rateLimit = createFightRateLimiter(),
 ): IRouter {
   const router = Router();
   router.get("/animals", (_req, res) => {
     res.json(GetAnimalsResponse.parse(catalog));
   });
-  router.post("/fight", async (req, res): Promise<void> => {
+  router.post("/fight", rateLimit, json({ limit: "16kb" }), urlencoded({ extended: true }), async (req, res): Promise<void> => {
     const parsed = FightInputSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({
