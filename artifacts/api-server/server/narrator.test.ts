@@ -4,7 +4,7 @@ import { animals } from "./animals";
 import { narrateMatchup } from "./narrator";
 import { FightError } from "./errors";
 import type { MatchupResult } from "./schemas";
-import { fixtureResult, fixtureBeats, fixtureFactor } from "./test-helpers";
+import { fixtureResult, fixtureBeats, fixtureEvidence } from "./test-helpers";
 import type { EvidenceItem } from "./narration-tool";
 
 // Fictional test-only output; this is NOT a scoring implementation.
@@ -52,7 +52,7 @@ test("matching favored outcome returns validated beats in one call", async () =>
   assert.equal(mock.calls.length, 1);
   assert.match(mock.calls[0]!.messages[0]!.content, /Do not invent/);
   const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: EvidenceItem[] };
-  assert.ok(payload.evidence.some(({ text }) => text === JSON.stringify(fixtureFactor)));
+  assert.ok(payload.evidence.some(({ text }) => text === fixtureEvidence));
   assert.equal(payload.evidence.some(({ text }) => text.includes(".functions_in")), false);
 });
 
@@ -109,7 +109,7 @@ test("sourced trait evidence is accepted; unknown values and TODO references are
   const source = a.field_sources.mass_kg!;
   const fact = `${a.name}.mass_kg = ${a.mass_kg} [tier ${source.tier}; ${source.ref}]`;
   const expected = beatsFor(a.name).map((beat, index) => ({
-    ...beat, facts_used: index === 4 ? [fact, JSON.stringify(fixtureFactor)] : [fact],
+    ...beat, facts_used: index === 4 ? [fact, fixtureEvidence] : [fact],
   }));
   const mock = mockProvider([provider(expected)]);
   const unknownBite = { ...a, bite_force_n: null };
@@ -212,7 +212,7 @@ test("resolved facts_used contains exact evidence text and fact_ids never escape
   const mock = mockProvider([wire("E1")]);
   const beats = await narrateMatchup(result, a, b, mock.options);
   for (const beat of beats) {
-    assert.deepEqual(beat.facts_used, [JSON.stringify(fixtureFactor)]);
+    assert.deepEqual(beat.facts_used, [fixtureEvidence]);
     assert.equal("fact_ids" in beat, false);
   }
 });
@@ -223,7 +223,7 @@ test("evidence IDs are deterministic and remain stable across a corrective retry
   const lists = mock.calls.map(({ messages }) => JSON.parse(messages[1]!.content).evidence as EvidenceItem[]);
   assert.deepEqual(lists[0], lists[1]);
   assert.deepEqual(lists[0]!.map(({ id }) => id), lists[0]!.map((_, index) => `E${index + 1}`));
-  assert.equal(lists[0]![0]!.text, JSON.stringify(fixtureFactor));
+  assert.equal(lists[0]![0]!.text, fixtureEvidence);
 });
 
 test("ID evidence retains zero, null, null-tier, empty-reference and missing-source exclusions", async () => {

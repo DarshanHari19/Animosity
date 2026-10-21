@@ -43,9 +43,11 @@ export function responseFixture(
       result,
       beats: [],
       explanation: `${outcome.kind}: Fictional fixture reason only.`,
+      narration_status: "not_required",
+      narration_reason: null,
     };
   }
-  const facts_used = [JSON.stringify(result.factors[0])];
+  const facts_used = [`${result.factors[0]!.name}: ${result.factors[0]!.reason}`];
   const actions: Beat["action"][] = ["approach", "charge", "dodge", "grapple", "finish"];
   return {
     result,
@@ -58,6 +60,8 @@ export function responseFixture(
       facts_used,
     })),
     explanation: null,
+    narration_status: "available",
+    narration_reason: null,
   };
 }
 

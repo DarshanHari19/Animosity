@@ -7,6 +7,7 @@ import type { Animal, Beat, MatchupResult } from "./schemas";
 
 // Fictional, test-only metadata and narration; never used by production.
 export const fixtureFactor = { name: "Fixture factor", value: 1, reason: "Fixture reason only" };
+export const fixtureEvidence = `${fixtureFactor.name}: ${fixtureFactor.reason}`;
 export function fixtureResult(outcome: MatchupResult["outcome"]): MatchupResult {
   return {
     outcome, deciding_factor: null, evidence_quality: "mixed",
@@ -16,7 +17,7 @@ export function fixtureResult(outcome: MatchupResult["outcome"]): MatchupResult 
 }
 
 export function fixtureBeats(a: Animal, finalAnimal: string | null): Beat[] {
-  const facts_used = [JSON.stringify(fixtureFactor)];
+  const facts_used = [fixtureEvidence];
   return [
     ...Array.from({ length: 4 }, (): Beat => ({
       text: "Hypothetical fixture movement.", action: "approach", animal: a.name, facts_used,

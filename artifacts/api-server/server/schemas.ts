@@ -90,16 +90,18 @@ export function fightResponseSchemaFor(a: Animal, b: Animal) {
   return CreateFightResponse.extend({
     result: resultSchemaFor(a, b),
     beats: z.array(BeatSchema).max(8),
-  }).strict().superRefine(({ result, beats, explanation }, ctx) => {
+  }).strict().superRefine(({ result, beats, explanation, narration_status, narration_reason }, ctx) => {
     const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
     const hasExplanation = typeof explanation === "string" &&
       explanation.trim().length > 0 && !/[\r\n]/.test(explanation);
-    const valid = narrated
+    const validContent = narrated
       ? (result.deciding_factor === "environmental_advantage" ? hasExplanation : explanation === null) &&
-        beatsSchemaFor(a, b).safeParse(beats).success &&
-        narrationMatchesOutcome(result, beats)
-      : beats.length === 0 && hasExplanation;
-    if (!valid) ctx.addIssue({
+        (narration_status === "unavailable"
+          ? beats.length === 0 && narration_reason !== null
+          : narration_status === "available" && narration_reason === null &&
+            beatsSchemaFor(a, b).safeParse(beats).success && narrationMatchesOutcome(result, beats))
+      : beats.length === 0 && hasExplanation && narration_status === "not_required" && narration_reason === null;
+    if (!validContent) ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Response must contain matching narration or a one-line explanation, according to its outcome.",
     });

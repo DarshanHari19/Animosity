@@ -140,12 +140,17 @@ forbids null actors and the finish action in the non-final array, and fixes the
 separate finish actor to the favored name or null for even. The server maps this
 to the existing 5–8 public beats array. Public actions remain `approach`, `charge`,
 `bite`, `dodge`, `grapple`, `retreat`, and `finish`. Each `facts_used` entry must
-exactly copy an evidence string: an engine factor serialized with
-`JSON.stringify({ name, value, reason })` in that field order, or a supplied,
+exactly copy an evidence string: a readable scored comparison such as
+`Size: Hippopotamus 1500 kg vs Lion 190 kg; Hippopotamus outweighs Lion about 7.9 to 1.`,
+or a supplied,
 sourced trait reference. `functions_in` is excluded from narrator evidence
 regardless of tier. Zero/null numeric traits, tier-null entries, empty
 references and `TODO` references are excluded from trait evidence.
 The prompt forbids invented facts and requires text to agree with that evidence.
+Both supplied masses (or both comparable bite forces in N) are included in
+each scored comparison. The engine output and numeric-citation check are
+unchanged. Trait source URLs render as links; bibliographic references without
+a URL remain text, never an invented link.
 Evidence is tagged `scored` for engine comparisons that ran (including equal
 comparisons), or `context` for sourced descriptive traits. Factors marked
 "Not compared" and their excluded bite traits are removed from the model's
@@ -167,8 +172,13 @@ The final beat must have
 an even matchup. Any validation failure (JSON, schema, unknown evidence ID, or
 outcome mismatch, wording or grounding) receives **one** corrective retry
 identifying the failed check and offending text.
-A second validation failure returns `INVALID_NARRATION`. Provider HTTP/network
-failures remain `LLM_PROVIDER_FAILURE` without retries. The per-request timeout
+A second validation failure raises `INVALID_NARRATION` internally. Provider HTTP/network
+failures remain `LLM_PROVIDER_FAILURE` without retries. The route preserves the
+validated engine verdict with HTTP 200, `beats: []`,
+`narration_status: "unavailable"` and `narration_reason` containing the reason
+code. This also covers configuration errors and daily-cap exhaustion; unexpected
+narrator exceptions use the sanitized `NARRATION_FAILED` code.
+The per-request timeout
 is 30 seconds. Raw failed model output is logged only on the server, never in
 client error responses; no fallback narration is fabricated.
 
@@ -193,9 +203,10 @@ These deterministic English checks are conservative, not semantic fact proof.
   requests, and timeouts each consume a call. All narrated outcomes count,
   including environmental-favored outcomes. No-contest, no-engagement, and
   indeterminate outcomes never consume or check this budget. A blocked first
-  attempt or retry returns HTTP 429, `NARRATION_DAILY_CAP_REACHED`, without a
-  provider call or fallback narration. Zero disables provider calls; invalid
-  values return HTTP 503, `NARRATION_CAP_CONFIGURATION`.
+   attempt or retry preserves the verdict with HTTP 200 and narration reason
+   `NARRATION_DAILY_CAP_REACHED`, without a provider call or fallback narration.
+   Zero disables provider calls; invalid values give narration reason
+   `NARRATION_CAP_CONFIGURATION`, also with the verdict intact.
 - Both limits are **in memory, per server process**, with no database. The daily
   budget resets at midnight **UTC**; restarting the server resets both limits.
   Multiple server replicas have separate budgets, so this is not a persistent
@@ -204,6 +215,12 @@ These deterministic English checks are conservative, not semantic fact proof.
   the deployment topology. Expired IP windows are pruned without background timers.
 
 - `GET /api/animals` returns the animal records for the selectors.
+- `GET /api/health` returns `{ status: "ok", build_id }` with caching disabled.
+  The build timestamp is embedded by esbuild and written to
+  `artifacts/api-server/dist/build-id.json`. **Before each live narration test**,
+  compare this file's `build_id` to `/api/health`; stop on any mismatch.
+  Restart the managed API workflow to build and run current code.
+  The existing `/api/healthz` endpoint is unchanged.
 - `POST /api/fight` accepts `{ animalA, animalB, environment, mode, encounter }`.
   Animal names are required; identical selections are allowed and passed
   unchanged to the engine, with no special result substituted by the route.
@@ -211,8 +228,11 @@ These deterministic English checks are conservative, not semantic fact proof.
   Mode is `realistic` or `forced_fight` (default `realistic`); encounter is
   `face_off` only (default `face_off`). Missing/unknown names, invalid enums,
   null context fields and unexpected fields are rejected.
-- Success returns `{ result, beats, explanation }`. Favored/even results have
-  5–8 beats and a null explanation. Indeterminate/no-contest results have an
+- Success returns `{ result, beats, explanation, narration_status, narration_reason }`.
+  Status is `available` (5–8 beats, null reason), `unavailable` (no beats, reason
+  code), or `not_required` (gated outcome, no beats, null reason).
+  The UI shows the verdict immediately with “Narration unavailable.” when needed,
+  without fabricating narration. Indeterminate/no-contest results have an
   empty beats array and a one-line explanation of the applicable gate,
   without contacting an LLM. This also applies to no-engagement outcomes.
   Environmental favored results retain narration and include an explanation
@@ -225,4 +245,8 @@ These deterministic English checks are conservative, not semantic fact proof.
   caption reads “Forced fight: no retreat; environmental disadvantages count.”
   There is no encounter picker yet. Playback timers are cleared on restart and unmount, and late responses
   are ignored. Numerical results show the v1 scoring-scope note; gate results
-  show explanations. Favored/even live playback requires a configured provider.
+  show explanations. Narrated playback requires a configured provider; verdicts do not.
+  API outcome `even` is displayed as **Too close to call**, with
+  “Scored factors (body mass, comparable bite force) don't separate these two.”
+  The narrator prompt requires this distinction too: no claim of a stalemate
+  or equally matched animals.

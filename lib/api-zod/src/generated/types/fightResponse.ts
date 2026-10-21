@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Beat } from './beat';
+import type { FightResponseNarrationReason } from './fightResponseNarrationReason';
+import type { FightResponseNarrationStatus } from './fightResponseNarrationStatus';
 import type { MatchupResult } from './matchupResult';
 
 /**
- * Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.
+ * A valid verdict is returned even when narration is unavailable. Available narration has 5–8 beats. Unavailable narration has no beats and a reason code. Non-narrated gates have no beats and a one-line explanation.
  */
 export interface FightResponse {
   result: MatchupResult;
@@ -23,4 +25,7 @@ export interface FightResponse {
      * @nullable
      */
   explanation: string | null;
+  narration_status: FightResponseNarrationStatus;
+  /** @nullable */
+  narration_reason: FightResponseNarrationReason;
 }

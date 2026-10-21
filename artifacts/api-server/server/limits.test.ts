@@ -195,11 +195,12 @@ test("HTTP cap covers favored, even and environmental favored, while non-narrate
   for (const output of [favored, fixtureResult({ kind: "even" }), environmental]) {
     result = output;
     const response = await api.post();
-    assert.equal(response.status, 429);
-    const body = await response.json() as { code: string; error: string };
-    assert.equal(body.code, "NARRATION_DAILY_CAP_REACHED");
-    assert.match(body.error, /midnight UTC/);
-    assert.equal("beats" in body, false);
+    assert.equal(response.status, 200);
+    const body = await response.json() as { narration_status: string; narration_reason: string; beats: unknown[]; result: MatchupResult };
+    assert.equal(body.narration_reason, "NARRATION_DAILY_CAP_REACHED");
+    assert.equal(body.narration_status, "unavailable");
+    assert.deepEqual(body.beats, []);
+    assert.deepEqual(body.result, output);
   }
   assert.equal(narrationCalls, 3);
   for (const kind of ["no_contest", "no_engagement", "indeterminate"] as const) {

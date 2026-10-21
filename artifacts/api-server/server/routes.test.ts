@@ -87,7 +87,8 @@ test("favored/even outcomes call narration and validate the final actor", async 
     });
     const response = await server.post(input);
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { result, beats: expected, explanation: null });
+    assert.deepEqual(await response.json(), { result, beats: expected, explanation: null,
+      narration_status: "available", narration_reason: null });
     assert.equal(calls, 1);
   }
 });
@@ -108,13 +109,17 @@ test("invalid engine outputs fail before narration", async (t) => {
   }
 });
 
-test("route rejects mismatched or malformed narration", async (t) => {
+test("route preserves a verdict when narration is mismatched or malformed", async (t) => {
   const result = fixtureResult({ kind: "even" });
   for (const beats of [fixtureBeats(a, a.name), [], fixtureBeats(a, "Unknown")]) {
     const server = await startFightServer(t, () => result, async () => beats);
     const response = await server.post(input);
-    assert.equal(response.status, 502);
-    assert.equal((await response.json() as { code: string }).code, "INVALID_NARRATION");
+    assert.equal(response.status, 200);
+    const body = await response.json() as { narration_status: string; narration_reason: string; beats: unknown[]; result: MatchupResult };
+    assert.equal(body.narration_status, "unavailable");
+    assert.equal(body.narration_reason, "INVALID_NARRATION");
+    assert.deepEqual(body.beats, []);
+    assert.deepEqual(body.result, result);
   }
 });
 

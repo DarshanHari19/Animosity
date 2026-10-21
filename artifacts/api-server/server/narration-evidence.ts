@@ -1,8 +1,20 @@
 import type { Animal, MatchupResult } from "./schemas";
 
-export type EvidenceItem = { id: string; text: string; kind: "scored" | "context" | "gate" };
+export type EvidenceItem = {
+  id: string; text: string; kind: "scored" | "context" | "gate";
+  factor_name?: string;
+};
 export const isEnvironmental = (result: MatchupResult) =>
   result.outcome.kind === "favored" && result.deciding_factor === "environmental_advantage";
+
+/** Presentation only: preserve the engine's reason, never recalculate a score. */
+export function scoredFactorText(factor: MatchupResult["factors"][number], a: Animal, b: Animal): string {
+  const values = factor.name === "Size"
+    ? `${a.name} ${a.mass_kg} kg vs ${b.name} ${b.mass_kg} kg; `
+    : factor.name === "Bite force"
+      ? `${a.name} ${a.bite_force_n} N vs ${b.name} ${b.bite_force_n} N; ` : "";
+  return `${factor.name}: ${values}${factor.reason}`;
+}
 
 /** Interpret the engine's explicit "Not compared" marker, never recalculate scores. */
 export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal): EvidenceItem[] {
@@ -14,7 +26,9 @@ export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal): 
     kind: "gate",
     // Only fields returned by the engine, never an invented score or trait claim.
     text: JSON.stringify({ outcome: result.outcome, deciding_factor: result.deciding_factor }),
-  }] : ran.map((factor) => ({ kind: "scored", text: JSON.stringify(factor) }));
+  }] : ran.map((factor) => ({
+    kind: "scored", factor_name: factor.name, text: scoredFactorText(factor, a, b),
+  }));
   for (const animal of [a, b]) {
     for (const [key, value] of Object.entries(animal)) {
       const source = animal.field_sources[key];

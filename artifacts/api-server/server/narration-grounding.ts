@@ -45,9 +45,7 @@ export function narrationGroundingChecks(
         messages.push("Context evidence is description only, not a reason for the outcome.");
         break;
       }
-      const scoredNames = scored.map((item) => {
-        try { return (JSON.parse(item.text) as { name?: string }).name; } catch { return undefined; }
-      });
+      const scoredNames = scored.map((item) => item.factor_name);
       if (/\b(?:speed|length|reach|strength|style|bluff|strike|grappling|armor|hide|claws|horns|tusks)\b/i.test(clause) ||
         (/\bbite\b/i.test(clause) && !scoredNames.includes("Bite force"))) {
         messages.push("An unscored trait is presented as a reason for the outcome.");

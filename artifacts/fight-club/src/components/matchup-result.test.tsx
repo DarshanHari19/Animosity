@@ -32,7 +32,7 @@ describe("MatchupResultCard", () => {
 
   const outcomes: [MatchupResult["outcome"], string][] = [
     [{ kind: "favored", animal: "Grizzly bear" }, "Grizzly bear favored"],
-    [{ kind: "even" }, "Even matchup"],
+    [{ kind: "even" }, "Too close to call"],
     [{ kind: "indeterminate" }, "Indeterminate"],
     [{ kind: "no_contest" }, "No contest"],
     [{ kind: "no_engagement", animals: ["Gorilla"] }, "No fight: Gorilla backs off"],
@@ -43,6 +43,12 @@ describe("MatchupResultCard", () => {
     expect(screen.getByTestId("text-outcome")).toHaveTextContent(label);
     expect(screen.getByTestId("text-profile-assumption").textContent).toBe("Assumes adult males");
     expect(screen.queryByTestId("text-explanation")).not.toBeInTheDocument();
+    if (outcome.kind === "even") {
+      expect(screen.getByTestId("text-even-scope").textContent).toBe(
+        "Scored factors (body mass, comparable bite force) don't separate these two.",
+      );
+      expect(screen.queryByText("Even matchup")).not.toBeInTheDocument();
+    }
   });
 
   it("shows None for a null deciding factor and omits an empty factors section", () => {
@@ -55,7 +61,8 @@ describe("MatchupResultCard", () => {
     };
     render(<MatchupResultCard result={result} explanation={null} />);
     expect(Array.from(screen.getByTestId("card-result").children, (child) => child.textContent)).toEqual([
-      "Even matchup", "Deciding factor: None", "Evidence quality: Mixed sources",
+      "Too close to call", "Scored factors (body mass, comparable bite force) don't separate these two.",
+      "Deciding factor: None", "Evidence quality: Mixed sources",
       "Encounter: hypothetical", "Assumes adult males",
     ]);
     expect(screen.queryByText("Factors:")).not.toBeInTheDocument();

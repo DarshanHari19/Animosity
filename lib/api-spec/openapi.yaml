@@ -44,17 +44,12 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiFailure" }
         "429":
-          description: Per-IP fight request limit or daily narration provider-call cap reached
+          description: Per-IP fight request limit reached before scoring
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiFailure" }
         "502":
-          description: Invalid engine or narrator output, or provider failure
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ApiFailure" }
-        "503":
-          description: Narrator configuration missing or daily cap configuration invalid
+          description: Invalid engine output
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiFailure" }
@@ -71,6 +66,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /health:
+    get:
+      operationId: getBuildHealth
+      tags: [health]
+      summary: Health and build identity
+      responses:
+        "200":
+          description: Current running build
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuildHealth"
 components:
   schemas:
     Animal:
@@ -194,8 +201,8 @@ components:
     FightResponse:
       type: object
       additionalProperties: false
-      required: [result, beats, explanation]
-      description: Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.
+      required: [result, beats, explanation, narration_status, narration_reason]
+      description: A valid verdict is returned even when narration is unavailable. Available narration has 5–8 beats. Unavailable narration has no beats and a reason code. Non-narrated gates have no beats and a one-line explanation.
       properties:
         result: { $ref: "#/components/schemas/MatchupResult" }
         beats:
@@ -204,6 +211,10 @@ components:
           maxItems: 8
           items: { $ref: "#/components/schemas/Beat" }
         explanation: { type: [string, "null"], minLength: 1 }
+        narration_status: { type: string, enum: [available, unavailable, not_required] }
+        narration_reason:
+          type: [string, "null"]
+          enum: [INVALID_NARRATION, LLM_PROVIDER_FAILURE, NARRATION_DAILY_CAP_REACHED, LLM_NOT_CONFIGURED, LLM_CONFIGURATION, NARRATION_CAP_CONFIGURATION, NARRATION_FAILED, null]
     ApiFailure:
       type: object
       required: [error]
@@ -217,4 +228,11 @@ components:
           type: string
       required:
         - status
+    BuildHealth:
+      type: object
+      additionalProperties: false
+      required: [status, build_id]
+      properties:
+        status: { type: string, enum: [ok] }
+        build_id: { type: string, minLength: 1 }
 

@@ -23,6 +23,12 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
   back off. Never add probability-based results.
 - Narrate only favored/even outcomes. A final finish beat identifies the favored
   animal or has a null animal for even; other outcomes use explanations.
+- Never hide a valid engine verdict because narration fails: HTTP 200 with
+  empty beats, unavailable status and a sanitized reason code; no fallback text.
+- Display `even` as “Too close to call,” not equal ability or a stalemate.
+  The prompt must explain that the scored factors do not separate the animals.
+- Before every live narration test, compare `/api/health` build_id against
+  `artifacts/api-server/dist/build-id.json` and stop on mismatch.
 - Identical selections are allowed in both API and UI and use the normal
   route without forcing an even result. The Lion-vs-Lion scenario tests this route.
 - Environments are `land`, `shallow_water`, `deep_water`; animal capability is

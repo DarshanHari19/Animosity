@@ -289,8 +289,33 @@ export interface Beat {
   facts_used: string[];
 }
 
+export type FightResponseNarrationStatus = typeof FightResponseNarrationStatus[keyof typeof FightResponseNarrationStatus];
+
+
+export const FightResponseNarrationStatus = {
+  available: 'available',
+  unavailable: 'unavailable',
+  not_required: 'not_required',
+} as const;
+
 /**
- * Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.
+ * @nullable
+ */
+export type FightResponseNarrationReason = typeof FightResponseNarrationReason[keyof typeof FightResponseNarrationReason] | null;
+
+
+export const FightResponseNarrationReason = {
+  INVALID_NARRATION: 'INVALID_NARRATION',
+  LLM_PROVIDER_FAILURE: 'LLM_PROVIDER_FAILURE',
+  NARRATION_DAILY_CAP_REACHED: 'NARRATION_DAILY_CAP_REACHED',
+  LLM_NOT_CONFIGURED: 'LLM_NOT_CONFIGURED',
+  LLM_CONFIGURATION: 'LLM_CONFIGURATION',
+  NARRATION_CAP_CONFIGURATION: 'NARRATION_CAP_CONFIGURATION',
+  NARRATION_FAILED: 'NARRATION_FAILED',
+} as const;
+
+/**
+ * A valid verdict is returned even when narration is unavailable. Available narration has 5–8 beats. Unavailable narration has no beats and a reason code. Non-narrated gates have no beats and a one-line explanation.
  */
 export interface FightResponse {
   result: MatchupResult;
@@ -304,6 +329,9 @@ export interface FightResponse {
      * @nullable
      */
   explanation: string | null;
+  narration_status: FightResponseNarrationStatus;
+  /** @nullable */
+  narration_reason: FightResponseNarrationReason;
 }
 
 export interface ApiFailure {
@@ -313,5 +341,18 @@ export interface ApiFailure {
 
 export interface HealthStatus {
   status: string;
+}
+
+export type BuildHealthStatus = typeof BuildHealthStatus[keyof typeof BuildHealthStatus];
+
+
+export const BuildHealthStatus = {
+  ok: 'ok',
+} as const;
+
+export interface BuildHealth {
+  status: BuildHealthStatus;
+  /** @minLength 1 */
+  build_id: string;
 }
 

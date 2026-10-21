@@ -3,9 +3,14 @@ import { GetAnimalsResponse } from "@workspace/api-zod";
 import { animals } from "./animals";
 import { scoreMatchup } from "./engine";
 import { narrateMatchup } from "./narrator";
-import { FightInputSchema, resultSchemaFor, fightResponseSchemaFor, type Animal } from "./schemas";
+import { FightInputSchema, resultSchemaFor, fightResponseSchemaFor, beatsSchemaFor, narrationMatchesOutcome, type Animal, type Beat } from "./schemas";
 import { FightError } from "./errors";
 import { createFightRateLimiter } from "./limits";
+
+const narrationErrors = new Set([
+  "INVALID_NARRATION", "LLM_PROVIDER_FAILURE", "NARRATION_DAILY_CAP_REACHED",
+  "LLM_NOT_CONFIGURED", "LLM_CONFIGURATION", "NARRATION_CAP_CONFIGURATION",
+]);
 
 // Injection enables focused boundary tests, never a production fallback.
 export function createFightRouter(
@@ -41,7 +46,24 @@ export function createFightRouter(
       }
       const result = output.data;
       const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
-      const beats = narrated ? await narrate(result, a, b) : [];
+      let beats: Beat[] = [];
+      let narration_status = narrated ? "available" : "not_required";
+      let narration_reason: string | null = null;
+      if (narrated) {
+        try {
+          beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b));
+          if (!narrationMatchesOutcome(result, beats)) {
+            throw new FightError("INVALID_NARRATION", "Narration does not match the engine outcome.", 502);
+          }
+        } catch (error) {
+          beats = [];
+          narration_status = "unavailable";
+          // Never expose provider messages, raw output, or unexpected error details.
+          narration_reason = error instanceof FightError && narrationErrors.has(error.code)
+            ? error.code : error instanceof Error && error.name === "ZodError"
+              ? "INVALID_NARRATION" : "NARRATION_FAILED";
+        }
+      }
       let explanation: string | null = null;
       const place = environment.replaceAll("_", " ");
       if (result.outcome.kind === "no_engagement") {
@@ -56,7 +78,9 @@ export function createFightRouter(
       } else if (result.deciding_factor === "environmental_advantage" && result.outcome.kind === "favored") {
         explanation = `${result.outcome.animal} is favored because the other animal cannot function in ${place}; forced fight counts this environmental disadvantage.`;
       }
-      const response = fightResponseSchemaFor(a, b).safeParse({ result, beats, explanation });
+      const response = fightResponseSchemaFor(a, b).safeParse({
+        result, beats, explanation, narration_status, narration_reason,
+      });
       if (!response.success) {
         throw new FightError("INVALID_NARRATION", "Response does not match the selected animals and engine outcome.", 502);
       }

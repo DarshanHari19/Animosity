@@ -197,7 +197,8 @@ test("beats require selected names, valid actions, 5–8 beats and a sole final 
 test("response validation enforces narration versus explanation and final outcome", () => {
   const schema = fightResponseSchemaFor(a, b);
   for (const outcome of [{ kind: "no_contest" }, { kind: "indeterminate" }] as const) {
-    const response = { result: fixtureResult(outcome), beats: [], explanation: "Fixture explanation." };
+    const response = { result: fixtureResult(outcome), beats: [], explanation: "Fixture explanation.",
+      narration_status: "not_required", narration_reason: null };
     assert.equal(schema.safeParse(response).success, true);
     for (const invalid of [
       { ...response, beats: fixtureBeats(a, a.name) },
@@ -207,7 +208,8 @@ test("response validation enforces narration versus explanation and final outcom
   }
   for (const outcome of [{ kind: "favored", animal: a.name }, { kind: "even" }] as const) {
     const final = outcome.kind === "favored" ? a.name : null;
-    const response = { result: fixtureResult(outcome), beats: fixtureBeats(a, final), explanation: null };
+    const response = { result: fixtureResult(outcome), beats: fixtureBeats(a, final), explanation: null,
+      narration_status: "available", narration_reason: null };
     assert.equal(schema.safeParse(response).success, true);
     assert.equal(schema.safeParse({ ...response, beats: fixtureBeats(a, b.name) }).success, false);
     assert.equal(schema.safeParse({ ...response, explanation: "unexpected" }).success, false);

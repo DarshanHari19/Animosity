@@ -102,7 +102,7 @@ export async function narrateMatchup(
         "Evidence has kind scored, context, or gate. Only scored items may explain the ordinary outcome. Context is description ONLY, never an advantage, deciding reason, offset, or cause of winning.",
         "Do not attribute the result to speed, length, strength, style, or other traits not scored by the engine. Do not invent combat abilities or explanations.",
         "An ordinary favored finish MUST cite at least one scored item and name the favored animal; no beat may name the other animal as winning.",
-        "For even, no beat may name a winner. The finish must describe no winner and MUST NOT credit ANY advantage, including a size edge.",
+        "For even, no beat may name a winner. The finish MUST say the scored factors (body mass, comparable bite force) don't separate these two. Do not call it a stalemate or say the animals are equally/evenly matched. This is uncertainty from limited scoring, not proof of an actual draw or equal abilities. The finish MUST NOT credit ANY advantage, including a size edge.",
         "Exception: when result.deciding_factor is environmental_advantage, finish MUST cite gate evidence derived only from the engine outcome, not scored evidence.",
         "An environmental finish MUST explicitly say the environment decided the fight. Do not mention or imply a physical advantage in that finish.",
         "Never change the engine outcome. Give hypothetical movements, not scientific predictions.",
@@ -111,7 +111,7 @@ export async function narrateMatchup(
     { role: "user", content: JSON.stringify({
       animals: [{ name: a.name }, { name: b.name }],
       result: { outcome: result.outcome, deciding_factor: result.deciding_factor },
-      evidence: evidenceItems,
+      evidence: evidenceItems.map(({ id, text, kind }) => ({ id, text, kind })),
     }) },
   ];
 
@@ -177,7 +177,7 @@ export async function narrateMatchup(
       }
       messages.push({
         role: "user",
-        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit a complete corrected {beats,finish}. Non-final actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two; no percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. An ordinary favored finish must cite scored evidence; an environmental finish must cite the engine gate and say the environment decided, never a physical advantage. An even finish credits no advantage. finish.action must be "finish" and animal ${JSON.stringify(result.outcome.kind === "favored" ? result.outcome.animal : null)}. Match ${JSON.stringify(result.outcome)}.`,
+        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit a complete corrected {beats,finish}. Non-final actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two; no percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. An ordinary favored finish must cite scored evidence; an environmental finish must cite the engine gate and say the environment decided, never a physical advantage. An even finish says the scored factors (body mass, comparable bite force) don't separate these two, never stalemate or equally matched, and credits no advantage. finish.action must be "finish" and animal ${JSON.stringify(result.outcome.kind === "favored" ? result.outcome.animal : null)}. Match ${JSON.stringify(result.outcome)}.`,
       });
     }
   }

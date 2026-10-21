@@ -5,7 +5,7 @@ import { z } from "zod";
 import { animals } from "./animals";
 import { scoreMatchup } from "./engine";
 import { narrateMatchup } from "./narrator";
-import { narrationEvidence, type EvidenceItem } from "./narration-evidence";
+import { narrationEvidence, scoredFactorText, type EvidenceItem } from "./narration-evidence";
 import { narrationTool, resolveEvidence } from "./narration-tool";
 import { narrationTextChecks } from "./narration-text-checks";
 import { narrationGroundingChecks } from "./narration-grounding";
@@ -15,7 +15,7 @@ import { FightError } from "./errors";
 
 const a = animals[0]!;
 const b = animals[1]!;
-const scored: EvidenceItem = { id: "E1", kind: "scored", text: '{"name":"Size","value":1,"reason":"Test-only size comparison"}' };
+const scored: EvidenceItem = { id: "E1", kind: "scored", factor_name: "Size", text: "Size: Test-only size comparison" };
 const context: EvidenceItem = { id: "E2", kind: "context", text: "Test-only mass: 190 kg" };
 const context2: EvidenceItem = { id: "E3", kind: "context", text: "Test-only speed: 80 km/h" };
 const favored = fixtureResult({ kind: "favored", animal: a.name });
@@ -84,10 +84,10 @@ test("uncompared bites and their warnings are absent from both scored and contex
   assert.ok(result.factors.some(({ reason }) => reason.startsWith("Not compared:")));
   assert.equal(evidence.some(({ text }) => /bite_force_n|Not compared:/.test(text)), false);
   assert.equal(evidence.some(({ text }) => text.includes(".functions_in")), false);
-  assert.ok(evidence.some(({ kind, text }) => kind === "scored" && JSON.parse(text).name === "Size"));
+  assert.ok(evidence.some(({ kind, factor_name }) => kind === "scored" && factor_name === "Size"));
   const same = scoreMatchup(a, a, { environment: "land", mode: "realistic", encounter: "face_off" });
   const compared = narrationEvidence(same, a, a);
-  assert.ok(compared.some(({ kind, text }) => kind === "scored" && JSON.parse(text).name === "Bite force"));
+  assert.ok(compared.some(({ kind, factor_name }) => kind === "scored" && factor_name === "Bite force"));
   assert.ok(compared.some(({ text }) => text.includes(".bite_force_n")));
 });
 test("context cannot cause a result, even when a scored size item is also cited", () => {
@@ -173,7 +173,10 @@ for (const fixture of fixtures.cases) {
     // Structural migration only: text/actors are untouched; do not add citations.
     const encoded = fixture.raw_output.beats.map(({ fact_id, ...rest }) => {
       const oldText = fixture.recorded_evidence.find(({ id }) => id === fact_id)?.text;
-      return { ...rest, fact_ids: [evidence.find(({ text }) => text === oldText)?.id ?? "REMOVED_EVIDENCE"] };
+      // The public factor presentation changed, not the recorded comparison.
+      const originalFactor = result.factors.find((factor) => JSON.stringify(factor) === oldText);
+      const currentText = originalFactor ? scoredFactorText(originalFactor, first, second) : oldText;
+      return { ...rest, fact_ids: [evidence.find(({ text }) => text === currentText)?.id ?? "REMOVED_EVIDENCE"] };
     });
     let accepted = false;
     try {

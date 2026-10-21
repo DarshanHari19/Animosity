@@ -22,6 +22,7 @@ import type {
 import type {
   Animal,
   ApiFailure,
+  BuildHealth,
   FightInput,
   FightResponse,
   HealthStatus
@@ -285,6 +286,83 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetBuildHealthUrl = () => {
+
+
+
+
+  return `/api/health`
+}
+
+/**
+ * @summary Health and build identity
+ */
+export const getBuildHealth = async ( options?: Parameters<typeof customFetch>[1]): Promise<BuildHealth> => {
+
+  return customFetch<BuildHealth>(getGetBuildHealthUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBuildHealthQueryKey = () => {
+    return [
+    `/api/health`
+    ] as const;
+    }
+
+
+export const getGetBuildHealthQueryOptions = <TData = Awaited<ReturnType<typeof getBuildHealth>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBuildHealth>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBuildHealthQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBuildHealth>>> = ({ signal }) => getBuildHealth({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBuildHealth>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBuildHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getBuildHealth>>>
+export type GetBuildHealthQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Health and build identity
+ */
+
+export function useGetBuildHealth<TData = Awaited<ReturnType<typeof getBuildHealth>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBuildHealth>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBuildHealthQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

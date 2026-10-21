@@ -107,8 +107,10 @@ export const CreateFightResponse = zod.object({
   "animal": zod.string().min(1).nullable().describe('Selected animal name; null only for the final even-matchup finish beat.'),
   "facts_used": zod.array(zod.string().min(1)).min(1).max(createFightResponseBeatsItemFactsUsedMax)
 })).min(createFightResponseBeatsMin).max(createFightResponseBeatsMax),
-  "explanation": zod.string().min(1).nullable()
-}).describe('Favored/even outcomes have 5–8 beats; environmental advantages also include an explanation. Indeterminate/no_contest/no_engagement outcomes have no beats and a one-line explanation.')
+  "explanation": zod.string().min(1).nullable(),
+  "narration_status": zod.enum(['available', 'unavailable', 'not_required']),
+  "narration_reason": zod.union([zod.literal('INVALID_NARRATION'),zod.literal('LLM_PROVIDER_FAILURE'),zod.literal('NARRATION_DAILY_CAP_REACHED'),zod.literal('LLM_NOT_CONFIGURED'),zod.literal('LLM_CONFIGURATION'),zod.literal('NARRATION_CAP_CONFIGURATION'),zod.literal('NARRATION_FAILED'),zod.literal(null)]).nullable()
+}).describe('A valid verdict is returned even when narration is unavailable. Available narration has 5–8 beats. Unavailable narration has no beats and a reason code. Non-narrated gates have no beats and a one-line explanation.')
 
 
 /**
@@ -117,6 +119,18 @@ export const CreateFightResponse = zod.object({
  */
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
+})
+
+
+/**
+ * @summary Health and build identity
+ */
+
+
+
+export const GetBuildHealthResponse = zod.object({
+  "status": zod.enum(['ok']),
+  "build_id": zod.string().min(1)
 })
 
 

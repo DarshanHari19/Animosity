@@ -1,0 +1,143 @@
+{
+  "description": "Exact model tool inputs from the 2026-10-21 live Hippopotamus/Lion failures. Text, actors, and IDs are unchanged; comparison evidence now includes both masses.",
+  "cases": [
+    {
+      "name": "Hippopotamus vs Lion attempt 1",
+      "original_failure": {
+        "check": "text_consistency",
+        "missing_number": "190"
+      },
+      "expected": "accept",
+      "raw_output": {
+        "beats": [
+          {
+            "text": "The Lion closes in fast, its top speed of 80 km/h carrying it toward the Hippopotamus across the open ground.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_ids": [
+              "E7"
+            ]
+          },
+          {
+            "text": "The Hippopotamus holds its ground, a massive body at 1500 kg standing against the smaller Lion at 190 kg.",
+            "action": "approach",
+            "animal": "Hippopotamus",
+            "fact_ids": [
+              "E2",
+              "E5"
+            ]
+          },
+          {
+            "text": "The Lion tries to grapple with the Hippopotamus, but the sheer bulk of the Hippopotamus, roughly 7.9 times the Lion's weight, makes the hold difficult to maintain.",
+            "action": "grapple",
+            "animal": "Lion",
+            "fact_ids": [
+              "E1"
+            ]
+          },
+          {
+            "text": "The Hippopotamus turns its 3.5 m frame toward the Lion and pushes forward, using its superior fighting ability to press the attack.",
+            "action": "bite",
+            "animal": "Hippopotamus",
+            "fact_ids": [
+              "E1",
+              "E3"
+            ]
+          },
+          {
+            "text": "The Lion attempts to pull back and retreat from the Hippopotamus's advance, unable to break free of the pressure.",
+            "action": "retreat",
+            "animal": "Lion",
+            "fact_ids": [
+              "E6"
+            ]
+          }
+        ],
+        "finish": {
+          "action": "finish",
+          "animal": "Hippopotamus",
+          "fact_ids": [
+            "E1",
+            "E2"
+          ],
+          "text": "In this hypothetical matchup, the Hippopotamus prevails through its superior fighting ability, outweighing the Lion by about 7.9 to 1 at 1500 kg against 190 kg."
+        }
+      }
+    },
+    {
+      "name": "Hippopotamus vs Lion attempt 2",
+      "original_failure": {
+        "check": "text_consistency",
+        "missing_number": "1500"
+      },
+      "expected": "accept",
+      "raw_output": {
+        "beats": [
+          {
+            "text": "The Lion approaches the Hippopotamus quickly, testing the ground between them in this hypothetical matchup.",
+            "action": "approach",
+            "animal": "Lion",
+            "fact_ids": [
+              "E7"
+            ]
+          },
+          {
+            "text": "The Hippopotamus stands its ground as the Lion closes in, its bulk looming over the smaller cat.",
+            "action": "dodge",
+            "animal": "Hippopotamus",
+            "fact_ids": [
+              "E1",
+              "E2"
+            ]
+          },
+          {
+            "text": "The Lion charges with its top speed of 80 km/h, aiming to reach the Hippopotamus before it can settle.",
+            "action": "charge",
+            "animal": "Lion",
+            "fact_ids": [
+              "E7",
+              "E5"
+            ]
+          },
+          {
+            "text": "The Hippopotamus answers with a powerful bite, its heavier frame of 1500 kg bearing down on the Lion.",
+            "action": "bite",
+            "animal": "Hippopotamus",
+            "fact_ids": [
+              "E1",
+              "E2"
+            ]
+          },
+          {
+            "text": "The Hippopotamus holds the advantage, outweighing the Lion by about 7.9 to 1 at 1500 kg against 190 kg.",
+            "action": "grapple",
+            "animal": "Hippopotamus",
+            "fact_ids": [
+              "E1",
+              "E5"
+            ]
+          },
+          {
+            "text": "The Lion attempts to break away, but its speed of 80 km/h cannot free it from the Hippopotamus.",
+            "action": "retreat",
+            "animal": "Lion",
+            "fact_ids": [
+              "E7",
+              "E4"
+            ]
+          }
+        ],
+        "finish": {
+          "action": "finish",
+          "animal": "Hippopotamus",
+          "text": "In this hypothetical matchup, the Hippopotamus prevails through its superior fighting ability, outweighing the Lion by about 7.9 to 1 at 1500 kg against 190 kg.",
+          "fact_ids": [
+            "E1",
+            "E2",
+            "E5"
+          ]
+        }
+      }
+    }
+  ]
+}

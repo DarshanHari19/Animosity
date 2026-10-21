@@ -3,6 +3,7 @@ import { useCreateFight, useGetAnimals, getGetAnimalsQueryKey } from "@workspace
 import type { FightInputEnvironment, FightInputMode, FightResponse } from "@workspace/api-client-react";
 import { StickFigure } from "@/components/stick-figure";
 import { MatchupResultCard } from "@/components/matchup-result";
+import { ReadableFact } from "@/components/readable-fact";
 
 const BEAT_MS = 1500;
 
@@ -86,7 +87,7 @@ export default function Home() {
         <ul className="list-disc pl-5">
           <li>Seven adult-male trait profiles are loaded from user-provided data. Review field-level source notes and values before treating them as verified facts.</li>
           <li>v1 scores body mass and, where comparable, bite force only. These hypothetical results are not scientific predictions.</li>
-          <li>Favored/even outcomes require a configured narration provider; other outcomes receive an explanation without an LLM call.</li>
+          <li>A valid verdict is shown even when narration is unavailable; non-narrated outcomes receive an explanation without an LLM call.</li>
         </ul>
       </section>
 
@@ -147,13 +148,17 @@ export default function Home() {
             {beats.slice(0, shown).map((beat, i) => (
               <li key={i} data-testid={`text-beat-${i}`}>
                 <span className="font-semibold">{beat.animal ?? "No winner"}</span> [{beat.action}]: {beat.text}
-                <div className="text-muted-foreground">Facts: {beat.facts_used.join(" | ")}</div>
+                <div className="text-muted-foreground">Facts: {beat.facts_used.map((fact, index) => (
+                  <span key={index}>{index > 0 && " | "}<ReadableFact fact={fact} /></span>
+                ))}</div>
               </li>
             ))}
           </ol>
           </>}
           {done && result && (
-            <MatchupResultCard result={result} explanation={playback.response.explanation} />
+            <MatchupResultCard result={result} explanation={playback.response.explanation}
+              narrationStatus={playback.response.narration_status}
+              narrationReason={playback.response.narration_reason} />
           )}
         </section>
       )}

@@ -1,9 +1,9 @@
-import type { MatchupResult } from "@workspace/api-client-react";
+import type { FightResponse, MatchupResult } from "@workspace/api-client-react";
 
 function outcomeLabel(outcome: MatchupResult["outcome"]): string {
   switch (outcome.kind) {
     case "favored": return `${outcome.animal} favored`;
-    case "even": return "Even matchup";
+    case "even": return "Too close to call";
     case "indeterminate": return "Indeterminate";
     case "no_contest": return "No contest";
     case "no_engagement": return outcome.animals.length === 2
@@ -12,12 +12,20 @@ function outcomeLabel(outcome: MatchupResult["outcome"]): string {
   }
 }
 
-export function MatchupResultCard({ result, explanation }: {
+export function MatchupResultCard({ result, explanation, narrationStatus, narrationReason }: {
   result: MatchupResult; explanation: string | null;
+  narrationStatus?: FightResponse["narration_status"];
+  narrationReason?: FightResponse["narration_reason"];
 }) {
   return (
     <div className="border p-3 space-y-1" data-testid="card-result">
       <p data-testid="text-outcome"><strong>{outcomeLabel(result.outcome)}</strong></p>
+      {result.outcome.kind === "even" && <p data-testid="text-even-scope">
+        Scored factors (body mass, comparable bite force) don't separate these two.
+      </p>}
+      {narrationStatus === "unavailable" && <p data-testid="text-narration-unavailable">
+        Narration unavailable.{narrationReason && ` (${narrationReason})`}
+      </p>}
       <p data-testid="text-deciding-factor">Deciding factor: {result.deciding_factor?.replaceAll("_", " ") ?? "None"}</p>
       <p data-testid="text-evidence-quality">Evidence quality: {{
         mostly_higher_tier: "Mostly higher-tier sources",

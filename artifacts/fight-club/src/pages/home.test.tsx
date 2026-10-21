@@ -175,6 +175,19 @@ describe("Home request and status handling", () => {
 });
 
 describe("Home playback", () => {
+  it.each(["INVALID_NARRATION", "LLM_PROVIDER_FAILURE", "NARRATION_DAILY_CAP_REACHED"] as const)(
+    "shows a verdict immediately without playback when narration is unavailable: %s", async (reason) => {
+      const response = { ...responseFixture(), beats: [], narration_status: "unavailable" as const, narration_reason: reason };
+      fightReply = async () => jsonResponse(response);
+      await startFight();
+      expect(screen.getByTestId("card-result")).toBeInTheDocument();
+      expect(screen.getByTestId("text-outcome")).toHaveTextContent("Lion favored");
+      expect(screen.getByTestId("text-narration-unavailable")).toHaveTextContent(`Narration unavailable. (${reason})`);
+      expect(beatItems()).toHaveLength(0);
+      expect(vi.getTimerCount()).toBe(0);
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    },
+  );
   it("reveals one beat immediately, then exactly every 1.5 seconds, and only then shows the card", async () => {
     const response = responseFixture();
     const interval = vi.spyOn(window, "setInterval");
@@ -216,7 +229,7 @@ describe("Home playback", () => {
     fightReply = async () => jsonResponse(responseFixture({ kind: "even" }));
     await startFight();
     await advance(6000);
-    expect(screen.getByTestId("text-outcome")).toHaveTextContent("Even matchup");
+    expect(screen.getByTestId("text-outcome")).toHaveTextContent("Too close to call");
     expect(screen.getByTestId("text-beat-4")).toHaveTextContent("No winner [finish]");
     expect(figureTransform("left")).toBe("translate(90 100) scale(1 1) rotate(0)");
     expect(figureTransform("right")).toBe("translate(230 100) scale(-1 1) rotate(0)");
@@ -263,7 +276,7 @@ describe("Home playback", () => {
     await advance(1);
     expect(beatItems()).toHaveLength(2);
     await advance(4500);
-    expect(screen.getByTestId("text-outcome")).toHaveTextContent("Even matchup");
+    expect(screen.getByTestId("text-outcome")).toHaveTextContent("Too close to call");
     expect(interval).toHaveBeenCalledTimes(2);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -304,7 +317,7 @@ describe("Home playback", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(beatItems()).toHaveLength(1);
     await advance(6000);
-    expect(screen.getByTestId("text-outcome")).toHaveTextContent("Even matchup");
+    expect(screen.getByTestId("text-outcome")).toHaveTextContent("Too close to call");
     expect(vi.getTimerCount()).toBe(0);
   });
 });
