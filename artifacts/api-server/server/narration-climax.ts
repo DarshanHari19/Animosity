@@ -1,66 +1,44 @@
 import type { Animal, Environment, EngineContext, MatchupResult } from "./schemas";
 import type { FailureCheck } from "./narration-diagnostics";
-import { isEnvironmental } from "./narration-evidence";
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const number = /\d|\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|half|quarter)\b/i;
-const reason = /\b(?:because|thanks to|due to|owing to|outweighs|heavier|stronger|faster|advantage|superior)\b/i;
-const gore = /\b(?:blood\w*|bleed\w*|gore|gory|entrails|disembowel\w*|decapitat\w*|dismember\w*)\b/i;
-const death = /\b(?:kill\w*|dead|death|dies|fatal|lethal)\b/i;
-const notPresent = /\b(?:will|would|was|were|had|drove|rammed|knocked|pinned|seized|dragged|wrestled|held|overpowered|retreated|broke|ended)\b/i;
-const styles: Record<Animal["fighting_style"], RegExp> = {
-  charge: /\b(?:ram(?:s|ming)?|knock(?:s|ing)? (?:.{1,40} )?down|pin(?:s|ning)?)\b/i,
-  ambush: /\b(?:seiz(?:es|ing)|drag(?:s|ging)? (?:.{1,40} )?down)\b/i,
-  grapple: /\b(?:wrestl(?:es|ing) (?:.{1,40} )?down|hold(?:s|ing)?)\b/i,
-  bluff: /\boverpowers?\b.*\bdrives?\b.*\bback\b/i,
-  sustained: /\b(?:presses?|overpowers?|holds?)\b/i,
-};
+const reason = /\b(?:because|thanks to|due to)\b/i;
+const percentage = /[%％]|\b(?:percent(?:age|ages|s|ile|iles)?|per[\s-]+cent|pct)\b/i;
+const positiveClaim = /\b(?:wins?|won|winner|victor|victorious|victory|prevails?|prevailed|defeats?|defeated|beats|favou?red)\b/i;
+const negated = /\b(?:no|not|never|neither|without|cannot|can't)\b/i;
 
-/** Conservative choreography checks, scoped to the newly approved finish climax. */
+function namesWinner(clause: string, name: string): boolean {
+  if (negated.test(clause)) return false;
+  const animal = `\\b${escape(name)}\\b`;
+  return new RegExp(`${animal}(?:\\s+(?:clearly|decisively|ultimately))?\\s+` +
+    `(?:(?:is|was|becomes|became|emerges|emerged|remains|stands)(?:\\s+(?:as|the|clear|sole))*\\s+)?` +
+    `(?:wins?|won|winner|victor|victorious|prevails?|prevailed|defeats?|defeated|beats|favou?red|overpowers?|pins?)\\b`, "i").test(clause) ||
+    new RegExp(`\\b(?:(?:winner|victor)\\s*(?:(?:is|was)\\s*)?[:=]?|victory\\s+goes\\s+to)\\s*${animal}`, "i").test(clause) ||
+    new RegExp(`${animal}\\s+drives?\\b[^.!?;]*\\b(?:off|back|away)\\b`, "i").test(clause);
+}
+
+/** Only the approved hard limits. Choreography and prose style are prompt guidance. */
 export function climaxChecks(
   text: string, result: MatchupResult, a: Animal, b: Animal,
-  mode: EngineContext["mode"], environment: Environment,
+  _mode: EngineContext["mode"], _environment: Environment,
 ): FailureCheck[] {
   const messages: string[] = [];
-  if (text.split(/\s+/).length >= 25) messages.push("Climax must be under 25 words.");
-  if (!/^[^.!?\n]+[.!?]$/.test(text)) messages.push("Climax must be exactly one sentence.");
   if (number.test(text)) messages.push("Climax must contain no numbers.");
+  if (percentage.test(text)) messages.push("Climax must contain no percentages.");
   if (reason.test(text)) messages.push("Climax must not give reasons for the outcome.");
-  if (gore.test(text)) messages.push("Climax must contain no gore.");
-  if (mode === "realistic" && death.test(text)) messages.push("In the wild the climax must contain no death.");
-  if (notPresent.test(text)) messages.push("Climax must use present tense.");
+  if (/\bhypothetical\b/i.test(text)) messages.push("Climax must not use 'hypothetical'.");
+  const clauses = text.split(/[.!?;,]|\b(?:until|while|although|but|as)\b/i);
   if (result.outcome.kind === "even") {
-    const namesBoth = a.name !== b.name && text.includes(a.name) && text.includes(b.name);
-    if ((!/\bboth\b/i.test(text) && !namesBoth) || !/\bbreak(?:s)? (?:off|away|apart)\b/i.test(text) ||
-      !/\bneither\b.*\b(?:giving|gives?|yielding|yields?) ground\b/i.test(text)) {
-      messages.push("Even climax must show both breaking off with neither giving ground.");
+    if (clauses.some(clause => (!negated.test(clause) && positiveClaim.test(clause)) ||
+      [a.name, b.name].some(name => namesWinner(clause, name)))) {
+      messages.push("An even climax must not name a winner.");
     }
   } else if (result.outcome.kind === "favored") {
-    const winner = result.outcome.animal;
-    const favored = winner === a.name ? a : b;
-    const other = winner === a.name ? b : a;
-    if (!text.includes(winner) || !text.includes(other.name)) messages.push("Name both animals in the climax.");
-    if (isEnvironmental(result)) {
-      if (!new RegExp(`${escape(other.name)}\\b[^.!?]*\\b(?:can't|cannot|is unable to) (?:fight|continue|function)\\b`, "i").test(text) ||
-        !text.toLowerCase().includes(environment.replaceAll("_", " "))) {
-        messages.push("Environmental climax must show the other animal unable to fight in the selected setting.");
-      }
-    } else {
-      const actor = new RegExp(`${escape(winner)}\\s+(?:\\w+ly\\s+)?(?:charges?|drives?|rams?|knocks?|pins?|seizes?|drags?|wrestles?|holds?|overpowers?|presses?)\\b`, "i");
-      if (!actor.test(text)) messages.push("The favored animal must perform the conclusive action.");
-      if (mode === "realistic") {
-        if (!/\bdrives?\b.*\b(?:off|back|away)\b/i.test(text) ||
-          !new RegExp(`${escape(other.name)}\\b[^.!?]*\\b(?:retreats?|breaks? away)\\b`, "i").test(text)) {
-          messages.push("In the wild the favored animal drives the other off, and the other retreats or breaks away hurt.");
-        }
-        if (/\bbreaks? away\b/i.test(text) && !/\bhurt\b/i.test(text)) messages.push("A breakaway must say hurt.");
-      } else {
-        if (/\b(?:retreat\w*|breaks? away|flees?|escapes?)\b/i.test(text)) messages.push("Arena favored climax allows no retreat.");
-        if (!styles[favored.fighting_style].test(text)) messages.push(`Climax must fit ${favored.fighting_style} fighting style.`);
-        if (!new RegExp(`${escape(other.name)}\\b[^.!?]*\\b(?:can't|cannot|is unable to) continue\\b`, "i").test(text)) {
-          messages.push("Arena favored climax must end with the other animal unable to continue.");
-        }
-      }
+    const favored = result.outcome.animal;
+    if ([a.name, b.name].filter(name => name !== favored)
+      .some(name => clauses.some(clause => namesWinner(clause, name)))) {
+      messages.push("A favored climax must not show the other animal winning.");
     }
   }
   return messages.length ? [{

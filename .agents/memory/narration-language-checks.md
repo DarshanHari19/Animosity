@@ -9,7 +9,9 @@ template, do not treat one phrasing as the only valid expression of the rule.
 
 **Why:** Live conclusive narration legitimately used “break apart” instead of
 “break off” and compound action verbs; overly literal new checks rejected these
-despite satisfying the intended choreography.
+despite satisfying the intended choreography. The user subsequently said the
+climax checks were too strict and explicitly distinguished hard limits from
+prompt guidance; stylistic instructions alone do not authorize extra hard gates.
 
 **How to apply:** Keep existing numeric, evidence, outcome and retry guarantees
 intact. Distinguish actual model rule violations from false rejections before

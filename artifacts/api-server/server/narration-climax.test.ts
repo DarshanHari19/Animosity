@@ -29,11 +29,11 @@ const response = (climax: unknown) => Response.json({
   choices: [{ message: { content: JSON.stringify(wire(climax)) } }],
 });
 
-test("climax honors wild, Arena, even and environmental choreography without changing verdicts", () => {
+test("climax mode and environmental choreography are guidance, not hard checks", () => {
   assert.deepEqual(climaxChecks(wild, favored, hippo, lion, "realistic", "land"), []);
   assert.deepEqual(climaxChecks(arena, favored, hippo, lion, "forced_fight", "land"), []);
-  assert.ok(climaxChecks(wild, favored, hippo, lion, "forced_fight", "land").length);
-  assert.ok(climaxChecks(arena, favored, hippo, lion, "realistic", "land").length);
+  assert.deepEqual(climaxChecks(wild, favored, hippo, lion, "forced_fight", "land"), []);
+  assert.deepEqual(climaxChecks(arena, favored, hippo, lion, "realistic", "land"), []);
   const even = scoreMatchup(lion, bear, context);
   assert.equal(even.outcome.kind, "even");
   assert.deepEqual(climaxChecks(evenText, even, lion, bear, "forced_fight", "land"), []);
@@ -43,13 +43,13 @@ test("climax honors wild, Arena, even and environmental choreography without cha
     "The Great white shark circles as the Lion cannot fight in deep water.",
     environmental, shark, lion, "forced_fight", "deep_water",
   ), []);
-  assert.ok(climaxChecks(
+  assert.deepEqual(climaxChecks(
     "The Great white shark seizes the Lion until the Lion cannot continue.",
     environmental, shark, lion, "forced_fight", "deep_water",
-  ).length);
+  ), []);
 });
 
-test("climax choreography matches every fighting style, not an extra scoring factor", () => {
+test("climax fighting-style moves remain allowed but style matching is guidance only", () => {
   // Test-only style variants exercise presentation, not animal measurements or engine rules.
   for (const [style, action] of [
     ["charge", "rams the Lion down"], ["ambush", "seizes the Lion"],
@@ -62,13 +62,13 @@ test("climax choreography matches every fighting style, not an extra scoring fac
       favored, animal, lion, "forced_fight", "land",
     ), []);
   }
-  assert.ok(climaxChecks(
+  assert.deepEqual(climaxChecks(
     "The Hippopotamus seizes the Lion until the Lion cannot continue.",
     favored, hippo, lion, "forced_fight", "land",
-  ).length);
+  ), []);
 });
 
-test("meaning-preserving live climax phrasing is accepted without dropping outcome or mode rules", () => {
+test("recorded live climax phrasing passes without requiring a scripted ending", () => {
   const even = scoreMatchup(lion, bear, context);
   for (const text of [
     "The Lion and the Grizzly bear break apart, neither giving ground, and the standoff ends on open grassland.",
@@ -82,29 +82,54 @@ test("meaning-preserving live climax phrasing is accepted without dropping outco
     "The Hippopotamus charges full force, knocking the Lion down until the Lion cannot continue.",
     favored, hippo, lion, "forced_fight", "land",
   ), []);
-  assert.ok(climaxChecks(
+  assert.deepEqual(climaxChecks(
     "The Hippopotamus charges full force, knocking the Lion down and ending the forced fight.",
     favored, hippo, lion, "forced_fight", "land",
-  ).length); // Still missing the other's inability to continue.
+  ), []); // Explicit inability to continue is now guidance, not a hard check.
 });
 
-test("climax rejects extra sentences, 25 words, digits, number words, reasons, gore and past tense", () => {
+test("climax rejects only the approved numbers, percentages, reasons and hypothetical wording", () => {
   for (const text of [
-    `${arena} Another sentence.`,
-    `The Hippopotamus ${"firmly ".repeat(20)}rams the Lion until the Lion cannot continue.`,
     arena.replace("rams", "rams 2 times at"),
     arena.replace("rams", "rams two times at"),
     arena.replace("until", "because"),
     arena.replace("until", "thanks to its weight"),
-    arena.replace("rams", "bloodily kills and rams"),
-    arena.replace("rams", "rammed"),
+    arena.replace("until", "due to its weight"),
+    "The Hippopotamus prevails, percent by percent.",
+    "The Hippopotamus is favored %.",
+    "A hypothetical encounter ends.",
+    "A HYPOTHETICAL encounter ends.",
   ]) assert.ok(climaxChecks(text, favored, hippo, lion, "forced_fight", "land").length, text);
   const exactly24 = arena.replace("until", `${"firmly ".repeat(13)}until`);
   assert.equal(exactly24.split(/\s+/).length, 24);
   assert.deepEqual(climaxChecks(exactly24, favored, hippo, lion, "forced_fight", "land"), []);
   const exactly25 = exactly24.replace("until", "firmly until");
   assert.equal(exactly25.split(/\s+/).length, 25);
-  assert.match(climaxChecks(exactly25, favored, hippo, lion, "forced_fight", "land")[0]!.issues![0]!.message, /under 25/);
+  assert.deepEqual(climaxChecks(exactly25, favored, hippo, lion, "forced_fight", "land"), []);
+  for (const text of [
+    `${arena} Another sentence.`,
+    arena.replace("rams", "rammed"),
+    arena.replace("rams", "bloodily kills and rams"),
+    "The Hippopotamus looms.", // Both names/action list no longer required.
+    "The Hippopotamus is heavier.", // Descriptive wording is not a causal phrase.
+    "A hypothetical-looking animal pauses.",
+  ]) {
+    // Whole-word hypothetical still fails, independent of prose guidance.
+    if (text.includes("hypothetical")) assert.ok(climaxChecks(text, favored, hippo, lion, "realistic", "land").length);
+    else assert.deepEqual(climaxChecks(text, favored, hippo, lion, "realistic", "land"), []);
+  }
+});
+
+test("climax rejects the other animal winning and any named winner for even", () => {
+  for (const text of ["The Lion wins.", "The winner is Lion.", "The Lion drives the Hippopotamus off.",
+    "The Lion pins the Hippopotamus until the Hippopotamus cannot continue."]) {
+    assert.ok(climaxChecks(text, favored, hippo, lion, "forced_fight", "land").length, text);
+  }
+  const even = scoreMatchup(lion, bear, context);
+  for (const text of ["The Lion wins.", "The Grizzly bear wins.", "The winner is Lion.", "The Lion overpowers the Grizzly bear."]) {
+    assert.ok(climaxChecks(text, even, lion, bear, "forced_fight", "land").length, text);
+  }
+  assert.deepEqual(climaxChecks("Neither animal wins.", even, lion, bear, "forced_fight", "land"), []);
 });
 
 test("tool requires a climax string and never accepts a model-owned finish", () => {
@@ -146,12 +171,33 @@ test("invalid climax retries once through existing checks, without a verdict-onl
   }
 });
 
+test("prompt-only climax requirements do not leak back through legacy beat checks", async () => {
+  for (const [a, b, environment, mode, climax] of [
+    [hippo, lion, "land", "forced_fight", "The Hippopotamus rammed the Lion. The Lion retreats."],
+    [hippo, lion, "land", "realistic", "The Hippopotamus holds the Lion."],
+    [shark, lion, "deep_water", "forced_fight", "The Great white shark overpowers the Lion."],
+    [lion, bear, "land", "forced_fight", "The animals pause."],
+  ] as const) {
+    let calls = 0;
+    const result = scoreMatchup(a, b, { ...context, environment, mode });
+    const beats = await narrateMatchup(result, a, b, {
+      apiKey: "test-only", environment, mode, reserveProviderCall: () => {},
+      fetch: async () => { calls++; return response(climax); },
+    });
+    assert.equal(calls, 1);
+    assert.ok(beats.at(-1)!.text.startsWith(`${climax} `));
+    assert.deepEqual(beats.at(-1)!.facts_used,
+      narrationEvidence(result, a, b).filter(e => e.kind === (result.deciding_factor === "environmental_advantage" ? "gate" : "scored"))
+        .map(e => e.text));
+  }
+});
+
 test("route passes submitted mode; failed climax preserves HTTP 200 result and empty beats", async t => {
   const server = await startFightServer(t, scoreMatchup, async (result, a, b, options) => {
     assert.equal(options!.mode, "forced_fight");
     return narrateMatchup(result, a, b, {
       ...options, apiKey: "test-only", reserveProviderCall: () => {},
-      fetch: async () => response(wild), // Forbidden Arena retreat on both attempts.
+      fetch: async () => response("The Lion wins."), // Wrong winner on both attempts.
     });
   });
   const http = await server.post({ animalA: hippo.name, animalB: lion.name, ...context });

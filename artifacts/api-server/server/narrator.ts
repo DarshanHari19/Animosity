@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
 import {
   AnimalSchema, beatsSchemaFor, resultSchemaFor, narrationMatchesOutcome,
   type Animal, type Beat, type Environment, type EngineContext, type MatchupResult,
@@ -137,6 +138,7 @@ export async function narrateMatchup(
       evidence: evidenceItems.map(({ id, text, kind }) => ({ id, text, kind })),
     }) },
   ];
+  const narrationId = randomUUID();
 
   for (let attempt = 0; attempt < 2; attempt++) {
     // Reserve immediately before each provider attempt, not once per fight.
@@ -145,7 +147,7 @@ export async function narrateMatchup(
     options.onProviderAttempt?.();
     providerDiagnostics.length = 0;
     const diagnosticContext = {
-      animals: [a.name, b.name], model, attempt: attempt + 1, expectedOutcome: result.outcome,
+      narration_id: narrationId, animals: [a.name, b.name], model, attempt: attempt + 1, expectedOutcome: result.outcome,
     };
     let rawModelText: string | null = null;
     let parsed: unknown;
@@ -170,6 +172,9 @@ export async function narrateMatchup(
       rawModelText = responseEnvelope.choices[0]!.message.content;
       parsed = JSON.parse(rawModelText);
       const resolved = resolveEvidence(parsed, evidenceItems, a, b);
+      // Preserve all existing beat/verdict checks without applying extra prose
+      // restrictions to the climax, whose hard limits are deliberately separate.
+      const checkedBeats = [...resolved.beats, finish];
       const envelope = envelopeSchema.parse({ beats: [...resolved.beats,
         { ...finish, text: `${resolved.climax} ${finish.text}` }] });
       // Zod and the engine-outcome check remain authoritative after tool use.
@@ -179,9 +184,9 @@ export async function narrateMatchup(
       }
       const textFailures = [
         ...climaxChecks(resolved.climax, result, a, b, mode, environment),
-        ...narrationTextChecks(envelope.beats, result, a, b),
-        ...narrationGroundingChecks(envelope.beats, result, evidenceItems, a, b, environment),
-        ...nonFinishChecks(envelope.beats),
+        ...narrationTextChecks(checkedBeats, result, a, b),
+        ...narrationGroundingChecks(checkedBeats, result, evidenceItems, a, b, environment),
+        ...nonFinishChecks(checkedBeats),
       ];
       if (textFailures.length) {
         checks = textFailures;

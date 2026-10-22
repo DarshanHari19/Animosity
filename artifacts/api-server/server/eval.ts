@@ -6,6 +6,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
 import { AnimalSchema, fightResponseSchemaFor } from "./schemas";
 import { evaluationCases, summarizeEvaluation, type EvaluationRun } from "./evaluation";
+import { diagnosticOffset, readDiagnostics, diagnosticsForRun, summarizeDiagnosticChecks,
+  type EvaluationDiagnostic } from "./narration-diagnostic-store";
 
 const healthSchema = z.object({ status: z.literal("ok"), build_id: z.string().min(1) });
 const manifest = fileURLToPath(new URL("../dist/build-id.json", import.meta.url));
@@ -17,7 +19,7 @@ async function main() {
     "base-url": { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) {
-    console.log("pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nDefault: all 20 scenarios × 3 runs. Real provider calls; existing limits apply.");
+    console.log("pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nDefault: all 20 scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.");
     return;
   }
   const repeats = Number(values.runs);
@@ -51,6 +53,14 @@ async function main() {
   fs.mkdirSync(directory, { recursive: true });
   const output = path.join(directory, `${new Date().toISOString().replaceAll(":", "-")}.json`);
   const runs: EvaluationRun[] = [];
+  const diagnostics: EvaluationDiagnostic[] = [];
+  let diagnosticCursor = diagnosticOffset();
+  let diagnosticsComplete = true;
+  const save = () => fs.writeFileSync(output, JSON.stringify({
+    build_id: build, rate_deferrals: rateDeferrals, summary: summarizeEvaluation(runs), runs,
+    diagnostics_complete: diagnosticsComplete,
+    failed_checks: summarizeDiagnosticChecks(diagnostics), diagnostics,
+  }, null, 2));
   let previousStart = 0;
   let rateDeferrals = 0;
   console.log(`Build ${build}: ${cases.length} scenarios × ${repeats} runs. Requests paced at least 6.5 seconds apart.`);
@@ -85,8 +95,17 @@ async function main() {
         runs.push({ case_id: c.case_id, run: repeat, attempts: Number(count), started,
           finished: new Date().toISOString(), body });
         console.log(`Case ${c.case_id}, run ${repeat}: ${body.narration_status}; calls=${count}; reason=${body.narration_reason ?? "null"}`);
-        fs.writeFileSync(output, JSON.stringify({ build_id: build, rate_deferrals: rateDeferrals,
-          summary: summarizeEvaluation(runs), runs }, null, 2));
+        try {
+          const records = readDiagnostics(diagnosticCursor);
+          diagnosticCursor = diagnosticOffset();
+          diagnostics.push(...diagnosticsForRun(records, {
+            started, finished: runs.at(-1)!.finished, animals: [a.name, b.name],
+            attempts: Number(count), available: body.narration_status === "available",
+          }));
+        } catch (error) {
+          diagnosticsComplete = false;
+          throw error;
+        } finally { save(); }
         break;
       }
     }
@@ -101,6 +120,14 @@ async function main() {
       id: c.case_id, matchup: `${c.animalA} vs ${c.animalB}`, environment: c.environment, mode: c.mode,
       "First-pass": `${c.first_pass}/${c.runs}`, Unavailable: `${c.unavailable}/${c.runs}`,
     })));
+    console.log("Failed checks across all attempts (each check counted once per failed attempt):");
+    const checks = summarizeDiagnosticChecks(diagnostics);
+    if (checks.length) console.table(checks.map(({ check, failed_attempts, examples }) => ({
+      check, failed_attempts,
+      example_1: examples[0] ?? "", example_2: examples[1] ?? "", example_3: examples[2] ?? "",
+    })));
+    else console.log(diagnosticsComplete ? "No failed checks." : "Diagnostics incomplete; do not interpret missing counts as zero.");
+    if (!diagnosticsComplete) console.error("FAILED-CHECK SUMMARY IS INCOMPLETE.");
     console.log(`${summary.provider_attempts} provider calls; ${rateDeferrals} rate-limit deferrals. Saved ${output}`);
   }
 }

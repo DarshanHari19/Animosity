@@ -65,6 +65,10 @@ validation failure; disable SDK automatic retries. Force the narration tool
   Combine the model climax with the server-owned deterministic verdict using
   the approved templates documented in README.md. The climax follows the engine
   outcome and mode, never adds reasons or scores, and uses the same retry path.
+  Only these are hard climax checks: no numbers, percentages, reasons
+  (“because,” “thanks to,” “due to”), or “hypothetical”; no other animal winning
+  for favored; no named winner for even. All other climax rules are prompt
+  guidance only. Do not promote choreography or prose style into hard gates.
   Ordinary favored finishes cite size and
   only compared bite evidence; environmental finishes cite only engine gate
   evidence and name the other animal's inability to function in the selected

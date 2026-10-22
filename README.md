@@ -187,8 +187,15 @@ Server verdict templates (only already-compared evidence is cited):
 - Even: `Too close to call. Body mass and comparable bite force don't separate these two.`
 
 The model receives the engine outcome, mode and fighting styles for the climax.
-The combined finish is included in the final Zod, citation, wording, grounding,
-and outcome checks; invalid climaxes use the same single corrective retry.
+The public combined finish retains Zod and outcome validation. Hard climax
+checks are limited to no numbers, no percentages, no causal phrases (`because`,
+`thanks to`, `due to`), no whole-word `hypothetical`, no other animal winning
+when favored, and no named winner when even. Length, sentence count, tense,
+gore/death, naming both animals, style moves, retreat, decisive endings and
+environmental inability are prompt guidance only, not acceptance gates.
+All existing wording, citation and grounding checks remain unchanged for the
+non-finish beats and server verdict; they do not add extra climax restrictions.
+Invalid climaxes use the same single corrective retry.
 The verdict is never returned as a finish-only fallback if narration fails.
 
 Only `favored` and `even` outcomes call the narrator. `no_engagement` never does.
@@ -305,3 +312,19 @@ The summary prints first-attempt pass rate, final unavailable rate, every
 first-attempt pass. Gated/non-narrated scenarios stop the evaluation rather than
 inflate pass rates. Validated public responses and summary JSON are saved under
 `generated-artifacts/narration-eval/`, excluded from Git and deployment.
+
+It also prints failed-check counts **across all provider attempts**, including
+failed first attempts recovered by retry, plus up to three distinct example
+sentences per check name. Each check counts once per failed attempt, even if it
+affects multiple beats; totals across different checks can overlap.
+Structural/JSON failures may have no sentence to display.
+
+These details come from the server-only, synchronous journal at
+`generated-artifacts/narration-diagnostics/attempts.jsonl`, not HTTP responses
+or buffered console output. Evaluation reads only new records and correlates
+server timestamps, animal selections and server-generated narration IDs.
+The running API and Shell must share this workspace; `--base-url` does not
+retrieve remote logs. Missing, truncated or ambiguous diagnostics stop the run
+with an explicit incomplete-summary error instead of reporting invented zeroes.
+The saved evaluation JSON includes the matched diagnostics and check summary.
+Raw model output remains in server logs and is never sent through the API.

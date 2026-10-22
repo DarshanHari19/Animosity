@@ -1,5 +1,48 @@
 # Narration protocol test migrations
 
+## Climax hard-limit and evaluation-diagnostics update
+
+No tests deleted. Final verification: 153 backend + 66 frontend = 219 passed;
+workspace TypeScript checks passed. No live fights were run.
+
+Removed hard climax checks:
+1. Under 25 words.
+2. Exactly one sentence and prescribed sentence punctuation.
+3. Present tense.
+4. No gore.
+5. No death in realistic mode.
+6. Naming both animals.
+7. A favored subject/action verb whitelist.
+8. In-the-wild drive-off plus retreat/breakaway choreography.
+9. Explicit “hurt” on a breakaway.
+10. Arena no-retreat wording.
+11. Matching a fighting-style move list.
+12. Explicit inability to continue.
+13. Even break-off/neither-giving-ground wording.
+14. Environmental inability wording and naming the selected setting.
+15. Extra keyword bans (`owing to`, `outweighs`, `heavier`, `stronger`,
+    `faster`, `advantage`, `superior`) beyond the requested causal phrases.
+
+Legacy beat/verdict wording and grounding checks are not reapplied to the climax:
+no additional source/missing-data keyword bans, even-advantage bans, unscored
+trait/reason keyword bans or environmental physical-word bans. Those checks and
+all citation/evidence rules still run unchanged on non-finish beats and the
+server verdict. Public finish Zod/outcome validation remains unchanged.
+
+| Changed test | Old assertion → new assertion | Guarantee preserved |
+| --- | --- | --- |
+| Mode/environment choreography | Wrong mode or missing environmental ending rejected → accepted as prompt guidance; wrong even winner still rejected | Only approved hard climax checks |
+| Fighting styles | Wrong move rejected → accepted; all styles remain valid inputs | Style is choreography, never a scoring factor |
+| Live phrasing regressions | Missing “cannot continue” rejected → accepted | Authentic phrasing accepted without a scripted ending |
+| Climax prose limits | Length/sentence/tense/gore rejected → accepted; numeric rejection retained; percentages/reasons/hypothetical rejected | Explicit hard-list boundary, including 24/25-word cases |
+| Route mode/unavailable behavior | Arena retreat rejected → wrong-winner climax rejected instead | Mode forwarded, same retry limit, HTTP 200 verdict and empty beats on final failure |
+
+Added tests cover favored/even winner violations, guidance-only climax text
+passing through the full narrator, private synchronous diagnostic storage,
+timestamp/invocation correlation, recovered retries, all-attempt check counts,
+three-example limit, missing/overlapping diagnostics, and non-fatal diagnostic
+write errors. Existing evaluator scenario, result and rate summaries are unchanged.
+
 ## Conclusive finish and mode-label update
 
 No tests deleted. Existing guarantees remain; provider fixtures now include a
