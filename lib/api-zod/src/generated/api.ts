@@ -33,7 +33,11 @@ export const GetAnimalsResponseItem = zod.object({
   "armor": zod.enum(['none', 'thick_hide', 'shell', 'scales']),
   "temperament": zod.enum(['avoids', 'defensive', 'aggressive']),
   "fighting_style": zod.enum(['ambush', 'sustained', 'bluff', 'grapple', 'charge']),
-  "functions_in": zod.array(zod.enum(['land', 'shallow_water', 'deep_water'])),
+  "environments": zod.object({
+  "land": zod.enum(['full', 'hampered', 'cannot']),
+  "shallow_water": zod.enum(['full', 'hampered', 'cannot']),
+  "deep_water": zod.enum(['full', 'hampered', 'cannot'])
+}),
   "field_sources": zod.record(zod.string(), zod.object({
   "tier": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(null)]).nullable(),
   "ref": zod.string()

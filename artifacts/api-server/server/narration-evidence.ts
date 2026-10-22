@@ -32,7 +32,7 @@ export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal): 
   for (const animal of [a, b]) {
     for (const [key, value] of Object.entries(animal)) {
       const source = animal.field_sources[key];
-      if (key === "field_sources" || key === "functions_in" ||
+      if (key === "field_sources" || key === "environments" ||
         (key === "bite_force_n" && !comparableBites) ||
         value === null || value === 0 || !source || source.tier === null ||
         !source.ref.trim() || /\bTODO\b/i.test(source.ref)) continue;

@@ -9,9 +9,9 @@ import type { Animal, EngineContext } from "./schemas";
 function animal(name: string, overrides: Partial<Animal> = {}): Animal {
   return {
     ...animals[0]!, name, mass_kg: 100, bite_force_n: null,
-    functions_in: ["land"], temperament: "defensive", fighting_style: "sustained",
+    environments: { land: "full", shallow_water: "cannot", deep_water: "cannot" }, temperament: "defensive", fighting_style: "sustained",
     field_sources: Object.fromEntries(
-      ["functions_in", "temperament", "fighting_style", "mass_kg", "bite_force_n"]
+      ["environments", "temperament", "fighting_style", "mass_kg", "bite_force_n"]
         .map((field) => [field, { tier: 1 as const, ref: "Test-only fixture" }]),
     ),
     ...overrides,
@@ -63,11 +63,12 @@ test("cutoffs are inclusive at +/-0.5; smaller scored advantages are even", () =
   assert.equal(even.deciding_factor, null);
 });
 
-test("function gates precede behavior and do not run numerical factors", () => {
-  const unavailable = animal("A", { functions_in: [], temperament: "avoids" });
+test("cannot environment gates precede behavior and do not run numerical factors", () => {
+  const cannot = { land: "cannot", shallow_water: "cannot", deep_water: "cannot" } as const;
+  const unavailable = animal("A", { environments: cannot, temperament: "avoids" });
   const b = animal("B", { temperament: "avoids" });
   const outcomes = [
-    scoreMatchup(unavailable, { ...b, functions_in: [] }, realistic),
+    scoreMatchup(unavailable, { ...b, environments: cannot }, realistic),
     scoreMatchup(unavailable, b, realistic),
     scoreMatchup(unavailable, b, forced),
   ];
@@ -102,7 +103,7 @@ test("evidence quality uses exact 1/3 and 2/3 boundaries and only stage-consulte
     const a = animal("A", { temperament: "avoids" });
     const b = animal("B");
     const fields = [
-      [a, "functions_in"], [b, "functions_in"],
+      [a, "environments"], [b, "environments"],
       [a, "temperament"], [a, "fighting_style"], [b, "temperament"], [b, "fighting_style"],
     ] as const;
     fields.forEach(([target, field], index) => {

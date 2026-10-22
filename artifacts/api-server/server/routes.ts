@@ -76,7 +76,7 @@ export function createFightRouter(
       } else if (result.outcome.kind === "indeterminate") {
         explanation = `Neither animal can function in ${place}; no numerical factors were scored.`;
       } else if (result.outcome.kind === "no_contest") {
-        const unable = [a, b].filter((animal) => !animal.functions_in.includes(environment));
+        const unable = [a, b].filter((animal) => animal.environments[environment] === "cannot");
         explanation = `No contest: ${unable.map((animal) => animal.name).join(" and ")} cannot function in ${place} in realistic mode.`;
       } else if (result.deciding_factor === "environmental_advantage" && result.outcome.kind === "favored") {
         explanation = `${result.outcome.animal} is favored because the other animal cannot function in ${place}; forced fight counts this environmental disadvantage.`;

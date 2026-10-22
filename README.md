@@ -5,10 +5,10 @@ No database, authentication, hit points, or game loop.
 
 **This is a limited hypothetical model, not a scientific prediction.** The seven
 animal profiles and trait values were entered from user-provided data. The
-`functions_in` references have been reviewed against zoological sources, with
+environment-level references have been reviewed against zoological sources, with
 uncertainties recorded; other trait sources and numerical measurements have not
 been independently verified or changed. Habitat evidence does not validate
-fighting ability or the model's binary environment gates. The scoring
+fighting ability or the model's environment levels (see [METHODOLOGY.md](METHODOLOGY.md)). The scoring
 v1 engine scores body mass and, when source tiers match, bite force only.
 No fake results or fallback narration are substituted. Favored/even outcomes
 require a configured LLM provider; gate outcomes can return explanations without it.
@@ -55,9 +55,9 @@ The backend folder is **`artifacts/api-server/server/`**:
 - `profile` is `adult_male` or `adult_female`; the starter records use
   `adult_male`. `fighting_style` is one of `ambush`, `sustained`, `bluff`,
   `grapple`, or `charge`. The result card states “Assumes adult males.”
-- `functions_in` lists `land`, `shallow_water`, and/or `deep_water`. All seven
-  supplied lists are retained, but their references now distinguish reviewed
-  habitat/locomotion evidence from unresolved model assumptions. See the
+- `environments` assigns `full`, `hampered`, or `cannot` to `land`,
+  `shallow_water`, and `deep_water` per [METHODOLOGY.md](METHODOLOGY.md).
+  References distinguish reviewed habitat/locomotion evidence from model assumptions. See the
   functions_in review in [SOURCES.md](SOURCES.md); these are not established
   fighting capabilities. [METHODOLOGY.md](METHODOLOGY.md) defines the engine rules.
 - `engine.ts`: `scoreMatchup(a, b, { environment, mode, encounter })` implements
@@ -146,7 +146,7 @@ to the existing 5–8 public beats array. Public actions remain `approach`, `cha
 exactly copy an evidence string: a readable scored comparison such as
 `Size: Hippopotamus 1500 kg vs Lion 190 kg; Hippopotamus outweighs Lion about 7.9 to 1.`,
 or a supplied,
-sourced trait reference. `functions_in` is excluded from narrator evidence
+sourced trait reference. Raw `environments` levels are excluded from narrator evidence
 regardless of tier. Zero/null numeric traits, tier-null entries, empty
 references and `TODO` references are excluded from trait evidence.
 The prompt forbids invented facts and requires text to agree with that evidence.

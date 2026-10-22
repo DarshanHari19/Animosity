@@ -21,9 +21,9 @@ test("traits include all seven user-provided animals and their supplied values",
     name: "Lion", profile: "adult_male", mass_kg: 190, length_m: 2.5,
     top_speed_kmh: 80, primary_weapon: "bite", bite_force_n: 5500,
     armor: "none", temperament: "aggressive", fighting_style: "ambush",
-    functions_in: ["land"],
+    environments: { land: "full", shallow_water: "hampered", deep_water: "cannot" },
     field_sources: {
-      functions_in: a.field_sources.functions_in!,
+      environments: a.field_sources.environments!,
       mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
       length_m: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
       top_speed_kmh: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
@@ -36,10 +36,10 @@ test("traits include all seven user-provided animals and their supplied values",
   assert.equal(animals[6]?.bite_force_n, null);
   assert.equal(animals.every((animal) => animal.profile === "adult_male"), true);
   assert.equal(animals.every((animal) => animal.field_sources !== undefined), true);
-  assert.deepEqual(animals.map((animal) => animal.functions_in), [
-    ["land"], ["land", "shallow_water"], ["land", "shallow_water", "deep_water"],
-    ["land"], ["land", "shallow_water"], ["shallow_water", "deep_water"],
-    ["land", "shallow_water"],
+  assert.deepEqual(animals.map((animal) => Object.values(animal.environments)), [
+    ["full", "hampered", "cannot"], ["full", "full", "cannot"], ["hampered", "full", "full"],
+    ["full", "hampered", "cannot"], ["full", "full", "hampered"], ["cannot", "cannot", "full"],
+    ["full", "hampered", "cannot"],
   ]);
   assert.deepEqual(
     animals.map(({ mass_kg, length_m, top_speed_kmh, bite_force_n }) =>
@@ -53,7 +53,7 @@ test("traits include all seven user-provided animals and their supplied values",
   );
 });
 
-test("capability sources distinguish reviewed habitat evidence from unresolved model lists", () => {
+test("environment sources retain reviewed habitat references and original tiers", () => {
   const expected = [
     { tier: null, urls: ["https://www.sfzoo.org/african-lion/", "https://pmc.ncbi.nlm.nih.gov/articles/PMC11236087/"] },
     { tier: null, urls: [
@@ -70,7 +70,7 @@ test("capability sources distinguish reviewed habitat evidence from unresolved m
     { tier: null, urls: ["https://www.marylandzoo.org/animal/southern-white-rhinoceros/"] },
   ];
   animals.forEach((animal, index) => {
-    const source = animal.field_sources.functions_in!;
+    const source = animal.field_sources.environments!;
     const reviewed = expected[index]!;
     assert.equal(source.tier, reviewed.tier, animal.name);
     for (const url of reviewed.urls) {
@@ -90,6 +90,9 @@ test("animal validation uses exact enums and nonnegative nullable numeric fields
     assert.equal(AnimalSchema.safeParse({ ...a, fighting_style }).success, true);
   }
   assert.equal(AnimalSchema.safeParse({ ...a, functions_in: ["air"] }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, environments: { ...a.environments, land: "air" } }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, environments: { land: "full", deep_water: "cannot" } }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, environments: { ...a.environments, air: "full" } }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_juvenile" }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: "adult_female" }).success, true);
   assert.equal(AnimalSchema.safeParse({ ...a, profile: undefined }).success, false);

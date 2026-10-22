@@ -50,7 +50,10 @@ export function narrationGroundingChecks(
         break;
       }
       const scoredNames = scored.map((item) => item.factor_name);
-      if (/\b(?:speed|length|reach|strength|style|bluff|strike|grappling|armor|hide|claws|horns|tusks)\b/i.test(clause) ||
+      const environmentHandicap = scoredNames.includes("Environment") &&
+        /\b(?:environment|hampered|footing)\b/i.test(clause);
+      if (/\b(?:length|reach|strength|style|bluff|strike|armor|hide|claws|horns|tusks)\b/i.test(clause) ||
+        (/\b(?:speed|grappling)\b/i.test(clause) && !environmentHandicap) ||
         (/\bbite\b/i.test(clause) && !scoredNames.includes("Bite force"))) {
         messages.push("An unscored trait is presented as a reason for the outcome.");
         break;

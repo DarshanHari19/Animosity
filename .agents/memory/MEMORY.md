@@ -1,3 +1,4 @@
 - [DOM test dependency compatibility](dom-test-dependencies.md) — package installs may accept unsupported Node engines; check runtime compatibility before upgrading.
 - [Narration evaluation logs](narration-evaluation-logs.md) — correlate failures by embedded timestamps, not log arrival; buffered warnings can arrive during the next request.
 - [Narration language checks](narration-language-checks.md) — test legitimate paraphrases as well as violations; prose requirements are not exact templates unless specified.
+- [Git inspection protection](git-inspection-protection.md) — a Git read can print its result yet report blocked metadata access; do not confuse this with a failed app check.

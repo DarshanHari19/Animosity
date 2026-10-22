@@ -54,7 +54,7 @@ test("matching favored outcome returns validated beats in one call", async () =>
   assert.match(mock.calls[0]!.messages[0]!.content, /Do not invent/);
   const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: EvidenceItem[] };
   assert.ok(payload.evidence.some(({ text }) => text === fixtureEvidence));
-  assert.equal(payload.evidence.some(({ text }) => text.includes(".functions_in")), false);
+  assert.equal(payload.evidence.some(({ text }) => text.includes(".environments")), false);
 });
 
 test("a model-supplied wrong finish retries once; server keeps the favored actor", async () => {
@@ -142,22 +142,22 @@ test("TODO references remain excluded even with a non-null source tier", async (
   await assert.rejects(narrateMatchup(result, pending, b, unsupported.options), errorCode("INVALID_NARRATION"));
 });
 
-test("functions_in is never accepted as trait evidence, regardless of tier", async () => {
+test("raw environments are never accepted as trait evidence, regardless of tier", async () => {
   for (const tier of [1, 2, 3, null] as const) {
     const ref = "Test-only capability reference";
     const subject = {
       ...a,
       field_sources: {
         ...a.field_sources,
-        functions_in: { tier, ref },
+        environments: { tier, ref },
       },
     };
     const mock = mockProvider([provider(beatsFor(a.name))]);
     await narrateMatchup(result, subject, b, mock.options);
     const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: EvidenceItem[] };
-    assert.equal(payload.evidence.some(({ text }) => text.includes(".functions_in")), false);
+    assert.equal(payload.evidence.some(({ text }) => text.includes(".environments")), false);
 
-    const excludedFact = `${a.name}.functions_in = ${JSON.stringify(a.functions_in)} [tier ${tier}; ${ref}]`;
+    const excludedFact = `${a.name}.environments = ${JSON.stringify(a.environments)} [tier ${tier}; ${ref}]`;
     const bad = provider(beatsFor(a.name).map((beat) => ({
       ...beat, facts_used: [excludedFact],
     })));
@@ -236,13 +236,13 @@ test("ID evidence retains zero, null, null-tier, empty-reference and missing-sou
       length_m: { tier: null, ref: "Unverified" },
       top_speed_kmh: { tier: 1 as const, ref: " " },
       temperament: { tier: 1 as const, ref: "TODO: verify" },
-      functions_in: { tier: 1 as const, ref: "Excluded capability metadata" },
+      environments: { tier: 1 as const, ref: "Excluded environment metadata" },
     },
   };
   const mock = mockProvider([wire("E1")]);
   await narrateMatchup(result, subject, b, mock.options);
   const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: EvidenceItem[] };
-  for (const field of ["mass_kg", "bite_force_n", "length_m", "top_speed_kmh", "temperament", "functions_in", "primary_weapon"]) {
+  for (const field of ["mass_kg", "bite_force_n", "length_m", "top_speed_kmh", "temperament", "environments", "primary_weapon"]) {
     assert.equal(payload.evidence.some(({ text }) => text.startsWith(`${a.name}.${field} =`)), false, field);
   }
 });

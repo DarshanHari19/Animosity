@@ -2,7 +2,7 @@
 
 Version 1 spec, Oct 21, 2026. How Animosity sources animal data and decides who is favored. Updated whenever the method changes.
 
-Status: specified; engine implementation pending (see NEXT_PROMPT_engine.md).
+Status: v1 engine implemented.
 
 ## Principles
 
@@ -16,9 +16,11 @@ Status: specified; engine implementation pending (see NEXT_PROMPT_engine.md).
 
 | Setting | Options | Default | Controls |
 |---|---|---|---|
-| Environment | land, shallow_water, deep_water | land | Where the encounter happens and whether each animal can function there |
+| Environment | land, shallow_water, deep_water | land | Where the encounter happens and how well each animal functions there |
 | Mode | realistic, forced_fight | realistic | Whether animals are willing to fight |
 | Encounter | face_off (ambush planned) | face_off | How the encounter starts |
+
+UI default: Arena (forced_fight). In the wild (realistic) is optional.
 
 **Realistic:** animals behave as they do in the wild. Reluctant animals may back off; an animal that can't function in the environment means no contest.
 
@@ -35,7 +37,7 @@ Status: specified; engine implementation pending (see NEXT_PROMPT_engine.md).
 | Advantage score | number, or null for gated outcomes |
 | Factors | list of {name, value, reason} |
 
-UI labels: "[Animal] favored", "Even matchup", "No fight: [Animal] backs off" / "No fight: both animals back off", "Indeterminate", "No contest". Evidence: "Mostly higher-tier sources", "Mixed sources", "Mostly lower-tier or unknown sources".
+UI labels: "[Animal] favored", "Too close to call", "No fight: [Animal] backs off" / "No fight: both animals back off", "Indeterminate", "No contest". Evidence: "Mostly higher-tier sources", "Mixed sources", "Mostly lower-tier or unknown sources".
 
 Narration (5 to 8 beats) only for favored and even. Other outcomes return a one-line explanation, no LLM call.
 
@@ -50,15 +52,31 @@ Narration (5 to 8 beats) only for favored and even. Other outcomes return a one-
 
 Never used: video compilations, fight forums, "who would win" wikis, language-model knowledge. Bite force stored in newtons. Full list: SOURCES.md.
 
+## Environment levels (replaces functions_in)
+
+Each animal has a level for each environment: full, hampered, or cannot.
+- Shallow water: water an adult land mammal can stand in, such as a river edge.
+- Deep water: water too deep to stand in.
+- Levels are model assumptions, not measurements. Sources support habitat use only (see SOURCES.md, functions_in review). "cannot" is reserved for cases no reasonable person would dispute.
+
+| Animal | Land | Shallow water | Deep water |
+|---|---|---|---|
+| Lion | full | hampered | cannot |
+| Grizzly bear | full | full | cannot |
+| Gorilla | full | hampered | cannot |
+| Rhinoceros | full | hampered | cannot |
+| Hippopotamus | full | full | hampered |
+| Saltwater crocodile | hampered | full | full |
+| Great white shark | cannot | cannot | full |
+
 ## How the outcome is calculated
 
 **Step 0: Input validation.** Runs first, even if a gate would apply. Mass for both animals must be finite and greater than 0; any compared bite force must be finite and greater than 0. Otherwise a clear validation error. Never NaN, Infinity, or a fallback result.
 
-**Step 1: Function check.** An animal can function if the environment is in its functions_in.
-- Neither can: indeterminate.
-- One can't: realistic returns no_contest; forced_fight returns the other animal favored, environmental_advantage.
-
-functions_in gates apply even when the list's source tier is null. Habitat evidence does not validate gate outcomes.
+**Step 1: Environment check.** Uses each animal's level for the selected environment.
+- Both cannot: indeterminate.
+- One cannot: realistic returns no_contest; forced_fight returns the other animal favored, environmental_advantage.
+- Otherwise continue to scoring. Gates apply even when the level's source tier is null.
 
 **Step 2: Behavior check (realistic only).**
 - reluctant(x) = temperament "avoids" or fighting_style "bluff"
@@ -71,12 +89,20 @@ functions_in gates apply even when the list's source tier is null. Habitat evide
 |---|---|---|
 | Size | 0.8 × (log2(mass A) − log2(mass B)) | Counts doublings so huge ratios don't dominate. 0.8 is a tuning choice |
 | Bite force comparison | 0.5 × (log2(bite A) − log2(bite B)), only when both values are non-null and both source tiers are non-null and equal; otherwise 0 | A source-tier filter, not proof of the same measurement method. Compares bites to each other, not bites against defenses |
+| Environment handicap | −0.8 if A is hampered; +0.8 if B is hampered; both hampered cancel out | Lost footing, speed, and grappling, not lost mass. 0.8 equals the size score of a 2:1 mass edge. Set by calibration against the anchors below |
+
+**Calibration anchors** (design expectations, not findings):
+- Saltwater crocodile vs Lion, shallow water: crocodile favored (about +1.8)
+- Saltwater crocodile vs Lion, land: too close to call (about +0.2)
+- Hippopotamus vs Saltwater crocodile, deep water: hippopotamus favored (about +0.59)
+- Saltwater crocodile vs Grizzly bear, land: too close to call (about −0.2)
+- Hippopotamus vs Lion, shallow water: hippopotamus favored (about +3.2)
 
 Differences of logs are used instead of log of a ratio to avoid overflow.
 
 **Step 4: Decide.** advantage_score = sum of factors. 0.5 or more favors A; −0.5 or less favors B; otherwise even (no decisive advantage on the scored factors). With bite excluded, an animal needs about a **1.54x mass advantage** to be favored, since 0.8 × log2(1.54) ≈ 0.5.
 
-**Step 5: Evidence quality.** Tiers of every field consulted: functions_in always; temperament and fighting_style when the behavior check ran; mass when factors ran; bite force when compared. Null counts as lower tier. Share of tier 1 or 2 at 2/3 or more: mostly_higher_tier. 1/3 or less: mostly_lower_tier_or_unknown. Otherwise mixed.
+**Step 5: Evidence quality.** Tiers of every field consulted: environment level always; temperament and fighting_style when the behavior check ran; mass when factors ran; bite force when compared. Null counts as lower tier. Share of tier 1 or 2 at 2/3 or more: mostly_higher_tier. 1/3 or less: mostly_lower_tier_or_unknown. Otherwise mixed.
 
 **Step 6: Encounter label.** Always hypothetical in v1.
 
@@ -89,22 +115,25 @@ Differences of logs are used instead of log of a ratio to avoid overflow.
 
 ## Known limitations and open questions
 
-- [ ] Lion land-only list is contradicted by documented swimming (Braczkowski et al. 2024). Revisit once shallow_water is defined.
 - [ ] **Confidence method.** None validated yet.
 - [ ] **Fighting style weights.** Charging, grappling, ambush matter, but any numeric value today would be arbitrary.
 - [ ] **Ambush encounter.** Disabled until first-strike effects have a basis.
 - [ ] **Defenses.** The bite comparison measures who bites harder, not how well a bite gets through the other animal's body. Needs sourced hide_thickness_mm and canine_length_mm for most animals first.
 - [ ] **Estimating missing bite force.** Only with a validated relationship for that animal group, and only if it doesn't double-count size.
 - [ ] **Encounter labels.** Ranges overlap needs range data; documented needs a curated list of field studies.
-- [ ] **Shallow water.** Define it (e.g. an adult can stand with its head above the surface) and source functions_in per animal.
 - [ ] **Both animals incapacitated.** Returns indeterminate; no endurance comparison until there's evidence.
 - [ ] **Sex and age.** All profiles are adult males; adult females planned.
-- [ ] **Tuning cases.** Croc vs. lion on land (score about +1.0, croc favored) and gorilla vs. grizzly in forced fight (about +0.47, even). Decide and log.
+- [ ] **Tuning cases.** Gorilla vs. grizzly in forced fight (about +0.47, even). Decide and log.
+- [ ] **Environment handicap size.** One fixed value for every hampered animal. Real effects vary by animal, opponent, depth, and footing.
+- [ ] **Two water levels.** If shallow vs. deep keeps causing confusion, merge them into a single water environment.
 
 ## Changelog (newest first)
 
 | Date | Change | Reason |
 |---|---|---|
+| Oct 22, 2026 | Environment levels (full, hampered, cannot) replace functions_in; environment handicap factor of 0.8 | A lion in shallow water can fight, but not at full strength; on/off gates couldn't express that |
+| Oct 22, 2026 | UI shows forced_fight as "Arena" (default) and realistic as "In the wild"; even shown as "Too close to call" | Most users want the fight; "even" read as 50/50 |
+| Oct 22, 2026 | Engine writes the verdict sentence; model writes action beats and a climax; failed narration still returns the verdict | Model-written verdicts caused most narration failures |
 | Oct 21, 2026 | functions_in sources reviewed; zoo and aquarium pages are tier 3; unresolved lists stay null; functions_in excluded from narration | Replace TODO refs without redefining tiers |
 | Oct 21, 2026 | Added no_engagement outcome (one or both animals back off); symmetric behavior check | "Even" was conflating no fight with equal ability; input order changed results |
 | Oct 21, 2026 | Renamed evidence labels to higher-tier / lower-tier wording | Tiers describe source quality, not measurement method |

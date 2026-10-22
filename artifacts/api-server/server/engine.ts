@@ -50,7 +50,7 @@ export function scoreMatchup(
     requirePositive(b, "bite_force_n");
   }
 
-  const consulted = [tier(a, "functions_in"), tier(b, "functions_in")];
+  const consulted = [tier(a, "environments"), tier(b, "environments")];
   const finish = (
     outcome: MatchupResult["outcome"],
     deciding_factor: MatchupResult["deciding_factor"],
@@ -61,9 +61,11 @@ export function scoreMatchup(
     evidence_quality: evidenceQuality(consulted), encounter_label: "hypothetical",
   });
 
-  // Step 1: Function check. No numerical score is assigned at a gate.
-  const aFunctions = a.functions_in.includes(environment);
-  const bFunctions = b.functions_in.includes(environment);
+  // Step 1: Cannot levels gate regardless of their source tier.
+  const aLevel = a.environments[environment];
+  const bLevel = b.environments[environment];
+  const aFunctions = aLevel !== "cannot";
+  const bFunctions = bLevel !== "cannot";
   if (!aFunctions && !bFunctions) return finish({ kind: "indeterminate" }, null);
   if (!aFunctions || !bFunctions) {
     return mode === "realistic"
@@ -88,7 +90,7 @@ export function scoreMatchup(
     }
   }
 
-  // Steps 3–4: Only mass and comparable bites contribute to the v1 score.
+  // Steps 3–4: Mass, comparable bites and the specified environment handicap.
   consulted.push(tier(a, "mass_kg"), tier(b, "mass_kg"));
   const factors: MatchupResult["factors"] = [{
     name: "Size",
@@ -106,6 +108,14 @@ export function scoreMatchup(
       value: 0.5 * (Math.log2(a.bite_force_n!) - Math.log2(b.bite_force_n!)),
       reason: `${a.name}: ${a.bite_force_n} N; ${b.name}: ${b.bite_force_n} N. Matching source tiers do not guarantee matching measurement methods; this compares bites to bites, not bites against defenses.`,
     };
+  }
+  if (aLevel === "hampered" || bLevel === "hampered") {
+    factors.push({
+      name: "Environment",
+      value: (aLevel === "hampered" ? -0.8 : 0) + (bLevel === "hampered" ? 0.8 : 0),
+      reason: [a, b].filter(animal => animal.environments[environment] === "hampered")
+        .map(animal => `${animal.name} is hampered in ${environment}: footing, speed, and grappling suffer.`).join(" "),
+    });
   }
   const advantage = factors.reduce((sum, factor) => sum + factor.value, 0);
   // With bite excluded, a roughly 1.54x mass advantage reaches the favored cutoff.

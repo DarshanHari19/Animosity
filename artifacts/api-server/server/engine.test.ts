@@ -10,7 +10,7 @@ test("step 0 rejects invalid mass for either animal before any gate", () => {
   for (const value of [0, -1, NaN, Infinity, -Infinity]) {
     for (const index of [0, 1]) {
       const pair = [animals[0]!, animals[1]!];
-      const bad = { ...pair[index]!, mass_kg: value, functions_in: [] };
+      const bad = { ...pair[index]!, mass_kg: value, environments: { land: "cannot", shallow_water: "cannot", deep_water: "cannot" } as const };
       pair[index] = bad;
       for (const mode of ["realistic", "forced_fight"] as const) {
         assert.throws(
@@ -31,7 +31,7 @@ test("step 0 rejects invalid comparable bites before an environment gate", () =>
         ...animals[1]!, bite_force_n: 100,
         field_sources: { bite_force_n: { tier: 2 as const, ref: "Test fixture" } },
       }];
-      const bad = { ...pair[index]!, bite_force_n: value, functions_in: [] };
+      const bad = { ...pair[index]!, bite_force_n: value, environments: { land: "cannot", shallow_water: "cannot", deep_water: "cannot" } as const };
       pair[index] = bad;
       assert.throws(
         () => scoreMatchup(pair[0]!, pair[1]!, { environment: "land", mode: "realistic", encounter: "face_off" }),
@@ -46,16 +46,27 @@ test("step 0 rejects invalid comparable bites before an environment gate", () =>
 // test-only values, NOT real measurements. Different masses catch accidental
 // numerical scoring in gated outcomes. Other zero/null values are unknowns.
 // These animals must never be added to the production selectable catalog.
-function fixtureAnimal(name: string, mass_kg: number, functions_in: Animal["functions_in"]): Animal {
+function fixtureAnimal(name: string, mass_kg: number, environments: Animal["environments"]): Animal {
   return AnimalSchema.parse({
     name, profile: "adult_male", mass_kg, length_m: 0, top_speed_kmh: 0,
     primary_weapon: "strike", bite_force_n: null, armor: "none",
-    temperament: "avoids", fighting_style: "bluff", functions_in,
-    field_sources: { functions_in: { tier: 3, ref: "TODO: verify" } },
+    temperament: "avoids", fighting_style: "bluff", environments,
+    field_sources: { environments: { tier: 3, ref: "TODO: verify" } },
   });
 }
-const whale = fixtureAnimal("Blue whale", 2, ["deep_water"]);
-const elephant = fixtureAnimal("African elephant", 1, ["land", "shallow_water"]);
+const whale = fixtureAnimal("Blue whale", 2, { land: "cannot", shallow_water: "cannot", deep_water: "full" });
+const elephant = fixtureAnimal("African elephant", 1, { land: "full", shallow_water: "full", deep_water: "cannot" });
+
+test("test-only Whale vs Elephant shallow water remains no_contest in the wild and elephant favored in Arena", () => {
+  for (const [a, b] of [[whale, elephant], [elephant, whale]]) {
+    for (const mode of ["realistic", "forced_fight"] as const) {
+      const result = scoreMatchup(a!, b!, { environment: "shallow_water", mode, encounter: "face_off" });
+      assert.deepEqual(result.outcome, mode === "realistic" ? { kind: "no_contest" } : { kind: "favored", animal: elephant.name });
+      assert.equal(result.advantage_score, null);
+      assert.deepEqual(result.factors, []);
+    }
+  }
+});
 const catalog = [...animals, whale, elephant];
 
 type Scenario = {
@@ -72,10 +83,9 @@ const scenarios: Scenario[] = [
   { title: "3. Croc vs Lion: forced deep water", a: "Saltwater crocodile", b: "Lion",
     context: { environment: "deep_water", mode: "forced_fight" },
     expected: { kind: "favored", animal: "Saltwater crocodile" }, deciding: "environmental_advantage" },
-  // TODO: Tune the land matchup; either Croc favored or even is acceptable.
-  { title: "4. Croc vs Lion: land tuning", a: "Saltwater crocodile", b: "Lion",
+  { title: "4. Croc vs Lion: land calibration anchor", a: "Saltwater crocodile", b: "Lion",
     context: { environment: "land", mode: "realistic" },
-    expected: { kind: "tuning", animal: "Saltwater crocodile" } },
+    expected: { kind: "even" } },
   { title: "5. Great white vs Croc: deep water", a: "Great white shark", b: "Saltwater crocodile",
     context: { environment: "deep_water", mode: "realistic" },
     expected: { kind: "favored", animal: "Great white shark" }, deciding: "fighting_ability" },

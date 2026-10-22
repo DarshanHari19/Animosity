@@ -55,15 +55,6 @@ export const AnimalFightingStyle = {
   charge: 'charge',
 } as const;
 
-export type AnimalFunctionsInItem = typeof AnimalFunctionsInItem[keyof typeof AnimalFunctionsInItem];
-
-
-export const AnimalFunctionsInItem = {
-  land: 'land',
-  shallow_water: 'shallow_water',
-  deep_water: 'deep_water',
-} as const;
-
 /**
  * @nullable
  */
@@ -84,6 +75,21 @@ export interface FieldSource {
 
 export type AnimalFieldSources = {[key: string]: FieldSource};
 
+export type EnvironmentLevel = typeof EnvironmentLevel[keyof typeof EnvironmentLevel];
+
+
+export const EnvironmentLevel = {
+  full: 'full',
+  hampered: 'hampered',
+  cannot: 'cannot',
+} as const;
+
+export interface EnvironmentLevels {
+  land: EnvironmentLevel;
+  shallow_water: EnvironmentLevel;
+  deep_water: EnvironmentLevel;
+}
+
 export interface Animal {
   /** @minLength 1 */
   name: string;
@@ -103,7 +109,7 @@ export interface Animal {
   armor: AnimalArmor;
   temperament: AnimalTemperament;
   fighting_style: AnimalFightingStyle;
-  functions_in: AnimalFunctionsInItem[];
+  environments: EnvironmentLevels;
   field_sources: AnimalFieldSources;
 }
 

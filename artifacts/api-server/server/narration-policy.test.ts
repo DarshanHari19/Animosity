@@ -84,7 +84,7 @@ test("uncompared bites and their warnings are absent from both scored and contex
   const evidence = narrationEvidence(result, a, b);
   assert.ok(result.factors.some(({ reason }) => reason.startsWith("Not compared:")));
   assert.equal(evidence.some(({ text }) => /bite_force_n|Not compared:/.test(text)), false);
-  assert.equal(evidence.some(({ text }) => text.includes(".functions_in")), false);
+  assert.equal(evidence.some(({ text }) => text.includes(".environments")), false);
   assert.ok(evidence.some(({ kind, factor_name }) => kind === "scored" && factor_name === "Size"));
   const same = scoreMatchup(a, a, { environment: "land", mode: "realistic", encounter: "face_off" });
   const compared = narrationEvidence(same, a, a);

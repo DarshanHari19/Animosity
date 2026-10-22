@@ -74,6 +74,8 @@ These circulate widely online and should not be treated as facts:
 
 ## functions_in review
 
+These references now support the environment levels in METHODOLOGY.md. They document habitat use, not fighting performance; levels remain model assumptions.
+
 All seven supplied lists and all numerical measurements are retained unchanged.
 This review applies the existing source tiers above: zoo, aquarium, museum and
 park service pages are tier-3 reference summaries, not tier-2 research models.

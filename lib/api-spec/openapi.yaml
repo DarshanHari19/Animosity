@@ -83,7 +83,7 @@ components:
     Animal:
       type: object
       additionalProperties: false
-      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_n, armor, temperament, fighting_style, functions_in, field_sources]
+      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_n, armor, temperament, fighting_style, environments, field_sources]
       properties:
         name: { type: string, minLength: 1 }
         profile: { type: string, enum: [adult_male, adult_female] }
@@ -95,13 +95,23 @@ components:
         armor: { type: string, enum: [none, thick_hide, shell, scales] }
         temperament: { type: string, enum: [avoids, defensive, aggressive] }
         fighting_style: { type: string, enum: [ambush, sustained, bluff, grapple, charge] }
-        functions_in:
-          type: array
-          items: { type: string, enum: [land, shallow_water, deep_water] }
+        environments:
+          $ref: "#/components/schemas/EnvironmentLevels"
         field_sources:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/FieldSource"
+    EnvironmentLevel:
+      type: string
+      enum: [full, hampered, cannot]
+    EnvironmentLevels:
+      type: object
+      additionalProperties: false
+      required: [land, shallow_water, deep_water]
+      properties:
+        land: { $ref: "#/components/schemas/EnvironmentLevel" }
+        shallow_water: { $ref: "#/components/schemas/EnvironmentLevel" }
+        deep_water: { $ref: "#/components/schemas/EnvironmentLevel" }
     FieldSource:
       type: object
       additionalProperties: false

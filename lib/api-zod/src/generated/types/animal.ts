@@ -8,10 +8,10 @@
 import type { AnimalArmor } from './animalArmor';
 import type { AnimalFieldSources } from './animalFieldSources';
 import type { AnimalFightingStyle } from './animalFightingStyle';
-import type { AnimalFunctionsInItem } from './animalFunctionsInItem';
 import type { AnimalPrimaryWeapon } from './animalPrimaryWeapon';
 import type { AnimalProfile } from './animalProfile';
 import type { AnimalTemperament } from './animalTemperament';
+import type { EnvironmentLevels } from './environmentLevels';
 
 export interface Animal {
   /** @minLength 1 */
@@ -32,6 +32,6 @@ export interface Animal {
   armor: AnimalArmor;
   temperament: AnimalTemperament;
   fighting_style: AnimalFightingStyle;
-  functions_in: AnimalFunctionsInItem[];
+  environments: EnvironmentLevels;
   field_sources: AnimalFieldSources;
 }

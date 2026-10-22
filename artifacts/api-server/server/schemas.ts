@@ -12,12 +12,19 @@ export const FieldSourceSchema = z.object({
   ref: z.string(),
 }).strict();
 export type FieldSource = z.infer<typeof FieldSourceSchema>;
+export const EnvironmentSchema = z.enum(["land", "shallow_water", "deep_water"]);
+export type Environment = z.infer<typeof EnvironmentSchema>;
+export const EnvironmentLevelSchema = z.enum(["full", "hampered", "cannot"]);
+export type EnvironmentLevel = z.infer<typeof EnvironmentLevelSchema>;
+export const EnvironmentsSchema = z.object({
+  land: EnvironmentLevelSchema, shallow_water: EnvironmentLevelSchema, deep_water: EnvironmentLevelSchema,
+}).strict();
+export type Environments = z.infer<typeof EnvironmentsSchema>;
 export const AnimalSchema = GetAnimalsResponseItem.extend({
+  environments: EnvironmentsSchema,
   field_sources: z.record(z.string(), FieldSourceSchema),
 }).strict();
 export type Animal = z.infer<typeof AnimalSchema>;
-export const EnvironmentSchema = AnimalSchema.shape.functions_in.element;
-export type Environment = z.infer<typeof EnvironmentSchema>;
 export const FightInputSchema = CreateFightBody.strict();
 export const EngineContextSchema = CreateFightBody.pick({
   environment: true, mode: true, encounter: true,
