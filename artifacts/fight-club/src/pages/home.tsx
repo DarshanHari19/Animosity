@@ -21,7 +21,7 @@ export default function Home() {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [env, setEnv] = useState<FightInputEnvironment>("land");
-  const [mode, setMode] = useState<FightInputMode>("realistic");
+  const [mode, setMode] = useState<FightInputMode>("forced_fight");
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [shown, setShown] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -125,10 +125,12 @@ export default function Home() {
         <fieldset className="space-y-1">
           <legend className="text-sm">Mode</legend>
           <div className="flex gap-4 text-sm">
-            <label><input type="radio" name="mode" value="realistic" checked={mode === "realistic"} onChange={() => setMode("realistic")} data-testid="mode-realistic" /> Realistic</label>
-            <label><input type="radio" name="mode" value="forced_fight" checked={mode === "forced_fight"} onChange={() => setMode("forced_fight")} data-testid="mode-forced-fight" /> Forced fight</label>
+            <label><input type="radio" name="mode" value="realistic" checked={mode === "realistic"} onChange={() => setMode("realistic")} data-testid="mode-realistic" /> In the wild</label>
+            <label><input type="radio" name="mode" value="forced_fight" checked={mode === "forced_fight"} onChange={() => setMode("forced_fight")} data-testid="mode-forced-fight" /> Arena</label>
           </div>
-          <p className="text-sm" data-testid="text-mode-caption">Forced fight: no retreat; environmental disadvantages count.</p>
+          <p className="text-sm" data-testid="text-mode-caption">{mode === "forced_fight"
+            ? "No retreat. Environmental disadvantages still count."
+            : "Animals may back off, the way most real encounters end."}</p>
         </fieldset>
         <button className="border px-4 py-1 bg-primary text-primary-foreground disabled:opacity-50" onClick={onFight} disabled={!canFight} data-testid="button-fight">
           {fight.isPending ? "Fighting..." : "Fight"}
@@ -138,7 +140,7 @@ export default function Home() {
 
       {playback && (
         <section className="space-y-3" data-testid="section-playback">
-          <h2 className="font-semibold">{playback.a} vs {playback.b} ({playback.env.replaceAll("_", " ")}, {playback.mode.replaceAll("_", " ")})</h2>
+          <h2 className="font-semibold">{playback.a} vs {playback.b} ({playback.env.replaceAll("_", " ")}, {playback.mode === "forced_fight" ? "Arena" : "In the wild"})</h2>
           {beats.length > 0 && <>
           <svg viewBox="0 0 320 190" className="w-full border bg-card" role="img" aria-label="Stick figure fight">
             <StickFigure side="left" label={playback.a} action={currentAction} isActor={current?.animal === playback.a} />

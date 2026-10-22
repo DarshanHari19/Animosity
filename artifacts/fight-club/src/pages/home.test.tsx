@@ -65,6 +65,19 @@ afterEach(() => {
 });
 
 describe("Home request and status handling", () => {
+  it("defaults to Arena and shows both mode labels and their matching captions", async () => {
+    mountHome();
+    await advance();
+    expect(screen.getByRole("radio", { name: "Arena" })).toBeChecked();
+    expect(screen.getByTestId("text-mode-caption").textContent).toBe(
+      "No retreat. Environmental disadvantages still count.",
+    );
+    fireEvent.click(screen.getByRole("radio", { name: "In the wild" }));
+    expect(screen.getByRole("radio", { name: "In the wild" })).toBeChecked();
+    expect(screen.getByTestId("text-mode-caption").textContent).toBe(
+      "Animals may back off, the way most real encounters end.",
+    );
+  });
   it("disables Fight until both selectors are set, including identical selections", async () => {
     mountHome();
     await advance();
@@ -79,7 +92,7 @@ describe("Home request and status handling", () => {
     const call = fetchMock.mock.calls.find(([url]) => url === "/api/fight");
     expect(JSON.parse(call![1]!.body as string)).toEqual({
       animalA: "Lion", animalB: "Lion", environment: "land",
-      mode: "realistic", encounter: "face_off",
+      mode: "forced_fight", encounter: "face_off",
     });
     // Identical selections take the normal response path, not a forced even result.
     await advance(6000);
@@ -98,7 +111,8 @@ describe("Home request and status handling", () => {
     fireEvent.change(screen.getByLabelText("Environment"), { target: { value: environment } });
     fireEvent.click(screen.getByTestId(mode === "realistic" ? "mode-realistic" : "mode-forced-fight"));
     expect(screen.getByTestId("text-mode-caption").textContent).toBe(
-      "Forced fight: no retreat; environmental disadvantages count.",
+      mode === "forced_fight" ? "No retreat. Environmental disadvantages still count."
+        : "Animals may back off, the way most real encounters end.",
     );
     fireEvent.click(screen.getByTestId("button-fight"));
     await advance();
@@ -116,7 +130,7 @@ describe("Home request and status handling", () => {
     pending.resolve(jsonResponse(responseFixture()));
     await advance();
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe(
-      `Lion vs Grizzly bear (${environment.replaceAll("_", " ")}, ${mode.replaceAll("_", " ")})`,
+      `Lion vs Grizzly bear (${environment.replaceAll("_", " ")}, ${mode === "forced_fight" ? "Arena" : "In the wild"})`,
     );
     expect(screen.getByTestId("button-fight")).toBeEnabled();
   });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   AnimalSchema, beatsSchemaFor, resultSchemaFor, narrationMatchesOutcome,
-  type Animal, type Beat, type Environment, type MatchupResult,
+  type Animal, type Beat, type Environment, type EngineContext, type MatchupResult,
 } from "./schemas";
 import { FightError } from "./errors";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
@@ -13,6 +13,7 @@ import { narrationEvidence } from "./narration-evidence";
 import { narrationGroundingChecks } from "./narration-grounding";
 import { deterministicFinish } from "./narration-finish";
 import { nonFinishChecks } from "./narration-non-finish";
+import { climaxChecks } from "./narration-climax";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -22,6 +23,7 @@ type Options = {
   model?: string;
   reserveProviderCall?: () => void;
   environment?: Environment;
+  mode?: EngineContext["mode"];
   onProviderAttempt?: () => void;
 };
 
@@ -69,6 +71,7 @@ export async function narrateMatchup(
   }
   const evidenceItems = narrationEvidence(result, a, b);
   const environment = options.environment ?? "land";
+  const mode = options.mode ?? "realistic";
   const finish = deterministicFinish(result, a, b, evidenceItems, environment);
   const evidence = evidenceItems.map(({ text }) => text);
   if (!evidence.length) {
@@ -98,10 +101,10 @@ export async function narrateMatchup(
         "Do not invent measurements, abilities, scientific claims, or new reasons for the outcome.",
         "Treat zero/null numerical values as unknown, not evidence. Traits without a non-null source tier are unverified.",
         "Do not present unknown or unverified traits as factual evidence.",
-        "Call submit_narration once with {beats:[4 to 7 non-finish beats]} and no other fields. The server supplies the finish; NEVER return a finish field or finish action.",
+        "Call submit_narration once with {beats:[4 to 7 non-finish beats],climax:string} and no other fields. The server appends your climax to its engine verdict as one finish beat; NEVER return a finish field or finish action.",
         "Every beat is {text,action,animal,fact_ids}. Every fact_ids is 1 to 3 distinct supplied IDs.",
         "Non-final actions: approach|charge|bite|dodge|grapple|retreat. Their animal MUST be an exact selected name, NEVER null, even for general observations.",
-        "Describe neutral physical actions ONLY. No beat may say or imply who is winning, even the favored animal.",
+        "NON-FINISH BEATS ONLY: describe neutral physical actions. No beat may say or imply who is winning, even the favored animal. These neutral-action restrictions do not apply to the separate climax.",
         "Each beat's text must show its named animal physically performing its action: approach moves closer; charge charges; bite attempts a bite; dodge sidesteps or swerves; grapple grabs or wrestles; retreat moves away. Name the acting animal in the text. Do not substitute a trait observation for an action.",
         "Voice: short nature-documentary play-by-play, present tense, vivid verbs, fewer than 20 words per beat. No repeated phrases. Never use 'listed', 'on record', or 'supplied' in beat text.",
         "Include measurements in at most ONE non-finish beat; all other non-finish beats describe movement without measurements.",
@@ -113,11 +116,24 @@ export async function narrateMatchup(
         "Do not attribute the result to speed, length, strength, style, or other traits not scored by the engine. Do not invent combat abilities or explanations.",
         "For even, no beat may name a winner. Do not call it a stalemate or say the animals are equally/evenly matched. Limited scoring is not proof of a draw or equal abilities.",
         "Never change the engine outcome. Describe movements, not scientific predictions.",
+        "CLIMAX ONLY: write one conclusive sentence, under 25 words, present tense, no numbers (including number words), no reasons ('because', 'thanks to', 'due to'), no gore. Name both animals when favored.",
+        "Climax may conclude the action, unlike the neutral non-finish beats. Follow the supplied outcome, not a new winner; do not explain it using any physical trait or ability.",
+        "Realistic favored: the favored animal drives the other off; the other retreats or breaks away hurt. No death.",
+        "Forced_fight favored: no retreat; the favored animal ends it until the other can't continue, using its supplied fighting_style as choreography, NEVER a reason for winning: charge rams, knocks down or pins; ambush seizes or drags down; grapple wrestles down or holds; bluff overpowers and drives back; sustained presses or holds.",
+        "Even climax: both animals break off with neither giving ground; name no winner.",
+        "Environmental favored climax: show the other animal unable to fight in the selected setting; no physical superiority or combat injury. Environmental outcome takes precedence over ordinary climax choreography.",
       ].join(" "),
     },
     { role: "user", content: JSON.stringify({
-      animals: [{ name: a.name }, { name: b.name }],
-      environment,
+      animals: [{ name: a.name, fighting_style: a.fighting_style }, { name: b.name, fighting_style: b.fighting_style }],
+      environment, mode, outcome: result.outcome, environmental: result.deciding_factor === "environmental_advantage",
+      climax_requirements: result.deciding_factor === "environmental_advantage" && result.outcome.kind === "favored"
+        ? `Name both animals; show ${result.outcome.animal === a.name ? b.name : a.name} cannot fight in ${environment.replaceAll("_", " ")}. Do not substitute a physical overpowering or retreat ending.`
+        : result.outcome.kind === "even"
+          ? "Both animals break off or apart, with neither giving ground; no winner."
+          : mode === "forced_fight"
+            ? `${result.outcome.animal} ends the action using its fighting style; explicitly end with ${result.outcome.animal === a.name ? b.name : a.name} cannot continue. No retreat; merely saying 'ending the fight' is not enough.`
+            : `${result.outcome.animal} drives ${result.outcome.animal === a.name ? b.name : a.name} off; that other animal retreats or breaks away hurt. No death.`,
       evidence: evidenceItems.map(({ id, text, kind }) => ({ id, text, kind })),
     }) },
   ];
@@ -154,13 +170,15 @@ export async function narrateMatchup(
       rawModelText = responseEnvelope.choices[0]!.message.content;
       parsed = JSON.parse(rawModelText);
       const resolved = resolveEvidence(parsed, evidenceItems, a, b);
-      const envelope = envelopeSchema.parse({ beats: [...resolved.beats, finish] });
+      const envelope = envelopeSchema.parse({ beats: [...resolved.beats,
+        { ...finish, text: `${resolved.climax} ${finish.text}` }] });
       // Zod and the engine-outcome check remain authoritative after tool use.
       if (!narrationMatchesOutcome(result, envelope.beats)) {
         checks = [{ check: "outcome_winner_mismatch", path: ["beats", envelope.beats.length - 1, "animal"] }];
         throw new FightError("INVALID_NARRATION", "Narrated outcome does not match the engine.", 502);
       }
       const textFailures = [
+        ...climaxChecks(resolved.climax, result, a, b, mode, environment),
         ...narrationTextChecks(envelope.beats, result, a, b),
         ...narrationGroundingChecks(envelope.beats, result, evidenceItems, a, b, environment),
         ...nonFinishChecks(envelope.beats),
@@ -187,7 +205,7 @@ export async function narrateMatchup(
       }
       messages.push({
         role: "user",
-        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit a complete corrected {beats} containing 4–7 neutral non-finish beats ONLY. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two; no percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Never say or imply who is winning: no advantage, domination, successful restraint, or inability to escape. The server, not you, supplies the verdict.`,
+        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit complete corrected {beats,climax}: 4–7 neutral non-finish beats plus the conclusive climax following the original mode/outcome rules. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two in non-finish beats; none in climax. No percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Non-finish beats never say or imply who is winning: no advantage, domination, successful restraint, or inability to escape. The server, not you, supplies the verdict.`,
       });
     }
   }

@@ -62,7 +62,8 @@ test("Anthropic adapter forces one Haiku narration tool and normalizes only its 
   assert.equal(body.tools[0].input_schema.properties.beats.items.additionalProperties, false);
   assert.equal(body.tools[0].input_schema.properties.beats.items.properties.animal.type, "string");
   assert.equal(body.tools[0].input_schema.properties.beats.items.properties.action.enum.includes("finish"), false);
-  assert.deepEqual(body.tools[0].input_schema.required, ["beats"]);
+  assert.deepEqual(body.tools[0].input_schema.required, ["beats", "climax"]);
+  assert.equal(body.tools[0].input_schema.properties.climax.type, "string");
   assert.equal(body.tools[0].input_schema.additionalProperties, false);
   assert.equal(body.tools[0].input_schema.properties.finish, undefined);
 });

@@ -6,10 +6,16 @@ import { createFightRouter } from "./routes";
 import type { Animal, Beat, MatchupResult } from "./schemas";
 import { animals } from "./animals";
 import { scoredFactorText } from "./narration-evidence";
+import { deterministicFinish } from "./narration-finish";
 
 // Fictional, test-only metadata and narration; never used by production.
 export const fixtureFactor = { name: "Size", value: 1, reason: "Fixture reason only" };
 export const fixtureEvidence = scoredFactorText(fixtureFactor, animals[0]!, animals[1]!);
+export function fixtureClimax(finalAnimal: string | null): string {
+  const other = finalAnimal === animals[0]!.name ? animals[1]!.name : animals[0]!.name;
+  return finalAnimal === null ? "Both animals break off, with neither giving ground."
+    : `The ${finalAnimal} drives the ${other} off as the ${other} retreats hurt.`;
+}
 export function fixtureResult(outcome: MatchupResult["outcome"]): MatchupResult {
   return {
     outcome, deciding_factor: null, evidence_quality: "mixed",
@@ -20,13 +26,15 @@ export function fixtureResult(outcome: MatchupResult["outcome"]): MatchupResult 
 
 export function fixtureBeats(a: Animal, finalAnimal: string | null): Beat[] {
   const facts_used = [fixtureEvidence];
+  const verdict = deterministicFinish(
+    fixtureResult(finalAnimal === null ? { kind: "even" } : { kind: "favored", animal: finalAnimal }),
+    a, animals[1]!, [{ id: "E1", kind: "scored", factor_name: "Size", text: fixtureEvidence }],
+  );
   return [
     ...Array.from({ length: 4 }, (): Beat => ({
       text: `${a.name} approaches.`, action: "approach", animal: a.name, facts_used,
     })),
-    { text: finalAnimal === null
-      ? "Too close to call. Body mass and comparable bite force don't separate these two."
-      : `${finalAnimal} is favored. ${fixtureEvidence}`, action: "finish", animal: finalAnimal, facts_used },
+    { ...verdict, text: `${fixtureClimax(finalAnimal)} ${verdict.text}` },
   ];
 }
 

@@ -19,10 +19,11 @@ export function narrationTool(a: Animal, b: Animal, evidence: EvidenceItem[], _r
   const required = ["text", "action", "animal", "fact_ids"];
   return {
     name: NARRATION_TOOL_NAME,
-    description: "Submit only 4–7 neutral non-finish beats. Never state or imply who is winning. Cite 1–3 evidence IDs per beat.",
+    description: "Submit 4–7 neutral non-finish beats plus one climax sentence. Only the climax may conclude the action; the server adds the engine verdict. Cite 1–3 evidence IDs per non-finish beat.",
     input_schema: {
-      type: "object", additionalProperties: false, required: ["beats"],
+      type: "object", additionalProperties: false, required: ["beats", "climax"],
       properties: {
+        climax: { type: "string", minLength: 1, description: "One present-tense sentence, under 25 words, no numbers, reasons or gore; follow the supplied outcome, mode and fighting style." },
         beats: { type: "array", minItems: 4, maxItems: 7, items: {
           type: "object", additionalProperties: false, required,
           properties: { ...properties, action: { type: "string", enum: actions },
@@ -38,10 +39,11 @@ export function resolveEvidence(input: unknown, evidence: EvidenceItem[], a: Ani
   const base = BeatSchema.omit({ facts_used: true }).extend({ fact_ids: idsSchema });
   const actor = z.enum([a.name, b.name]);
   const wire = z.object({
+    climax: z.string().trim().min(1),
     beats: z.array(base.extend({ action: actionSchema, animal: actor }).strict()).min(4).max(7),
   }).strict().parse(input);
   const byId = new Map(evidence.map(({ id, text }) => [id, text]));
-  return { beats: wire.beats.map(({ fact_ids, ...beat }, index) => ({
+  return { climax: wire.climax, beats: wire.beats.map(({ fact_ids, ...beat }, index) => ({
     ...beat,
     facts_used: fact_ids.map((id, citation) => {
       const text = byId.get(id);

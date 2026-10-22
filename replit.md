@@ -35,7 +35,9 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 - Identical selections are allowed in both API and UI and use the normal
   route without forcing an even result. The Lion-vs-Lion scenario tests this route.
 - Environments are `land`, `shallow_water`, `deep_water`; animal capability is
-  recorded in `functions_in`. Mode defaults to `realistic`, encounter to `face_off`.
+  recorded in `functions_in`. API mode defaults to `realistic`, encounter to
+  `face_off`. UI defaults to `forced_fight`, labeled “Arena”; `realistic` is
+  labeled “In the wild.” Do not rename these API values.
 
 ## Run and verify
 
@@ -58,10 +60,12 @@ Narration uses Replit-managed Anthropic AI Integrations and a Claude Haiku-class
 model; no personal LLM_API_KEY. Credentials stay on the backend. Preserve the
 narrator's final Zod/outcome validation and single corrective retry for any
 validation failure; disable SDK automatic retries. Force the narration tool
-  with ONLY 4–7 named non-finish beats. They must not state or imply who is
+  with 4–7 named non-finish beats and one `climax` sentence. Non-finish beats must not state or imply who is
   winning. Resolve 1–3 evidence IDs per beat into public `facts_used: string[]`.
-  Append the server-owned deterministic finish using the exact approved
-  templates documented in README.md. Ordinary favored finishes cite size and
+  Combine the model climax with the server-owned deterministic verdict using
+  the approved templates documented in README.md. The climax follows the engine
+  outcome and mode, never adds reasons or scores, and uses the same retry path.
+  Ordinary favored finishes cite size and
   only compared bite evidence; environmental finishes cite only engine gate
   evidence and name the other animal's inability to function in the selected
   environment. Never call gates scored. Never return a finish-only fallback.

@@ -45,7 +45,8 @@ for (const fixture of recorded.cases) {
     const evidence = narrationEvidence(result, hippo, lion);
     const oldEvidence = evidence.map((item) => item.factor_name === "Size"
       ? { ...item, text: JSON.stringify(result.factors[0]) } : item);
-    const wire = { beats: fixture.raw_output.beats };
+    const wire = { beats: fixture.raw_output.beats,
+      climax: "The Hippopotamus drives the Lion off as the Lion retreats hurt." };
     const old = resolveEvidence(wire, oldEvidence, hippo, lion);
     const historicalFinish = (items: typeof evidence) => {
       const { fact_ids, ...beat } = fixture.raw_output.finish;

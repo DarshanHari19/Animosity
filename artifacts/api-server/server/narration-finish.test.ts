@@ -10,7 +10,7 @@ import { nonFinishChecks } from "./narration-non-finish";
 import { beatsSchemaFor, fightResponseSchemaFor, narrationMatchesOutcome, type Beat, type Environment } from "./schemas";
 import { narrationGroundingChecks } from "./narration-grounding";
 import { FightError } from "./errors";
-import { fixtureBeats, fixtureResult, startFightServer } from "./test-helpers";
+import { fixtureBeats, fixtureResult, fixtureClimax, startFightServer } from "./test-helpers";
 
 const lion = animals.find(a => a.name === "Lion")!;
 const hippo = animals.find(a => a.name === "Hippopotamus")!;
@@ -24,7 +24,8 @@ test("favored fighting finish uses exact size text and only compared bite text, 
     const evidence = narrationEvidence(result, a, b);
     const size = evidence.find(e => e.factor_name === "Size")!;
     const finish = deterministicFinish(result, a, b, evidence);
-    assert.equal(finish.text, `${hippo.name} is favored. ${size.text}`);
+    assert.equal(finish.text, "The Hippopotamus is favored: it outweighs the Lion about 7.9 to 1 (1500 kg vs 190 kg).");
+    assert.ok(size.text.includes("7.9 to 1"));
     assert.deepEqual(finish.facts_used, [size.text]);
     assert.equal(finish.animal, hippo.name);
     assert.equal(finish.action, "finish");
@@ -39,7 +40,7 @@ test("favored fighting finish uses exact size text and only compared bite text, 
   const scored = evidence.filter(e => e.kind === "scored");
   assert.equal(scored.length, 2);
   const finish = deterministicFinish(result, lion, lion, evidence);
-  assert.equal(finish.text, `${lion.name} is favored. ${scored.map(e => e.text).join(" ")}`);
+  assert.equal(finish.text, `The Lion is favored: body masses are ${lion.mass_kg} kg vs ${lion.mass_kg} kg. Comparable bite force: the Lion ${lion.bite_force_n} N vs the Lion ${lion.bite_force_n} N.`);
   assert.deepEqual(finish.facts_used, scored.map(e => e.text));
 });
 
@@ -52,7 +53,7 @@ test("environmental template names the actual winner, other animal and selected 
       const other = environment === "land" ? shark.name : lion.name;
       const evidence = narrationEvidence(result, a, b);
       const finish = deterministicFinish(result, a, b, evidence, environment);
-      assert.equal(finish.text, `${winner} is favored. ${other} can't function in ${environment.replaceAll("_", " ")}.`);
+      assert.equal(finish.text, `The ${winner} is favored: the ${other} can't function in ${environment.replaceAll("_", " ")}.`);
       assert.equal(finish.animal, winner);
       assert.deepEqual(finish.facts_used, evidence.filter(e => e.kind === "gate").map(e => e.text));
       assert.deepEqual(narrationGroundingChecks([finish], result, evidence, a, b, environment), []);
@@ -121,6 +122,7 @@ test("neutral movements get exactly one server finish; implied wins retry once w
         assert.equal(body.tools[0].input_schema.properties.finish, undefined);
         if (calls === 2) assert.match(body.messages.at(-1).content, /non_finish_verdict/);
         return Response.json({ choices: [{ message: { content: JSON.stringify({
+          climax: fixtureClimax(a.name),
           beats: Array.from({ length: 4 }, () => ({
             text: calls <= failures ? implied.beat.text : "The animal attempts to approach.",
             action: "approach", animal: a.name, fact_ids: ["E1"],
@@ -136,7 +138,8 @@ test("neutral movements get exactly one server finish; implied wins retry once w
       assert.equal(calls, failures + 1);
       assert.equal(beats.length, 5);
       assert.equal(beats.filter(b => b.action === "finish").length, 1);
-      assert.deepEqual(beats.at(-1), deterministicFinish(result, a, b, narrationEvidence(result, a, b)));
+      const verdict = deterministicFinish(result, a, b, narrationEvidence(result, a, b));
+      assert.deepEqual(beats.at(-1), { ...verdict, text: `${fixtureClimax(a.name)} ${verdict.text}` });
     }
   }
 });

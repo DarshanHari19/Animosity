@@ -8,7 +8,7 @@ import { createFightRouter } from "./routes";
 import { narrateMatchup } from "./narrator";
 import { FightError } from "./errors";
 import { animals } from "./animals";
-import { fixtureBeats, fixtureResult } from "./test-helpers";
+import { fixtureBeats, fixtureResult, fixtureClimax } from "./test-helpers";
 import type { MatchupResult } from "./schemas";
 
 const a = animals[0]!;
@@ -22,7 +22,7 @@ const hasCode = (code: string) => (error: unknown) =>
 const wire = () => {
   const encoded = fixtureBeats(a, a.name).map(({ facts_used: _unused, ...beat }) => ({ ...beat, fact_ids: ["E1"] }));
   return Response.json({ choices: [{ message: { content: JSON.stringify({
-    beats: encoded.slice(0, -1),
+    beats: encoded.slice(0, -1), climax: fixtureClimax(a.name),
   }) } }] });
 };
 const badWire = () => Response.json({ choices: [{ message: { content: "not JSON" } }] });

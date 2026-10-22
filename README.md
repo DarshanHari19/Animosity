@@ -134,12 +134,13 @@ by the UI. This replaces the old singular `fact_used`; IDs never reach the UI.
 Zod and the existing outcome checks remain the final authority.
 SDK automatic retries are disabled so they cannot add hidden attempts.
 
-The tool input is `{ "beats": [4–7 non-finish beats] }` only.
+The tool input is `{ "beats": [4–7 non-finish beats], "climax": "one sentence" }`.
 Every wire beat has `text`, `action`, `animal`, and `fact_ids`. The tool schema
 forbids null actors, any finish action, and a top-level finish field. Non-finish
 beats must be neutral attempted movements: no stated or implied winner,
 advantage, domination, or inability to escape (including “unable to shake it off”).
-The server appends exactly one deterministic finish and maps this
+The model also supplies one `climax` sentence. The server combines that climax
+with its deterministic verdict into exactly one finish beat and maps this
 to the existing 5–8 public beats array. Public actions remain `approach`, `charge`,
 `bite`, `dodge`, `grapple`, `retreat`, and `finish`. Each `facts_used` entry must
 exactly copy an evidence string: a readable scored comparison such as
@@ -168,16 +169,27 @@ are invented for gates.
 Zod validates structure and evidence references; it cannot prove natural-language
 claims are scientifically true. Review sources and narration before relying on it.
 
-Server finish templates (readable size/bite text is copied from supplied scored evidence):
-- Fighting ability: `{Winner} is favored. {size factor text}`, followed by the
-  bite factor text only when bite was compared.
-- Environmental: `{Winner} is favored. {Other} can't function in {environment}.`
+Finish text is `{model climax} {server verdict}`. The climax is one sentence,
+under 25 words, present tense, with no numbers, reasons or gore. In the wild,
+the favored animal drives the other off and it retreats or breaks away hurt,
+without death. In Arena, the favored animal uses its fighting style to end the
+fight until the other cannot continue, without retreat. Even matchups break off
+with neither giving ground; environmental finishes show inability to fight in
+the setting. Style is choreography, not a new scoring factor.
+
+Server verdict templates (only already-compared evidence is cited):
+- Fighting ability, for example: `The Hippopotamus is favored: it outweighs the Lion about 7.9 to 1 (1500 kg vs 190 kg).`
+  Append the bite comparison only when bite was compared. Ratios are copied
+  from the engine's size reason, not recalculated. If the favored animal is
+  lighter, the sentence accurately names the other animal as heavier.
+- Environmental: `The {Winner} is favored: the {Other} can't function in {environment}.`
   Environment labels use spaces, e.g. `deep water`.
 - Even: `Too close to call. Body mass and comparable bite force don't separate these two.`
 
-The model does not receive a separate requested verdict. The server-owned finish
-is included in the final Zod, citation, wording, grounding, and outcome checks.
-It is never returned alone if model narration fails.
+The model receives the engine outcome, mode and fighting styles for the climax.
+The combined finish is included in the final Zod, citation, wording, grounding,
+and outcome checks; invalid climaxes use the same single corrective retry.
+The verdict is never returned as a finish-only fallback if narration fails.
 
 Only `favored` and `even` outcomes call the narrator. `no_engagement` never does.
 The final beat must have
@@ -255,7 +267,9 @@ These deterministic English checks are conservative, not semantic fact proof.
   figures have explicit poses for the seven actions. The end card follows the
   last beat; explanation-only outcomes show their card immediately without a
   playback timer. Even finishes do not show either figure defeated. The mode
-  caption reads “Forced fight: no retreat; environmental disadvantages count.”
+  UI defaults to **Arena** (`forced_fight`) with “No retreat. Environmental
+  disadvantages still count.” **In the wild** (`realistic`) shows “Animals may
+  back off, the way most real encounters end.” API defaults remain unchanged.
   There is no encounter picker yet. Playback timers are cleared on restart and unmount, and late responses
   are ignored. Numerical results show the v1 scoring-scope note; gate results
   show explanations. Narrated playback requires a configured provider; verdicts do not.

@@ -53,7 +53,7 @@ export function createFightRouter(
       if (narrated) {
         try {
           beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b, {
-            environment, onProviderAttempt: () => { providerAttempts++; },
+            environment, mode, onProviderAttempt: () => { providerAttempts++; },
           }));
           if (!narrationMatchesOutcome(result, beats)) {
             throw new FightError("INVALID_NARRATION", "Narration does not match the engine outcome.", 502);

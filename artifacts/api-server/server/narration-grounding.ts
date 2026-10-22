@@ -30,7 +30,8 @@ export function narrationGroundingChecks(
           messages.push("An environmental finish must cite the engine gate, not a scored factor.");
         }
         const serverTemplate = evidence.some(item => item.kind === "gate") &&
-          beat.text === deterministicFinish(result, a, b, evidence, environment).text;
+          beat.text.endsWith(deterministicFinish(result, a, b, evidence, environment).text) &&
+          !physical.test(beat.text);
         if (!serverTemplate && (!/\benvironment(?:al)?\b/i.test(beat.text) ||
           !/\b(?:decid(?:e|es|ed|ing)|determin(?:e|es|ed)|decisive|because|due to)\b/i.test(beat.text) ||
           physical.test(beat.text))) {

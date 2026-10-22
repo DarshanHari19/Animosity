@@ -10,7 +10,7 @@ import { narrationTool, resolveEvidence } from "./narration-tool";
 import { narrationTextChecks } from "./narration-text-checks";
 import { narrationGroundingChecks } from "./narration-grounding";
 import { beatsSchemaFor, narrationMatchesOutcome, type Beat, type MatchupResult } from "./schemas";
-import { fixtureBeats, fixtureResult } from "./test-helpers";
+import { fixtureBeats, fixtureResult, fixtureClimax } from "./test-helpers";
 import { FightError } from "./errors";
 
 const a = animals[0]!;
@@ -30,7 +30,8 @@ const beat = (text: string, facts: EvidenceItem[]): Beat =>
 test("tool schema allows only named non-final actors; no model-owned finish", () => {
   for (const result of [favored, fixtureResult({ kind: "even" })]) {
     const schema = JSON.parse(JSON.stringify(narrationTool(a, b, [scored], result).input_schema));
-    assert.deepEqual(schema.required, ["beats"]);
+    assert.deepEqual(schema.required, ["beats", "climax"]);
+    assert.equal(schema.properties.climax.type, "string");
     assert.equal(schema.properties.beats.minItems, 4);
     assert.equal(schema.properties.beats.maxItems, 7);
     const item = schema.properties.beats.items.properties;
@@ -46,7 +47,7 @@ test("tool schema allows only named non-final actors; no model-owned finish", ()
 
 function wire(ids: string[] = ["E1"]) {
   const encoded = fixtureBeats(a, a.name).map(({ facts_used: _unused, ...rest }) => ({ ...rest, fact_ids: ids }));
-  return { beats: encoded.slice(0, -1) };
+  return { beats: encoded.slice(0, -1), climax: fixtureClimax(a.name) };
 }
 test("1–3 IDs resolve in order to exact facts, without leaking IDs or accepting duplicates", () => {
   const evidence = [scored, context, context2];
@@ -179,7 +180,7 @@ for (const fixture of fixtures.cases) {
     });
     let accepted = false;
     try {
-      const output = resolveEvidence({ beats: encoded.slice(0, -1) }, evidence, first, second);
+      const output = resolveEvidence({ beats: encoded.slice(0, -1), climax: fixtureClimax(null) }, evidence, first, second);
       // Historical finish is evaluated as public data to retain the original
       // outcome/evidence/grounding regression, not sent through the new tool.
       const final = encoded.at(-1)!;

@@ -1,4 +1,31 @@
-# Deterministic-finish test migration
+# Narration protocol test migrations
+
+## Conclusive finish and mode-label update
+
+No tests deleted. Existing guarantees remain; provider fixtures now include a
+model `climax` string, not a model-owned finish action, actor, verdict or citations.
+
+| Changed test(s) | Old assertion → new assertion | Guarantee preserved |
+| --- | --- | --- |
+| narrator.test.ts — provider-backed success, forged finish, evidence filters, IDs, retry and text-validation cases | `{beats}` wire → `{beats,climax}`; expected public finish gains the validated climax | Zod, exact IDs/text, filtering, outcomes, all error codes and one retry |
+| narration-policy.test.ts — tool schema | Required `beats` → required `beats,climax`; finish field/action still absent | Strict protocol, selected actors, 1–3 distinct allowed IDs |
+| narration-policy.test.ts — ID resolution, invalid actors/actions and recorded regressions | Non-finish wire → same wire plus climax; historical public finishes still checked unchanged | Exact citations, TODO/null-tier/functions_in exclusion, every recorded acceptance/rejection |
+| narration-readability.test.ts — both Hippo regression fixtures | `{beats}` wire → `{beats,climax}`; original historical finish and numeric assertions retained | Both original numeric failures stay covered; implied-advantage rejection retained |
+| anthropic-provider.test.ts — forced-tool request | Required `beats` → required `beats,climax`; string type asserted | One forced tool, actor/action/ID restrictions, strict shape and managed provider behavior |
+| limits.test.ts — successful transport fixtures | `{beats}` wire → `{beats,climax}`; cap/call/concurrency assertions unchanged | Per-provider-call budget, retries counted, gated outcomes unaffected |
+| narration-finish.test.ts — fighting verdict, both orders and compared bite | Old readable-factor concatenation → exact new verdict wording; same evidence arrays and unchanged result asserted | Actual engine size ratio, compared-bite-only inclusion, no rescoring |
+| narration-finish.test.ts — environmental verdict | Old two sentences → exact new colon template; same gate citations and winner | Selected environment, actual engine winner, gate-only evidence |
+| narration-finish.test.ts — neutral beats/implied win retry | Server-only finish → validated climax plus server verdict | One finish, neutral non-finish checks, one retry, no partial fallback |
+| home.test.tsx — identical selection request | Default realistic → default forced_fight | Same animals use normal route, unchanged API values |
+| home.test.tsx — context/captions and submitted heading | Internal mode words → Arena/In the wild and their selected captions | Correct submitted values; pending edits cannot relabel the submitted result |
+
+New tests cover climax bounds/grammar, all fighting styles, wild/Arena/even/
+environmental choreography, required climax shape, validation retry and unavailable
+responses, route mode forwarding, and both UI labels/default/captions.
+Final verification: 147 backend + 66 frontend = 213 tests passed; TypeScript
+checks passed. Authentic live paraphrases are covered by acceptance regressions.
+
+## Earlier deterministic-finish migration (historical)
 
 **No tests deleted.** Backend count: 130 → 138; frontend: 65 unchanged.
 All 203 tests and workspace TypeScript checks pass.

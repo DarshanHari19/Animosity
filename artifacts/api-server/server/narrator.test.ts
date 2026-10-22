@@ -4,7 +4,7 @@ import { animals } from "./animals";
 import { narrateMatchup } from "./narrator";
 import { FightError } from "./errors";
 import type { MatchupResult } from "./schemas";
-import { fixtureResult, fixtureBeats, fixtureEvidence } from "./test-helpers";
+import { fixtureResult, fixtureBeats, fixtureEvidence, fixtureClimax } from "./test-helpers";
 import type { EvidenceItem } from "./narration-tool";
 
 // Fictional test-only output; this is NOT a scoring implementation.
@@ -26,7 +26,8 @@ function fixtureWire(beats: unknown, evidence: EvidenceItem[], injectFinish = fa
     ...rest, fact_ids: Array.isArray(facts_used)
       ? facts_used.map((fact) => evidence.find(({ text }) => text === fact)?.id ?? "E_UNKNOWN") : [],
   }));
-  return { beats: encoded.slice(0, -1), ...(injectFinish ? { finish: encoded.at(-1) } : {}) };
+  return { beats: encoded.slice(0, -1), climax: fixtureClimax(encoded.at(-1)?.animal ?? null),
+    ...(injectFinish ? { finish: encoded.at(-1) } : {}) };
 }
 const errorCode = (code: string) => (error: unknown) =>
   error instanceof FightError && error.code === code;
@@ -195,7 +196,7 @@ const wire = (fact_id: string) => Response.json({
   choices: [{ message: { content: JSON.stringify({
     ...(() => {
       const encoded = beatsFor(a.name).map(({ facts_used: _unused, ...beat }) => ({ ...beat, fact_ids: [fact_id] }));
-      return { beats: encoded.slice(0, -1) };
+      return { beats: encoded.slice(0, -1), climax: fixtureClimax(a.name) };
     })(),
   }) } }],
 });
