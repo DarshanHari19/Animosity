@@ -22,7 +22,7 @@ export function fixtureBeats(a: Animal, finalAnimal: string | null): Beat[] {
   const facts_used = [fixtureEvidence];
   return [
     ...Array.from({ length: 4 }, (): Beat => ({
-      text: "Hypothetical fixture movement.", action: "approach", animal: a.name, facts_used,
+      text: `${a.name} approaches.`, action: "approach", animal: a.name, facts_used,
     })),
     { text: finalAnimal === null
       ? "Too close to call. Body mass and comparable bite force don't separate these two."

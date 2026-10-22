@@ -10,12 +10,17 @@ const control = /\b(?:controls? (?:the|this) (?:fight|exchange|encounter)|gains?
 
 export function nonFinishChecks(beats: Beat[]): FailureCheck[] {
   return beats.flatMap((beat, index) => {
-    if (beat.action === "finish" ||
-      ![verdict, inability, compelled, control].some((pattern) => pattern.test(beat.text))) return [];
+    if (beat.action === "finish") return [];
     const path = ["beats", index, "text"];
-    return [{
-      check: "non_finish_verdict" as const, path, text: beat.text,
+    const checks: FailureCheck[] = [];
+    if (/\bhypothetical\b/i.test(beat.text)) checks.push({
+      check: "text_consistency", path, text: beat.text,
+      issues: [{ path, message: "Non-finish beats must not use the word 'hypothetical'." }],
+    });
+    if ([verdict, inability, compelled, control].some((pattern) => pattern.test(beat.text))) checks.push({
+      check: "non_finish_verdict", path, text: beat.text,
       issues: [{ path, message: "Non-finish beats must describe neutral attempts, not state or imply who is winning." }],
-    }];
+    });
+    return checks;
   });
 }

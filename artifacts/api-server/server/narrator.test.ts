@@ -261,6 +261,7 @@ for (const [check, bad] of [
 }
 
 for (const [label, text, outcome] of [
+  ["hypothetical wording", `${a.name} makes a hypothetical approach.`, { kind: "favored", animal: a.name }],
   ["unsupported number", "It moves at 999 km/h.", { kind: "favored", animal: a.name }],
   ["percentage", "Its advantage is 1 percent.", { kind: "favored", animal: a.name }],
   ["other animal winning", `${b.name} wins.`, { kind: "favored", animal: a.name }],

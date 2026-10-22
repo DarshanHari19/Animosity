@@ -86,6 +86,19 @@ test("implied-advantage fixture now fails even if it cites scored evidence", () 
   assert.deepEqual(nonFinishChecks([{ ...implied.beat, text: "Lion attempts to bite, then steps sideways." }]), []);
 });
 
+test("hypothetical is rejected case-insensitively only as a whole word in non-finish beats", () => {
+  const beat = fixtureBeats(lion, lion.name)[0]!;
+  for (const text of ["A hypothetical approach.", "HYPOTHETICAL movement.", "A hypothetical-looking charge."]) {
+    const checks = nonFinishChecks([{ ...beat, text }]);
+    assert.equal(checks.length, 1);
+    assert.equal(checks[0]!.check, "text_consistency");
+    assert.match(checks[0]!.issues![0]!.message, /hypothetical/);
+  }
+  assert.deepEqual(nonFinishChecks([{ ...beat, text: "Lion approaches." }]), []);
+  assert.deepEqual(nonFinishChecks([{ ...beat, text: "Hypothetically, Lion approaches." }]), []);
+  assert.deepEqual(nonFinishChecks([{ ...beat, action: "finish", text: "A hypothetical finish." }]), []);
+});
+
 test("neutral movements get exactly one server finish; implied wins retry once with no partial fallback", async () => {
   const result = fixtureResult({ kind: "favored", animal: animals[0]!.name });
   const a = animals[0]!, b = animals[1]!;
@@ -96,6 +109,15 @@ test("neutral movements get exactly one server finish; implied wins retry once w
       fetch: async (_url, init) => {
         calls++;
         const body = JSON.parse(String(init?.body));
+        const prompt = body.messages[0].content;
+        assert.match(prompt, /NEVER use the word 'hypothetical'/);
+        assert.match(prompt, /named animal physically performing its action/);
+        assert.match(prompt, /grapple grabs or wrestles/);
+        assert.match(prompt, /charge charges/);
+        assert.match(prompt, /nature-documentary play-by-play, present tense, vivid verbs, fewer than 20 words/);
+        assert.match(prompt, /No repeated phrases/);
+        assert.match(prompt, /Never use 'listed', 'on record', or 'supplied'/);
+        assert.match(prompt, /measurements in at most ONE non-finish beat/);
         assert.equal(body.tools[0].input_schema.properties.finish, undefined);
         if (calls === 2) assert.match(body.messages.at(-1).content, /non_finish_verdict/);
         return Response.json({ choices: [{ message: { content: JSON.stringify({
