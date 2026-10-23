@@ -4,6 +4,7 @@ import { animals } from "./animals";
 import { scoreMatchup } from "./engine";
 import { narrationEvidence } from "./narration-evidence";
 import { narrationGroundingChecks } from "./narration-grounding";
+import { humanWording } from "./wording";
 import type { Animal, Environment, EnvironmentLevel, MatchupResult } from "./schemas";
 
 const find = (name: string) => animals.find(a => a.name === name)!;
@@ -93,7 +94,7 @@ test("Environment factor is scored evidence; raw levels never become trait evide
     const factor = result.factors.find(f => f.name === "Environment")!;
     const item = evidence.find(e => e.factor_name === "Environment")!;
     assert.equal(item.kind, "scored");
-    assert.equal(item.text, `Environment: ${factor.reason}`);
+    assert.equal(item.text, `Environment: ${humanWording(factor.reason)}`);
     assert.equal(evidence.some(e => e.text.includes(".environments")), false);
     assert.equal(evidence.some(e => e.text.includes("Test-only habitat reference")), false);
   }

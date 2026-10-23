@@ -1,6 +1,7 @@
 import type { Animal, Beat, Environment, MatchupResult } from "./schemas";
 import { FightError } from "./errors";
 import { isEnvironmental, type EvidenceItem } from "./narration-evidence";
+import { environmentPhrase } from "./wording";
 
 /** Presentation of the engine verdict only. Never infer or recalculate a winner. */
 export function deterministicFinish(
@@ -15,7 +16,7 @@ export function deterministicFinish(
     const gate = evidence.find(({ kind }) => kind === "gate");
     if (!gate) throw new FightError("INVALID_NARRATION", "Environmental outcome evidence is missing.", 502);
     return {
-      text: `The ${winner} is favored: the ${other} can't function in ${environment.replaceAll("_", " ")}.`,
+      text: `The ${winner} is favored: the ${other} can't function ${environmentPhrase(environment)}.`,
       action: "finish", animal: winner, facts_used: [gate.text],
     };
   }
@@ -27,7 +28,7 @@ export function deterministicFinish(
     ...(result.outcome.kind === "even" && environmentFactor ? [environmentFactor.text] : [])];
   const winner = result.outcome.kind === "favored" ? result.outcome.animal : null;
   const [favored, other] = winner === b.name ? [b, a] : [a, b];
-  const place = environment.replaceAll("_", " ");
+  const place = environmentPhrase(environment);
   // Rephrase the engine's comparison, never recalculate its ratio or score.
   const reason = result.factors.find(f => f.name === "Size")!.reason;
   const ratio = reason.match(/\babout ([\d.]+) to 1\.$/)?.[1];
@@ -47,10 +48,10 @@ export function deterministicFinish(
       if (!environmentFactor) return `The ${winner} is favored: ${comparison}${biteComparison}`;
       const modifiers: string[] = [];
       if (other.environments[environment] === "hampered") {
-        modifiers.push(`and the ${other.name} is hampered in ${place}`);
+        modifiers.push(`and the ${other.name} is hampered ${place}`);
       }
       if (favored.environments[environment] === "hampered") {
-        modifiers.push(`despite being hampered in ${place}`);
+        modifiers.push(`despite being hampered ${place}`);
       }
       if (modifiers.length) facts_used.push(environmentFactor.text);
       const biteFact = bite

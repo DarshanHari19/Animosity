@@ -22,7 +22,7 @@ const favored = fixtureResult({ kind: "favored", animal: a.name });
 const environmental = { ...favored, deciding_factor: "environmental_advantage" as const, factors: [] };
 const gate: EvidenceItem = {
   id: "E4", kind: "gate",
-  text: JSON.stringify({ outcome: environmental.outcome, deciding_factor: environmental.deciding_factor }),
+  text: `Environment: ${b.name} can't function on land.`,
 };
 const beat = (text: string, facts: EvidenceItem[]): Beat =>
   ({ text, action: "finish", animal: a.name, facts_used: facts.map(({ text }) => text) });

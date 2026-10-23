@@ -153,6 +153,14 @@ test("invalid climax retries once through existing checks, without a verdict-onl
         assert.equal(data.mode, "forced_fight");
         assert.equal(data.animals[0].fighting_style, hippo.fighting_style);
         assert.deepEqual(data.outcome, favored.outcome);
+        assert.match(body.messages[0].content, /sports-commentary energy with documentary accuracy/);
+        assert.match(body.messages[0].content, /never invent other animals or herds/);
+        assert.match(body.messages[0].content, /hampered animal wades, slips, or struggles/);
+        assert.match(body.messages[0].content, /The loser may die. No blood, wounds, or gore detail/);
+        assert.match(body.messages[0].content, /clamps its jaws on the neck/);
+        assert.match(body.messages[0].content, /loser escapes hurt; say how/);
+        assert.match(data.climax_requirements, /concrete finishing move/);
+        assert.match(data.climax_requirements, /Never say 'cannot continue'/);
         if (calls === 2) assert.match(body.messages.at(-1).content, /Climax must contain no numbers/);
         return response(calls <= failures ? arena.replace("rams", "rams 2 times at") : arena);
       },
@@ -187,7 +195,7 @@ test("prompt-only climax requirements do not leak back through legacy beat check
     assert.equal(calls, 1);
     assert.ok(beats.at(-1)!.text.startsWith(`${climax} `));
     assert.deepEqual(beats.at(-1)!.facts_used,
-      narrationEvidence(result, a, b).filter(e => e.kind === (result.deciding_factor === "environmental_advantage" ? "gate" : "scored"))
+      narrationEvidence(result, a, b, environment).filter(e => e.kind === (result.deciding_factor === "environmental_advantage" ? "gate" : "scored"))
         .map(e => e.text));
   }
 });

@@ -1,4 +1,5 @@
-import type { Animal, MatchupResult } from "./schemas";
+import type { Animal, Environment, MatchupResult } from "./schemas";
+import { environmentPhrase, humanWording } from "./wording";
 
 export type EvidenceItem = {
   id: string; text: string; kind: "scored" | "context" | "gate";
@@ -13,11 +14,11 @@ export function scoredFactorText(factor: MatchupResult["factors"][number], a: An
     ? `${a.name} ${a.mass_kg} kg vs ${b.name} ${b.mass_kg} kg; `
     : factor.name === "Bite force"
       ? `${a.name} ${a.bite_force_n} N vs ${b.name} ${b.bite_force_n} N; ` : "";
-  return `${factor.name}: ${values}${factor.reason}`;
+  return `${factor.name}: ${values}${humanWording(factor.reason)}`;
 }
 
 /** Interpret the engine's explicit "Not compared" marker, never recalculate scores. */
-export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal): EvidenceItem[] {
+export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal, environment: Environment = "land"): EvidenceItem[] {
   const environmental = isEnvironmental(result);
   const ran = result.factors.filter((factor) =>
     !(factor.name === "Bite force" && factor.reason.startsWith("Not compared:")));
@@ -25,7 +26,7 @@ export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal): 
   const items: Omit<EvidenceItem, "id">[] = environmental ? [{
     kind: "gate",
     // Only fields returned by the engine, never an invented score or trait claim.
-    text: JSON.stringify({ outcome: result.outcome, deciding_factor: result.deciding_factor }),
+    text: `Environment: ${result.outcome.kind === "favored" && result.outcome.animal === a.name ? b.name : a.name} can't function ${environmentPhrase(environment)}.`,
   }] : ran.map((factor) => ({
     kind: "scored", factor_name: factor.name, text: scoredFactorText(factor, a, b),
   }));

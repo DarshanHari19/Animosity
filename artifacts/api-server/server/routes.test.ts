@@ -68,7 +68,7 @@ test("indeterminate, no_contest and no_engagement skip narration and explain the
     const body = await response.json() as { result: MatchupResult; beats: unknown[]; explanation: string };
     assert.deepEqual(body.result, result);
     assert.deepEqual(body.beats, []);
-    assert.match(body.explanation, kind === "no_engagement" ? /Lion backs off/ : /cannot function|Neither animal can function/);
+    assert.match(body.explanation, kind === "no_engagement" ? /Lion backs off/ : /can't function|Neither animal can function/);
     assert.doesNotMatch(body.explanation, /[\r\n]/);
   }
 });

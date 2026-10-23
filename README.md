@@ -173,9 +173,11 @@ claims are scientifically true. Review sources and narration before relying on i
 
 Finish text is `{model climax} {server verdict}`. The climax is one sentence,
 under 25 words, present tense, with no numbers, reasons or gore. In the wild,
-the favored animal drives the other off and it retreats or breaks away hurt,
-without death. In Arena, the favored animal uses its fighting style to end the
-fight until the other cannot continue, without retreat. Even matchups break off
+the loser escapes hurt, with a concrete escape movement and no death.
+In Arena, the favored animal performs a concrete finishing move fitting its
+fighting style and the terrain; the loser may die, without blood, wound, or gore
+detail. Never use “cannot continue.” These are prompt instructions, not new
+validation checks. Even matchups break off
 with neither giving ground; environmental finishes show inability to fight in
 the setting. Style is choreography, not a new scoring factor.
 
@@ -187,8 +189,9 @@ Server verdict templates (only already-compared evidence is cited):
   When an Environment factor is present, append `and the {Other} is hampered in {environment}`
   if the other animal is hampered, or `despite being hampered in {environment}`
   if the favored animal is hampered.
-- Environmental: `The {Winner} is favored: the {Other} can't function in {environment}.`
-  Environment labels use spaces, e.g. `deep water`.
+- Environmental: `The {Winner} is favored: the {Other} can't function {environment phrase}.`
+  Environment phrases are `on land`, `in shallow water`, and `in deep water`.
+  Gate citations use readable text, e.g. `Environment: Great white shark can't function on land.`
 - Even: `Too close to call. Scored factors (body mass, comparable bite force, environment) don't separate these two.`
 
 The model receives the engine outcome, mode and fighting styles for the climax.

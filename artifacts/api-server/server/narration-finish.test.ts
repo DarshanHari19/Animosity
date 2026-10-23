@@ -52,9 +52,11 @@ test("environmental template names the actual winner, other animal and selected 
       assert.equal(result.outcome.kind, "favored");
       const winner = environment === "land" ? lion.name : shark.name;
       const other = environment === "land" ? shark.name : lion.name;
-      const evidence = narrationEvidence(result, a, b);
+      const evidence = narrationEvidence(result, a, b, environment);
       const finish = deterministicFinish(result, a, b, evidence, environment);
-      assert.equal(finish.text, `The ${winner} is favored: the ${other} can't function in ${environment.replaceAll("_", " ")}.`);
+      assert.equal(finish.text, `The ${winner} is favored: the ${other} can't function ${environment === "land" ? "on land" : "in deep water"}.`);
+      assert.equal(evidence.find(e => e.kind === "gate")!.text,
+        `Environment: ${other} can't function ${environment === "land" ? "on land" : "in deep water"}.`);
       assert.equal(finish.animal, winner);
       assert.deepEqual(finish.facts_used, evidence.filter(e => e.kind === "gate").map(e => e.text));
       assert.deepEqual(narrationGroundingChecks([finish], result, evidence, a, b, environment), []);

@@ -11,6 +11,7 @@ import { narrationTool, resolveEvidence } from "./narration-tool";
 import { narrationTextChecks } from "./narration-text-checks";
 import { reserveNarrationCall } from "./limits";
 import { narrationEvidence } from "./narration-evidence";
+import { environmentPhrase } from "./wording";
 import { narrationGroundingChecks } from "./narration-grounding";
 import { deterministicFinish } from "./narration-finish";
 import { nonFinishChecks } from "./narration-non-finish";
@@ -70,8 +71,8 @@ export async function narrateMatchup(
   } catch {
     throw new FightError("LLM_CONFIGURATION", "The managed Anthropic integration URL is invalid.", 503);
   }
-  const evidenceItems = narrationEvidence(result, a, b);
   const environment = options.environment ?? "land";
+  const evidenceItems = narrationEvidence(result, a, b, environment);
   const mode = options.mode ?? "realistic";
   const finish = deterministicFinish(result, a, b, evidenceItems, environment);
   const evidence = evidenceItems.map(({ text }) => text);
@@ -108,6 +109,8 @@ export async function narrateMatchup(
         "NON-FINISH BEATS ONLY: describe physical actions consistent with the engine. The favored animal may gain ground, push, drive back, or press its opponent; never show the other animal winning or gaining the upper hand. For even outcomes, neither animal may decisively win. These restrictions do not apply to the separate climax.",
         "Each beat's text must show its named animal physically performing its action: approach moves closer; charge charges; bite attempts a bite; dodge sidesteps or swerves; grapple grabs or wrestles; retreat moves away. Name the acting animal in the text. Do not substitute a trait observation for an action.",
         "Voice: short nature-documentary play-by-play, present tense, vivid verbs, fewer than 20 words per beat. No repeated phrases. Never use 'listed', 'on record', or 'supplied' in beat text.",
+        "Add sports-commentary energy with documentary accuracy. Vary sentence rhythm. Use concrete body movements and terrain details such as dust, spray, and mud only where the selected terrain supports them. Stay entirely in the selected terrain; never invent other animals or herds. A hampered animal wades, slips, or struggles instead of charging freely.",
+        "Use human wording: 'on land', 'in shallow water', 'in deep water', 'Arena', and 'In the wild'. Never write 'in land', underscore tokens, or 'realistic mode' in narration.",
         "Include measurements in at most ONE non-finish beat; all other non-finish beats describe movement without measurements.",
         "Do not describe domination, superior ability, injuries, successful restraint, or inability to escape/shake an animal off. The favored animal may push, press, or drive forward; never imply that the other animal has the upper hand. Do not explain the verdict.",
         "Every digit-number in a beat's text MUST occur in at least one of THAT beat's cited evidence items. Cite both IDs when comparing two measurements.",
@@ -119,8 +122,8 @@ export async function narrateMatchup(
         "Never change the engine outcome. Describe movements, not scientific predictions.",
         "CLIMAX ONLY: write one conclusive sentence, under 25 words, present tense, no numbers (including number words), no reasons ('because', 'thanks to', 'due to'), no gore. Name both animals when favored.",
         "Climax may conclude the action, unlike the neutral non-finish beats. Follow the supplied outcome, not a new winner; do not explain it using any physical trait or ability.",
-        "Realistic favored: the favored animal drives the other off; the other retreats or breaks away hurt. No death.",
-        "Forced_fight favored: no retreat; the favored animal ends it until the other can't continue, using its supplied fighting_style as choreography, NEVER a reason for winning: charge rams, knocks down or pins; ambush seizes or drags down; grapple wrestles down or holds; bluff overpowers and drives back; sustained presses or holds.",
+        "In the wild (realistic), favored: the loser escapes hurt; say how it limps off, flees into the water if the selected terrain supports that, or breaks free and bolts. No death.",
+        "Arena (forced_fight), favored: no retreat. Describe the finishing move concretely like a nature documentary: what the winner physically does, fitting its supplied fighting_style and the terrain. For example it clamps its jaws on the neck, drags its opponent under in water, tramples it, or pins it and bites down. The loser may die. No blood, wounds, or gore detail. Fighting style is choreography, NEVER a reason for winning. Never use the phrase 'cannot continue' or the substitute 'can\\'t continue'.",
         "Even climax: both animals break off with neither giving ground; name no winner.",
         "Environmental favored climax: show the other animal unable to fight in the selected setting; no physical superiority or combat injury. Environmental outcome takes precedence over ordinary climax choreography.",
       ].join(" "),
@@ -129,12 +132,12 @@ export async function narrateMatchup(
       animals: [{ name: a.name, fighting_style: a.fighting_style }, { name: b.name, fighting_style: b.fighting_style }],
       environment, mode, outcome: result.outcome, environmental: result.deciding_factor === "environmental_advantage",
       climax_requirements: result.deciding_factor === "environmental_advantage" && result.outcome.kind === "favored"
-        ? `Name both animals; show ${result.outcome.animal === a.name ? b.name : a.name} cannot fight in ${environment.replaceAll("_", " ")}. Do not substitute a physical overpowering or retreat ending.`
+        ? `Name both animals; show ${result.outcome.animal === a.name ? b.name : a.name} unable to fight ${environmentPhrase(environment)}. Do not substitute a physical overpowering or retreat ending.`
         : result.outcome.kind === "even"
           ? "Both animals break off or apart, with neither giving ground; no winner."
           : mode === "forced_fight"
-            ? `${result.outcome.animal} ends the action using its fighting style; explicitly end with ${result.outcome.animal === a.name ? b.name : a.name} cannot continue. No retreat; merely saying 'ending the fight' is not enough.`
-            : `${result.outcome.animal} drives ${result.outcome.animal === a.name ? b.name : a.name} off; that other animal retreats or breaks away hurt. No death.`,
+            ? `${result.outcome.animal} ends the action with a concrete finishing move fitting its fighting style ${environmentPhrase(environment)}. No retreat. The loser may die, but no blood, wounds, or gore detail. Never say 'cannot continue' or 'can't continue'.`
+            : `${result.outcome.animal} drives ${result.outcome.animal === a.name ? b.name : a.name} off; show how that animal escapes hurt ${environmentPhrase(environment)}. No death.`,
       evidence: evidenceItems.map(({ id, text, kind }) => ({ id, text, kind })),
     }) },
   ];
