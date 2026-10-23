@@ -105,7 +105,9 @@ function Shapes({ type, horn, mane, p }: { type: BodyType; horn: boolean; mane: 
       <circle cx="224" cy="66" r="3" fill={p.dark} />
     </>;
     case "reptile": return <>
-      <path d="M6 108 Q50 92 80 94 L82 118 Q46 118 6 112 Z" fill={p.dark} />
+      <g className="croc-tail" data-part="tail">
+        <path d="M6 108 Q50 92 80 94 L82 118 Q46 118 6 112 Z" fill={p.dark} />
+      </g>
       <rect x="86" y="110" width="12" height="26" rx="5" fill={p.dark} transform="rotate(-12 92 122)" />
       <rect x="148" y="110" width="12" height="26" rx="5" fill={p.dark} transform="rotate(12 154 122)" />
       <ellipse cx="122" cy="104" rx="58" ry="17" fill={p.body} />

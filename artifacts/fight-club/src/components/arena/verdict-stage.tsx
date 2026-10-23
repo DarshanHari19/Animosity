@@ -23,6 +23,7 @@ function verdictSentence(response: FightResponse, red: Animal, blue: Animal, sel
 export function VerdictStage({ sel, red, blue, response, onRematch, onNew }: {
   sel: Selection; red: Animal; blue: Animal; response: FightResponse; onRematch: () => void; onNew: () => void;
 }) {
+  const [mathOpen, setMathOpen] = useState(false);
   const [copied, setCopied] = useState<"idle" | "ok" | "fail">("idle");
   const timer = useRef<number | null>(null);
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
@@ -68,9 +69,9 @@ export function VerdictStage({ sel, red, blue, response, onRematch, onNew }: {
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, paddingTop: 4 }}>{chips}</div>
         </section>
 
-        <div className="enter enter-2"><TaleOfTheTape sel={sel} red={red} blue={blue} result={result} /></div>
+        <div className="enter enter-2"><TaleOfTheTape sel={sel} red={red} blue={blue} result={result} onShowMath={() => setMathOpen(true)} /></div>
 
-        <MathDrawer red={red} blue={blue} result={result} />
+        <MathDrawer red={red} blue={blue} result={result} open={mathOpen} setOpen={setMathOpen} />
 
         <section aria-labelledby="sources" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <h2 id="sources" className="display" style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--bronze)" }}>Sources</h2>

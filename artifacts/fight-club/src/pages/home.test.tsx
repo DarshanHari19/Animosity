@@ -15,7 +15,7 @@ async function advance(ms = 0) {
   // Step so each beat's effect can schedule the next timer between ticks.
   let left = ms;
   do {
-    const step = Math.min(left, 500);
+    const step = Math.min(left, 250); // divides the 750 ms phase and 1500 ms hold
     await act(async () => { await vi.advanceTimersByTimeAsync(step); });
     left -= step;
   } while (left > 0);
@@ -133,7 +133,7 @@ describe("Picker", () => {
     await advance();
     expect(fightBodies()).toEqual([{ animalA: "Lion", animalB: "Lion", environment: "land", mode: "forced_fight", encounter: "face_off" }]);
     fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
-    await advance(15000);
+    await advance(16500);
     expect(screen.getByTestId("text-outcome")).toHaveTextContent("Lion favored");
   });
 
@@ -230,7 +230,7 @@ describe("Fight requests", () => {
     pending.resolve(jsonResponse(responseFixture()));
     await advance();
     fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
-    await advance(15000);
+    await advance(16500);
     expect(screen.getByTestId("text-outcome")).toHaveTextContent("Too close to call");
   });
 
@@ -250,7 +250,7 @@ describe("Fight requests", () => {
     else pending.reject(new Error("Late fictional failure"));
     await advance();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    await advance(15000);
+    await advance(16500);
     expect(screen.getByTestId("text-outcome")).toHaveTextContent("Too close to call");
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -270,6 +270,11 @@ describe("Bout playback", () => {
     }
     expect(screen.queryByTestId("stage-verdict")).not.toBeInTheDocument();
     await advance(3000);
+    expect(screen.getByTestId("text-verdict-hold")).toHaveTextContent("The verdict is in");
+    expect(screen.queryByTestId("stage-verdict")).not.toBeInTheDocument();
+    await advance(1499);
+    expect(screen.queryByTestId("stage-verdict")).not.toBeInTheDocument();
+    await advance(1);
     expect(screen.getByTestId("stage-verdict")).toBeInTheDocument();
     expect(screen.getByTestId("text-climax")).toHaveTextContent("Fictional beat 5.");
     expect(vi.getTimerCount()).toBe(0);
@@ -346,7 +351,8 @@ describe("Bout playback", () => {
 
   it("moves the charging animal without reduced motion", async () => {
     await toBout();
-    await advance(3000);
+    await advance(3750); // charge beat, contact phase
+    expect(screen.getByTestId("arena-stage").dataset.phase).toBe("contact");
     expect(figure("blue").style.transform).toBe("translate(-130px, 0px) rotate(4deg)");
     expect(figure("blue").dataset.motion).toBe("full");
   });
@@ -380,6 +386,123 @@ describe("Bout playback", () => {
     expect(vi.getTimerCount()).toBe(1);
     view.unmount();
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("Phases, hold, and water", () => {
+  it("plays four distinct phases per beat and freezes them when paused", async () => {
+    await toBout();
+    await advance(3000);
+    const seen: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      seen.push(`${screen.getByTestId("arena-stage").dataset.phase}|${figure("blue").style.transform}`);
+      await advance(750);
+    }
+    expect(seen.map((s) => s.split("|")[0])).toEqual(["approach", "contact", "recoil", "settle"]);
+    expect(new Set(seen.map((s) => s.split("|")[1])).size).toBe(4);
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    const phase = screen.getByTestId("arena-stage").dataset.phase;
+    expect(screen.getByTestId("arena-stage")).toHaveClass("paused");
+    await advance(9000);
+    expect(screen.getByTestId("arena-stage").dataset.phase).toBe(phase);
+    expect(beatText()).toBe("Fictional beat 3.");
+    fireEvent.click(screen.getByRole("button", { name: "Replay" }));
+    expect(screen.getByTestId("arena-stage").dataset.phase).toBe("approach");
+    expect(beatText()).toBe("Fictional beat 1.");
+  });
+
+  it("holds on The verdict is in, and Skip still works during the hold", async () => {
+    await toBout();
+    await advance(15000);
+    expect(screen.getByTestId("text-verdict-hold")).toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(1);
+    fireEvent.click(screen.getByRole("button", { name: "Skip to the verdict" }));
+    expect(screen.getByTestId("stage-verdict")).toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("Replay during the hold cancels the automatic verdict", async () => {
+    await toBout();
+    await advance(15500);
+    fireEvent.click(screen.getByRole("button", { name: "Replay" }));
+    await advance(1500);
+    expect(screen.queryByTestId("stage-verdict")).not.toBeInTheDocument();
+    expect(beatText()).toBe("Fictional beat 1.");
+    expect(screen.queryByTestId("text-verdict-hold")).not.toBeInTheDocument();
+  });
+
+  it("pausing during the hold stops the verdict and offers See the verdict", async () => {
+    await toBout();
+    await advance(15500);
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    await advance(5000);
+    expect(screen.queryByTestId("stage-verdict")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "See the verdict" }));
+    expect(screen.getByTestId("stage-verdict")).toBeInTheDocument();
+  });
+
+  it("keeps figures still under reduced motion across phases", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("reduce"), media: query, addEventListener: () => {}, removeEventListener: () => {},
+    }));
+    await toBout();
+    for (let i = 0; i < 4; i++) { await advance(750); expect(figure("red").style.transform).toBe(""); }
+    expect(beatText()).toBe("Fictional beat 2.");
+  });
+
+  it("puts semi-transparent shallow water above the figures, covering their legs", async () => {
+    mountHome();
+    await advance();
+    selectAnimals();
+    fireEvent.click(screen.getByTestId("button-terrain-shallow_water"));
+    fireEvent.click(startButton());
+    await advance();
+    fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
+    await advance();
+    const water = screen.getByTestId("floor-shallows");
+    const surface = parseFloat(water.style.height);
+    for (const side of ["red", "blue"] as const) {
+      expect(Number(water.style.zIndex)).toBeGreaterThan(Number(figure(side).style.zIndex));
+      expect(surface - parseFloat(figure(side).style.bottom)).toBeGreaterThanOrEqual(15);
+    }
+  });
+
+  it.each([
+    ["shallow_water", "40%", 1], ["shallow_water", "40%", 20], ["deep_water", "86%", 1], ["deep_water", "86%", 20],
+  ] as const)("anchors a crocodile to the %s surface with a size-independent offset (mass x%s)", async (env, surface, factor) => {
+    const croc: Animal[] = [{ ...animals[0]!, name: "Nile crocodile", mass_kg: 500 }, { ...animals[1]!, mass_kg: 500 * factor }];
+    animalReply = async () => jsonResponse(croc);
+    mountHome();
+    await advance();
+    selectAnimals("Nile crocodile", "Grizzly bear");
+    fireEvent.click(screen.getByTestId(`button-terrain-${env}`));
+    fireEvent.click(startButton());
+    await advance();
+    fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
+    await advance();
+    expect(figure("red").dataset.submerged).toBe("true");
+    expect(figure("red").style.bottom).toBe(surface);
+    expect(screen.getByTestId("croc-offset-red").style.transform).toBe("translateY(34%)");
+    expect(figure("red").dataset.scale).toBe(Math.cbrt(1 / factor).toFixed(3));
+    expect(figure("blue").dataset.submerged).toBe("false");
+    expect(screen.queryByTestId("croc-offset-blue")).not.toBeInTheDocument();
+  });
+
+  it("keeps the croc offset static under reduced motion and leaves a land croc low with its tail group", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("reduce"), media: query, addEventListener: () => {}, removeEventListener: () => {},
+    }));
+    animalReply = async () => jsonResponse([{ ...animals[0]!, name: "Nile crocodile" }, animals[1]!]);
+    mountHome();
+    await advance();
+    selectAnimals("Nile crocodile", "Grizzly bear");
+    fireEvent.click(screen.getByTestId("button-terrain-shallow_water"));
+    fireEvent.click(startButton());
+    await advance();
+    fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
+    await advance();
+    expect(figure("red").style.transform).toBe("");
+    expect(screen.getByTestId("croc-offset-red").style.transform).toBe("translateY(34%)");
   });
 });
 
@@ -476,6 +599,66 @@ describe("Verdict", () => {
     expect(lion.map((a) => a.getAttribute("href"))).toEqual(expect.arrayContaining([
       "https://en.wikipedia.org/wiki/Lion", "https://en.wikipedia.org/wiki/Hippopotamus",
     ]));
+  });
+
+  it("labels rows Scored, Not compared, and Not modeled yet, and expands sources", async () => {
+    await toVerdict(scoredResponse());
+    expect(screen.getByTestId("label-tape-weight")).toHaveTextContent("Scored");
+    expect(screen.getByTestId("label-tape-bite")).toHaveTextContent("Not compared");
+    expect(screen.getByTestId("label-tape-environment")).toHaveTextContent("Scored");
+    expect(screen.getByTestId("label-tape-style")).toHaveTextContent("Not modeled yet");
+    const toggle = screen.getByTestId("button-expand-weight");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByTestId("text-source-weight-0")).toHaveTextContent("Hippopotamus: Tier 3, Reference summary");
+    expect(screen.getByTestId("text-detail-factor-weight")).toHaveTextContent("+2.38");
+    fireEvent.click(screen.getByTestId("button-expand-bite"));
+    expect(screen.getByTestId("text-detail-bite-reason")).toHaveTextContent("Hippopotamus has no usable bite force value");
+    expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("source unknown");
+    fireEvent.click(screen.getByTestId("button-expand-environment"));
+    expect(screen.getByTestId("text-detail-env")).toHaveTextContent("No handicap applied: environment factor 0.");
+    fireEvent.click(screen.getAllByRole("link", { name: "See the full math" })[0]!);
+    expect(screen.getByTestId("drawer-math")).toBeInTheDocument();
+  });
+
+  it("labels an environment-gated bout Scored with a gate explanation, and unscored rows Context", async () => {
+    await toBout();
+    fireEvent.click(screen.getByRole("button", { name: "Skip to the verdict" }));
+    expect(screen.getByTestId("label-tape-environment")).toHaveTextContent("Scored");
+    fireEvent.click(screen.getByTestId("button-expand-environment"));
+    expect(screen.getByTestId("text-detail-env")).toHaveTextContent("Environment gate");
+    expect(screen.getByTestId("text-detail-env")).toHaveTextContent("no numeric factor and no score; it decided the bout before numeric scoring");
+    expect(screen.getByTestId("label-tape-weight")).toHaveTextContent("Context");
+    expect(screen.queryByText("EDGE")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["both tiers unknown", { bite_force_n: 4000 }, { bite_force_n: 4500 }, "no known source tier"],
+    ["zero placeholder", { bite_force_n: 0 }, { bite_force_n: 4500 }, "Hippopotamus has no usable bite force value"],
+    ["unequal tiers", { bite_force_n: 4000, field_sources: { bite_force_n: { tier: 1, ref: "Field study" } } },
+      { bite_force_n: 4500, field_sources: { bite_force_n: { tier: 3, ref: "Summary" } } }, "tier 1 (Measured)"],
+  ] as const)("explains an un-compared bite: %s", async (_n, a, b, text) => {
+    const [h, l] = heavyAnimals();
+    const pair = [{ ...h!, ...a, field_sources: { ...h!.field_sources, ...("field_sources" in a ? a.field_sources : {}) } },
+      { ...l!, ...b, field_sources: { ...l!.field_sources, ...("field_sources" in b ? b.field_sources : {}) } }] as Animal[];
+    const response = scoredResponse();
+    animalReply = async () => jsonResponse(pair);
+    fightReply = async () => jsonResponse(response);
+    mountHome();
+    await advance();
+    selectAnimals("Hippopotamus", "Lion");
+    fireEvent.click(startButton());
+    await advance();
+    fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
+    await advance();
+    fireEvent.click(screen.getByRole("button", { name: "Skip to the verdict" }));
+    expect(screen.getByTestId("label-tape-bite")).toHaveTextContent("Not compared");
+    fireEvent.click(screen.getByTestId("button-expand-bite"));
+    const reason = screen.getByTestId("text-detail-bite-reason");
+    expect(reason).toHaveTextContent(text);
+    expect(reason).toHaveTextContent("Engine note: Not compared");
+    if (_n !== "unequal tiers") expect(reason).not.toHaveTextContent("different tiers");
   });
 
   it("never shows EDGE on a too-close-to-call verdict", async () => {

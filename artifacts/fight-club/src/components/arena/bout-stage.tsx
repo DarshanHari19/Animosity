@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from "lucide-react";
 import type { Animal, FightResponse } from "@workspace/api-client-react";
 import { ArcadeBand } from "./arcade-band";
-import { ArenaStage } from "./arena-stage";
+import { ArenaStage, PHASES, type Phase } from "./arena-stage";
 import { FactLine } from "./fact-line";
 import { actionTag, MODE_COPY, NARRATION_REASON, TERRAINS, type Selection } from "@/lib/arena";
 
 export const BEAT_MS = 3000;
+export const PHASE_MS = BEAT_MS / 4;
+export const HOLD_MS = 1500;
 
 export function BoutStage({ sel, red, blue, response, error, onRetry, reducedMotion, onVerdict }: {
   sel: Selection; red: Animal; blue: Animal; response: FightResponse | null; error: string | null;
@@ -20,14 +22,25 @@ export function BoutStage({ sel, red, blue, response, error, onRetry, reducedMot
   onVerdictRef.current = onVerdict;
   const last = beats.length - 1;
 
+  const [phase, setPhase] = useState<Phase>("approach");
+
+  // One timer at a time: four phases per beat, then a hold before the verdict.
   useEffect(() => {
     if (!playing || beats.length === 0) return;
+    if (phase === "hold") {
+      const t = window.setTimeout(() => onVerdictRef.current(), HOLD_MS);
+      return () => window.clearTimeout(t);
+    }
     const t = window.setTimeout(() => {
-      if (index < last) setIndex(index + 1);
-      else onVerdictRef.current();
-    }, BEAT_MS);
+      const k = PHASES.indexOf(phase);
+      if (k < PHASES.length - 1) setPhase(PHASES[k + 1]!);
+      else if (index < last) { setIndex(index + 1); setPhase("approach"); }
+      else setPhase("hold");
+    }, PHASE_MS);
     return () => window.clearTimeout(t);
-  }, [playing, index, last, beats.length]);
+  }, [playing, index, phase, last, beats.length]);
+
+  const goTo = (i: number) => { setIndex(i); setPhase(playing ? "approach" : "contact"); };
 
   const beat = beats[index] ?? null;
   const unavailable = response?.narration_status === "unavailable";
@@ -58,7 +71,8 @@ export function BoutStage({ sel, red, blue, response, error, onRetry, reducedMot
           </div>}
         </header>
 
-        <ArenaStage red={red} blue={blue} environment={sel.environment} mode={sel.mode} beat={beat} reducedMotion={reducedMotion} />
+        <ArenaStage red={red} blue={blue} environment={sel.environment} mode={sel.mode} beat={beat} reducedMotion={reducedMotion}
+          phase={phase} paused={!playing} holding={phase === "hold"} />
 
         <section aria-live="polite" className="panel" data-testid="panel-beat"
           style={{ display: "flex", flexDirection: "column", gap: 14, padding: 24, borderColor: "var(--line)" }}>
@@ -96,15 +110,15 @@ export function BoutStage({ sel, red, blue, response, error, onRetry, reducedMot
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {beats.length > 0 && <>
               <button type="button" className="icon-btn" aria-label="Previous moment" disabled={index === 0}
-                onClick={() => setIndex(Math.max(0, index - 1))} data-testid="button-prev"><ChevronLeft size={22} aria-hidden="true" /></button>
+                onClick={() => goTo(Math.max(0, index - 1))} data-testid="button-prev"><ChevronLeft size={22} aria-hidden="true" /></button>
               <button type="button" className="icon-btn icon-btn-main" aria-label={playing ? "Pause" : "Play"}
                 onClick={() => setPlaying(!playing)} data-testid="button-play-pause">
                 {playing ? <Pause size={22} aria-hidden="true" /> : <Play size={22} aria-hidden="true" />}
               </button>
               <button type="button" className="icon-btn" aria-label="Next moment" disabled={index >= last}
-                onClick={() => setIndex(Math.min(last, index + 1))} data-testid="button-next"><ChevronRight size={22} aria-hidden="true" /></button>
+                onClick={() => goTo(Math.min(last, index + 1))} data-testid="button-next"><ChevronRight size={22} aria-hidden="true" /></button>
               <button type="button" className="icon-btn" aria-label="Replay"
-                onClick={() => { setIndex(0); setPlaying(true); }} data-testid="button-replay"><RotateCcw size={20} aria-hidden="true" /></button>
+                onClick={() => { setIndex(0); setPhase("approach"); setPlaying(true); }} data-testid="button-replay"><RotateCcw size={20} aria-hidden="true" /></button>
             </>}
             {response && ((beats.length > 0 && !playing && index === last) || beats.length === 0) && (
               <button type="button" className="btn btn-primary pop" style={{ minHeight: 50, fontSize: 17 }} onClick={onVerdict} data-testid="button-see-verdict">See the verdict</button>

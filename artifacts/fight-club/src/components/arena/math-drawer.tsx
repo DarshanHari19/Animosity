@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { Animal, MatchupResult } from "@workspace/api-client-react";
 import { findFactor, formatNumber, isScored, signed } from "@/lib/arena";
 
@@ -8,8 +7,9 @@ const GATE_NOTE: Record<string, string> = {
 };
 
 /** The only place raw factor values appear, rounded to two decimals. */
-export function MathDrawer({ red, blue, result }: { red: Animal; blue: Animal; result: MatchupResult }) {
-  const [open, setOpen] = useState(false);
+export function MathDrawer({ red, blue, result, open, setOpen }: {
+  red: Animal; blue: Animal; result: MatchupResult; open: boolean; setOpen: (open: boolean) => void;
+}) {
   const size = findFactor(result, "Size");
   const bite = findFactor(result, "Bite force");
   const env = findFactor(result, "Environment");
