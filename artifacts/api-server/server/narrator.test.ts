@@ -142,14 +142,28 @@ test("TODO references remain excluded even with a non-null source tier", async (
   await assert.rejects(narrateMatchup(result, pending, b, unsupported.options), errorCode("INVALID_NARRATION"));
 });
 
+test("internal source notes never enter the provider prompt or returned facts", async () => {
+  const sentinel = "INTERNAL_NOTE_NOT_FOR_PROVIDER";
+  const subject = {
+    ...a,
+    field_sources: Object.fromEntries(Object.entries(a.field_sources).map(([field, source]) =>
+      [field, { ...source, note: sentinel }])),
+  };
+  const mock = mockProvider([provider(beatsFor(a.name))]);
+  const beats = await narrateMatchup(result, subject, b, mock.options);
+  assert.equal(JSON.stringify(mock.calls).includes(sentinel), false);
+  assert.equal(JSON.stringify(beats).includes(sentinel), false);
+  assert.equal(JSON.stringify(mock.calls).includes("confirm in"), false);
+});
+
 test("raw environments are never accepted as trait evidence, regardless of tier", async () => {
   for (const tier of [1, 2, 3, null] as const) {
-    const ref = "Test-only capability reference";
+    const citation = "Test-only capability reference";
     const subject = {
       ...a,
       field_sources: {
         ...a.field_sources,
-        environments: { tier, ref },
+        environments: { tier, citation },
       },
     };
     const mock = mockProvider([provider(beatsFor(a.name))]);
@@ -157,7 +171,7 @@ test("raw environments are never accepted as trait evidence, regardless of tier"
     const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: EvidenceItem[] };
     assert.equal(payload.evidence.some(({ text }) => text.includes(".environments")), false);
 
-    const excludedFact = `${a.name}.environments = ${JSON.stringify(a.environments)} [tier ${tier}; ${ref}]`;
+    const excludedFact = `${a.name}.environments = ${JSON.stringify(a.environments)} [tier ${tier}; ${citation}]`;
     const bad = provider(beatsFor(a.name).map((beat) => ({
       ...beat, facts_used: [excludedFact],
     })));

@@ -102,9 +102,7 @@ export function fightResponseSchemaFor(a: Animal, b: Animal) {
     const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
     const hasExplanation = typeof explanation === "string" &&
       explanation.trim().length > 0 && !/[\r\n]/.test(explanation);
-    const sourceValid = narration_status === "available"
-      ? narration_source === "cache" || narration_source === "model"
-      : narration_source === null;
+    const sourceValid = narration_status === "available" || narration_source === "model";
     const validContent = sourceValid && (narrated
       ? (result.deciding_factor === "environmental_advantage" ? hasExplanation : explanation === null) &&
         (narration_status === "unavailable"

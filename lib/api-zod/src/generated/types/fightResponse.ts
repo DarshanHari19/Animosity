@@ -27,10 +27,7 @@ export interface FightResponse {
      */
   explanation: string | null;
   narration_status: FightResponseNarrationStatus;
-  /**
-     * Origin of available narration; null when unavailable or not required.
-     * @nullable
-     */
+  /** Cache hit or normal model path. Check narration_status to determine whether narration exists; model does not imply a provider call occurred. */
   narration_source: FightResponseNarrationSource;
   /** @nullable */
   narration_reason: FightResponseNarrationReason;

@@ -132,7 +132,7 @@ export type SourceLink = { href: string; label: string };
 export type ReadableFactParts = { text: string; links: SourceLink[]; note: string | null; key: string | null };
 
 export function sourceLinks(citation: string): SourceLink[] {
-  const found = ref.match(/https?:\/\/[^\s;,)]+/g) ?? [];
+  const found = citation.match(/https?:\/\/[^\s;,)]+/g) ?? [];
   const out: SourceLink[] = [];
   for (const raw of found) {
     const href = raw.replace(/[.]+$/, "");
@@ -149,7 +149,7 @@ export function sourceLinks(citation: string): SourceLink[] {
 
 /** Bibliographic text left after links are removed, so non-URL references still show. */
 export function sourceNote(citation: string): string | null {
-  const stripped = ref.replace(/https?:\/\/[^\s;,)]+/g, "").replace(/[:;,\s]+$/g, "").trim();
+  const stripped = citation.replace(/https?:\/\/[^\s;,)]+/g, "").replace(/[:;,\s]+$/g, "").trim();
   return stripped.length > 0 && !/^[:;,.\s]*$/.test(stripped) ? stripped : null;
 }
 

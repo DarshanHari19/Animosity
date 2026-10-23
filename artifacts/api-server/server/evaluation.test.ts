@@ -17,7 +17,7 @@ test("evaluation distinguishes first-pass, recovered retry, invalid and capped o
   const run = (attempts: number, reason: EvaluationRun["body"]["narration_reason"]): EvaluationRun => ({
     case_id: 1, run: 1, attempts, started: "test", finished: "test",
     body: { result: fixtureResult({ kind: "even" }), beats: [], explanation: null,
-      narration_status: reason ? "unavailable" : "available", narration_reason: reason },
+      narration_status: reason ? "unavailable" : "available", narration_reason: reason, narration_source: "model" },
   });
   const summary = summarizeEvaluation([
     run(1, null), run(2, null), run(2, "INVALID_NARRATION"), run(0, "NARRATION_DAILY_CAP_REACHED"),

@@ -24,12 +24,13 @@ test("traits include all seven user-provided animals and their supplied values",
     environments: { land: "full", shallow_water: "hampered", deep_water: "cannot" },
     field_sources: {
       environments: a.field_sources.environments!,
-      mass_kg: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" },
-      length_m: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" },
-      top_speed_kmh: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" },
+      mass_kg: { tier: 3, citation: "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion", note: "" },
+      length_m: { tier: 3, citation: "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion", note: "" },
+      top_speed_kmh: { tier: 3, citation: "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion", note: "" },
       bite_force_n: {
         tier: 2,
-        citation: "Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table",
+        citation: "Wroe et al. (2008), press summary",
+        note: "Press summary reports approximately 560 kg force for a large lion; confirm in Wroe et al. (2005) table. Supplied value retained, not independently verified.",
       },
     },
   });
@@ -201,7 +202,7 @@ test("response validation enforces narration versus explanation and final outcom
   const schema = fightResponseSchemaFor(a, b);
   for (const outcome of [{ kind: "no_contest" }, { kind: "indeterminate" }] as const) {
     const response = { result: fixtureResult(outcome), beats: [], explanation: "Fixture explanation.",
-      narration_status: "not_required", narration_reason: null };
+      narration_status: "not_required", narration_reason: null, narration_source: "model" };
     assert.equal(schema.safeParse(response).success, true);
     for (const invalid of [
       { ...response, beats: fixtureBeats(a, a.name) },
@@ -212,7 +213,7 @@ test("response validation enforces narration versus explanation and final outcom
   for (const outcome of [{ kind: "favored", animal: a.name }, { kind: "even" }] as const) {
     const final = outcome.kind === "favored" ? a.name : null;
     const response = { result: fixtureResult(outcome), beats: fixtureBeats(a, final), explanation: null,
-      narration_status: "available", narration_reason: null };
+      narration_status: "available", narration_reason: null, narration_source: "model" };
     assert.equal(schema.safeParse(response).success, true);
     assert.equal(schema.safeParse({ ...response, beats: fixtureBeats(a, b.name) }).success, false);
     assert.equal(schema.safeParse({ ...response, explanation: "unexpected" }).success, false);

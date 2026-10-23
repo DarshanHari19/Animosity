@@ -45,6 +45,7 @@ export function responseFixture(
       explanation: `${outcome.kind}: Fictional fixture reason only.`,
       narration_status: "not_required",
       narration_reason: null,
+      narration_source: "model",
     };
   }
   const facts_used = [`${result.factors[0]!.name}: ${result.factors[0]!.reason}`];
@@ -62,6 +63,7 @@ export function responseFixture(
     explanation: null,
     narration_status: "available",
     narration_reason: null,
+    narration_source: "model",
   };
 }
 

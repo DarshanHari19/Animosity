@@ -175,7 +175,12 @@ for (const fixture of fixtures.cases) {
       const oldText = fixture.recorded_evidence.find(({ id }) => id === fact_id)?.text;
       // The public factor presentation changed, not the recorded comparison.
       const originalFactor = result.factors.find((factor) => JSON.stringify(factor) === oldText);
-      const currentText = originalFactor ? scoredFactorText(originalFactor, first, second) : oldText;
+      // Bibliographic labels changed too. Match the identical trait/value prefix,
+      // not the old attribution formatting; do not add or alter any cited trait.
+      const context = evidence.find(item => item.kind === "context" &&
+        item.text.split(" [tier ")[0] === oldText?.split(" [tier ")[0]);
+      const currentText = originalFactor ? scoredFactorText(originalFactor, first, second)
+        : context?.text ?? oldText;
       return { ...rest, fact_ids: [evidence.find(({ text }) => text === currentText)?.id ?? "REMOVED_EVIDENCE"] };
     });
     let accepted = false;

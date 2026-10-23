@@ -1,7 +1,7 @@
 # Animosity
 
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
-No database, authentication, hit points, or game loop.
+Replit PostgreSQL stores validated narration only. No authentication, hit points, or game loop.
 
 **This is a limited hypothetical model, not a scientific prediction.** The seven
 animal profiles and trait values were entered from user-provided data. The
@@ -37,7 +37,10 @@ pnpm --filter @workspace/fight-club test
 ```
 
 Tests use fictional fixtures and mocked LLM responses only. They do not call
-an LLM, require a key, or replace scoring in production.
+an LLM, require a key, or replace scoring in production. The persistence test
+uses the development database and deletes its own test row (skipped when no
+`DATABASE_URL` is configured). Before running it for the first time:
+`pnpm --filter @workspace/db run push`.
 Frontend regression tests use test-only HTTP responses with the real API hooks
 and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`.
 
@@ -50,7 +53,10 @@ The backend folder is **`artifacts/api-server/server/`**:
   shark, and Rhinoceros. These are the values now sent to the animal selectors
   and API. Review the supplied numbers and URLs for accuracy before relying on
   them. `bite_force_n` accepts `null` for unknown or not applicable, and
-  `field_sources` records a tier and reference per trait. Restart
+  `field_sources` records `{ citation, tier, note }` per trait. `citation` holds
+  public bibliographic attribution and a URL when supplied; unknown titles or
+  years are not invented. `note` holds internal review instructions and caveats,
+  and never reaches the API, Sources list, or narrator evidence. Restart
   the API after edits because JSON is bundled at startup.
 - `profile` is `adult_male` or `adult_female`; the starter records use
   `adult_male`. `fighting_style` is one of `ambush`, `sustained`, `bluff`,
@@ -247,7 +253,7 @@ These deterministic English checks are conservative, not semantic fact proof.
    `NARRATION_DAILY_CAP_REACHED`, without a provider call or fallback narration.
    Zero disables provider calls; invalid values give narration reason
    `NARRATION_CAP_CONFIGURATION`, also with the verdict intact.
-- Both limits are **in memory, per server process**, with no database. The daily
+- Both limits remain **in memory, per server process**, separate from the persistent narration cache. The daily
   budget resets at midnight **UTC**; restarting the server resets both limits.
   Multiple server replicas have separate budgets, so this is not a persistent
   account-wide billing limit. IP resolution trusts one immediate reverse-proxy
@@ -268,7 +274,7 @@ These deterministic English checks are conservative, not semantic fact proof.
   Mode is `realistic` or `forced_fight` (default `realistic`); encounter is
   `face_off` only (default `face_off`). Missing/unknown names, invalid enums,
   null context fields and unexpected fields are rejected.
-- Success returns `{ result, beats, explanation, narration_status, narration_reason }`.
+- Success returns `{ result, beats, explanation, narration_status, narration_reason, narration_source }`.
   Status is `available` (5–8 beats, null reason), `unavailable` (no beats, reason
   code), or `not_required` (gated outcome, no beats, null reason).
   The UI shows the verdict immediately with “Narration unavailable.” when needed,
@@ -277,6 +283,30 @@ These deterministic English checks are conservative, not semantic fact proof.
   without contacting an LLM. This also applies to no-engagement outcomes.
   Environmental favored results retain narration and include an explanation
   on the result card instead of the numerical scoring-scope note.
+
+## Persistent narration cache
+
+Replit's built-in PostgreSQL stores one validated narration per **ordered**
+animal A, animal B, environment, mode, and build ID. A cache hit returns the
+same beats without calling the provider or reserving daily-cap budget. Failed
+or unavailable narrations are never cached. Non-narrated outcomes bypass the
+cache entirely. Request rate limits still apply to cache hits.
+
+`narration_source` is `cache` for a hit and `model` for the normal non-cache
+path; it is not displayed in the UI. Check `narration_status` to determine
+whether narration exists: `model` does not mean a provider call necessarily
+occurred (for example, a gate or exhausted daily cap).
+
+The cache survives process restarts of the same built artifact. A new build
+has a new build ID and automatically misses; restarting the development
+workflow rebuilds the API. Cache failures log a server-side warning and use
+the normal narration path; a failed cache write never hides a valid verdict.
+
+The database schema is in `lib/db/src/schema/narration-cache.ts`. Apply it to
+the development database with `pnpm --filter @workspace/db run push`.
+Publishing applies the development schema to production; no startup-time DDL
+or custom production migration is used. Local development also needs a
+PostgreSQL `DATABASE_URL`.
 - The page is in `artifacts/fight-club/src/pages/home.tsx`. A successful response
   reveals the first narrated beat immediately, then one every 1.5 seconds. Both SVG
   figures have explicit poses for the seven actions. The end card follows the
@@ -305,7 +335,9 @@ pnpm eval --help
 
 This makes real `POST /api/fight` calls through the running server, using its
 normal rate limit and daily provider-call cap. It never reads LLM credentials or
-resets/bypasses limits. Requests start at least 6.5 seconds apart; expect the full
+resets/bypasses limits. It sends `X-Animosity-Eval-Bypass-Cache: 1`, which bypasses
+cache reads **and writes only in development**; production ignores this header.
+Requests start at least 6.5 seconds apart; expect the full
 batch to take several minutes and use up to 120 provider calls.
 
 Before every fight it compares `/api/health` against the current build manifest

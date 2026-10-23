@@ -60,7 +60,7 @@ export function createFightRouter(
       let narration_status = narrated ? "available" : "not_required";
       let narration_reason: string | null = null;
       let providerAttempts = 0;
-      let narration_source: "cache" | "model" | null = null;
+      let narration_source: "cache" | "model" = "model";
       const buildId = options.buildId ?? BUILD_ID;
       const bypass = (options.development ?? process.env.NODE_ENV === "development")
         && req.get(EVAL_BYPASS_HEADER) === "1";
@@ -89,7 +89,7 @@ export function createFightRouter(
         } catch (error) {
           beats = [];
           narration_status = "unavailable";
-          narration_source = null;
+          narration_source = "model";
           // Never expose provider messages, raw output, or unexpected error details.
           narration_reason = error instanceof FightError && narrationErrors.has(error.code)
             ? error.code : error instanceof Error && error.name === "ZodError"
@@ -122,7 +122,7 @@ export function createFightRouter(
         try { await cache.put(key, buildId, response.data.beats); }
         catch { console.warn("Narration cache write failed; returning the validated model narration."); }
       }
-      // Server-owned telemetry for pnpm eval; public JSON and UI are unchanged.
+      // Server-owned telemetry for pnpm eval; the UI does not display cache provenance.
       res.setHeader("X-Narration-Attempts", String(providerAttempts));
       res.json(response.data);
     } catch (error) {

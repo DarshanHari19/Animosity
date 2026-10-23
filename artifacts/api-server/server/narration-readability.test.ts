@@ -99,7 +99,7 @@ test("every narrator failure preserves favored, even, and environmental verdicts
 test("response validation rejects contradictory narration status, reason, or beats", () => {
   const result: MatchupResult = fixtureResult({ kind: "favored", animal: lion.name });
   const valid = { result, beats: [], explanation: null,
-    narration_status: "unavailable", narration_reason: "INVALID_NARRATION" };
+    narration_status: "unavailable", narration_reason: "INVALID_NARRATION", narration_source: "model" };
   const schema = fightResponseSchemaFor(lion, hippo);
   assert.equal(schema.safeParse(valid).success, true);
   for (const invalid of [

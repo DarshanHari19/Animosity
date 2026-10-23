@@ -7,10 +7,9 @@
  */
 
 /**
- * Origin of available narration; null when unavailable or not required.
- * @nullable
+ * Cache hit or normal model path. Check narration_status to determine whether narration exists; model does not imply a provider call occurred.
  */
-export type FightResponseNarrationSource = typeof FightResponseNarrationSource[keyof typeof FightResponseNarrationSource] | null;
+export type FightResponseNarrationSource = typeof FightResponseNarrationSource[keyof typeof FightResponseNarrationSource];
 
 
 export const FightResponseNarrationSource = {

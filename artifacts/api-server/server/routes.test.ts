@@ -88,7 +88,7 @@ test("favored/even outcomes call narration and validate the final actor", async 
     const response = await server.post(input);
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { result, beats: expected, explanation: null,
-      narration_status: "available", narration_reason: null });
+      narration_status: "available", narration_reason: null, narration_source: "model" });
     assert.equal(calls, 1);
   }
 });

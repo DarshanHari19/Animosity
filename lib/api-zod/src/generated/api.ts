@@ -113,7 +113,7 @@ export const CreateFightResponse = zod.object({
 })).min(createFightResponseBeatsMin).max(createFightResponseBeatsMax),
   "explanation": zod.string().min(1).nullable(),
   "narration_status": zod.enum(['available', 'unavailable', 'not_required']),
-  "narration_source": zod.union([zod.literal('cache'),zod.literal('model'),zod.literal(null)]).nullable().describe('Origin of available narration; null when unavailable or not required.'),
+  "narration_source": zod.enum(['cache', 'model']).describe('Cache hit or normal model path. Check narration_status to determine whether narration exists; model does not imply a provider call occurred.'),
   "narration_reason": zod.union([zod.literal('INVALID_NARRATION'),zod.literal('LLM_PROVIDER_FAILURE'),zod.literal('NARRATION_DAILY_CAP_REACHED'),zod.literal('LLM_NOT_CONFIGURED'),zod.literal('LLM_CONFIGURATION'),zod.literal('NARRATION_CAP_CONFIGURATION'),zod.literal('NARRATION_FAILED'),zod.literal(null)]).nullable()
 }).describe('A valid verdict is returned even when narration is unavailable. Available narration has 5–8 beats. Unavailable narration has no beats and a reason code. Non-narrated gates have no beats and a one-line explanation.')
 

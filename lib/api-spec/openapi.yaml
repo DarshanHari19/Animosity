@@ -223,9 +223,9 @@ components:
         explanation: { type: [string, "null"], minLength: 1 }
         narration_status: { type: string, enum: [available, unavailable, not_required] }
         narration_source:
-          type: [string, "null"]
-          enum: [cache, model, null]
-          description: Origin of available narration; null when unavailable or not required.
+          type: string
+          enum: [cache, model]
+          description: Cache hit or normal model path. Check narration_status to determine whether narration exists; model does not imply a provider call occurred.
         narration_reason:
           type: [string, "null"]
           enum: [INVALID_NARRATION, LLM_PROVIDER_FAILURE, NARRATION_DAILY_CAP_REACHED, LLM_NOT_CONFIGURED, LLM_CONFIGURATION, NARRATION_CAP_CONFIGURATION, NARRATION_FAILED, null]

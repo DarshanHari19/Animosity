@@ -172,7 +172,7 @@ export function PickerStage({ list, loading, error, onRetry, sel, setSel, onStar
               </div>
             ))}
           </div>
-          <div className="dim" style={{ fontSize: 13 }}>Assumes adult males. All matchups are hypothetical. Trait values carry field-level source notes; each verdict lists the ones it used.</div>
+          <div className="dim" style={{ fontSize: 13 }}>Assumes adult males. All matchups are hypothetical. Trait values carry field-level citations; each verdict lists the ones it used.</div>
         </section>
 
         <TraitSources list={list} />

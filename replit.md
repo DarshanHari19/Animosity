@@ -13,7 +13,10 @@ Minimal fact-based animal matchup starter. See README.md for setup and limitatio
 - `SOURCES.md` and `METHODOLOGY.md` are the source of truth for source tiers and
   engine rules. Do not redefine tiers or change supplied capability lists;
   `functions_in` is model-gating metadata, never narrator evidence.
-- User explicitly wants no database, auth, hit points, game loop, or styling beyond basic layout.
+- The user authorized Replit PostgreSQL only for validated narration caching.
+  Keep animal traits in the hand-written JSON; no auth, hit points, or game loop.
+- Public source entries contain citation and tier only. Internal review notes
+  must never reach the API, UI, or narrator evidence.
 - Use the user-provided seven animal records in `traits.json`. Do not replace or
   silently alter their values; remind users that sources and measurements need
   independent review before being treated as scientific facts.
