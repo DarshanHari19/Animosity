@@ -1,0 +1,42 @@
+[
+  {
+    "animals": ["Hippopotamus", "Lion"],
+    "texts": [
+      "The Hippopotamus turns sharply and presses forward again, pushing the Lion toward the water's edge.",
+      "The Hippopotamus pushes forward once more, driving the Lion toward the water's edge.",
+      "The Hippopotamus drives forward, pressing the Lion back across the grass.",
+      "The Hippopotamus drives its bulk forward, pressing the Lion back toward the grass.",
+      "The Lion crouches low in the tall grass, watching the Hippopotamus at the water's edge.",
+      "The Lion creeps through the grass toward the water's edge, eyes fixed on the Hippopotamus."
+    ]
+  },
+  {
+    "animals": ["Rhinoceros", "Lion"],
+    "texts": ["The Rhinoceros drives its horn forward, pressing the Lion back across the dust."]
+  },
+  {
+    "animals": ["Rhinoceros", "Gorilla"],
+    "texts": ["The Rhinoceros wheels around and drives its massive frame back toward the Gorilla."]
+  },
+  {
+    "animals": ["Great white shark", "Lion"],
+    "texts": [
+      "The Lion prowls across the open land, its eyes fixed on the shark at the water's edge.",
+      "The Great white shark snaps its jaws toward the Lion from the water's edge."
+    ]
+  },
+  {
+    "animals": ["Saltwater crocodile", "Grizzly bear"],
+    "texts": [
+      "The Saltwater crocodile lunges sideways, snapping jaws at the water's edge.",
+      "The Saltwater crocodile slides backward toward the water's edge, watching the bear closely.",
+      "The Grizzly bear approaches the water's edge, head low, eyes fixed on the Saltwater crocodile."
+    ]
+  },
+  {
+    "animals": ["Gorilla", "Grizzly bear"],
+    "texts": [
+      "The Grizzly bear's greater length and mass weigh against the Gorilla in the size comparison, pushing the balance toward the bear's side."
+    ]
+  }
+]

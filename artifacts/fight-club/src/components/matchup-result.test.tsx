@@ -45,7 +45,7 @@ describe("MatchupResultCard", () => {
     expect(screen.queryByTestId("text-explanation")).not.toBeInTheDocument();
     if (outcome.kind === "even") {
       expect(screen.getByTestId("text-even-scope").textContent).toBe(
-        "Scored factors (body mass, comparable bite force) don't separate these two.",
+        "Scored factors (body mass, comparable bite force, environment) don't separate these two.",
       );
       expect(screen.queryByText("Even matchup")).not.toBeInTheDocument();
     }
@@ -61,10 +61,17 @@ describe("MatchupResultCard", () => {
     };
     render(<MatchupResultCard result={result} explanation={null} />);
     expect(Array.from(screen.getByTestId("card-result").children, (child) => child.textContent)).toEqual([
-      "Too close to call", "Scored factors (body mass, comparable bite force) don't separate these two.",
+      "Too close to call", "Scored factors (body mass, comparable bite force, environment) don't separate these two.",
       "Deciding factor: None", "Evidence quality: Mixed sources",
       "Encounter: hypothetical", "Assumes adult males",
     ]);
     expect(screen.queryByText("Factors:")).not.toBeInTheDocument();
+  });
+
+  it("states the complete v1 scoring scope for scored results", () => {
+    render(<MatchupResultCard result={{ ...resultFixture(), advantage_score: 1 }} explanation={null} />);
+    expect(screen.getByTestId("text-scoring-scope").textContent).toBe(
+      "v1 scores body mass, environment, and, where comparable, bite force.",
+    );
   });
 });

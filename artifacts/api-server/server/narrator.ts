@@ -105,7 +105,7 @@ export async function narrateMatchup(
         "Call submit_narration once with {beats:[4 to 7 non-finish beats],climax:string} and no other fields. The server appends your climax to its engine verdict as one finish beat; NEVER return a finish field or finish action.",
         "Every beat is {text,action,animal,fact_ids}. Every fact_ids is 1 to 3 distinct supplied IDs.",
         "Non-final actions: approach|charge|bite|dodge|grapple|retreat. Their animal MUST be an exact selected name, NEVER null, even for general observations.",
-        "NON-FINISH BEATS ONLY: describe neutral physical actions. No beat may say or imply who is winning, even the favored animal. These neutral-action restrictions do not apply to the separate climax.",
+        "NON-FINISH BEATS ONLY: describe physical actions consistent with the engine. The favored animal may gain ground, push, drive back, or press its opponent; never show the other animal winning or gaining the upper hand. For even outcomes, neither animal may decisively win. These restrictions do not apply to the separate climax.",
         "Each beat's text must show its named animal physically performing its action: approach moves closer; charge charges; bite attempts a bite; dodge sidesteps or swerves; grapple grabs or wrestles; retreat moves away. Name the acting animal in the text. Do not substitute a trait observation for an action.",
         "Voice: short nature-documentary play-by-play, present tense, vivid verbs, fewer than 20 words per beat. No repeated phrases. Never use 'listed', 'on record', or 'supplied' in beat text.",
         "Include measurements in at most ONE non-finish beat; all other non-finish beats describe movement without measurements.",
@@ -210,7 +210,7 @@ export async function narrateMatchup(
       }
       messages.push({
         role: "user",
-        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit complete corrected {beats,climax}: 4–7 neutral non-finish beats plus the conclusive climax following the original mode/outcome rules. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two in non-finish beats; none in climax. No percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Non-finish beats never say or imply who is winning: no advantage, domination, successful restraint, or inability to escape. The server, not you, supplies the verdict.`,
+        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit complete corrected {beats,climax}: 4–7 non-finish physical-action beats plus the conclusive climax following the original mode/outcome rules. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two in non-finish beats; none in climax. No percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Non-finish beats may show the favored animal gaining ground, pushing, driving back or pressing, but never the other animal winning or gaining the upper hand. In even outcomes neither animal may decisively win. The server, not you, supplies the verdict.`,
       });
     }
   }

@@ -112,12 +112,12 @@ test("response validation rejects contradictory narration status, reason, or bea
 test("even prompt bans equal ability or a stalemate; server supplies the limited-scoring finish", async () => {
   const even = fixtureResult({ kind: "even" });
   assert.equal(deterministicFinish(even, lion, hippo, narrationEvidence(even, lion, hippo)).text,
-    "Too close to call. Body mass and comparable bite force don't separate these two.");
+    "Too close to call. Scored factors (body mass, comparable bite force, environment) don't separate these two.");
   await assert.rejects(narrateMatchup(fixtureResult({ kind: "even" }), lion, hippo, {
     apiKey: "test-only", reserveProviderCall: () => {},
     fetch: async (_url, options) => {
       const body = JSON.parse(String(options?.body));
-      assert.match(body.messages[0].content, /No beat may say or imply who is winning/);
+      assert.match(body.messages[0].content, /For even outcomes, neither animal may decisively win/);
       assert.match(body.messages[0].content, /Do not call it a stalemate or say the animals are equally\/evenly matched/);
       return new Response("", { status: 503 });
     },

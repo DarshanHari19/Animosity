@@ -137,8 +137,10 @@ SDK automatic retries are disabled so they cannot add hidden attempts.
 The tool input is `{ "beats": [4–7 non-finish beats], "climax": "one sentence" }`.
 Every wire beat has `text`, `action`, `animal`, and `fact_ids`. The tool schema
 forbids null actors, any finish action, and a top-level finish field. Non-finish
-beats must be neutral attempted movements: no stated or implied winner,
-advantage, domination, or inability to escape (including “unable to shake it off”).
+beats may show the favored animal gaining ground, pushing, driving back, or
+pressing its opponent, but must not show the other animal winning or gaining
+the upper hand. In even outcomes, neither animal may decisively win. Geographic
+phrases such as “the water's edge” are locations, not advantage claims.
 The model also supplies one `climax` sentence. The server combines that climax
 with its deterministic verdict into exactly one finish beat and maps this
 to the existing 5–8 public beats array. Public actions remain `approach`, `charge`,
@@ -182,9 +184,12 @@ Server verdict templates (only already-compared evidence is cited):
   Append the bite comparison only when bite was compared. Ratios are copied
   from the engine's size reason, not recalculated. If the favored animal is
   lighter, the sentence accurately names the other animal as heavier.
+  When an Environment factor is present, append `and the {Other} is hampered in {environment}`
+  if the other animal is hampered, or `despite being hampered in {environment}`
+  if the favored animal is hampered.
 - Environmental: `The {Winner} is favored: the {Other} can't function in {environment}.`
   Environment labels use spaces, e.g. `deep water`.
-- Even: `Too close to call. Body mass and comparable bite force don't separate these two.`
+- Even: `Too close to call. Scored factors (body mass, comparable bite force, environment) don't separate these two.`
 
 The model receives the engine outcome, mode and fighting styles for the climax.
 The public combined finish retains Zod and outcome validation. Hard climax

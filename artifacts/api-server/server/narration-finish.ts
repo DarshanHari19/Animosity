@@ -23,7 +23,8 @@ export function deterministicFinish(
   const bite = evidence.find(({ kind, factor_name }) => kind === "scored" && factor_name === "Bite force");
   const environmentFactor = evidence.find(({ kind, factor_name }) => kind === "scored" && factor_name === "Environment");
   if (!size) throw new FightError("INVALID_NARRATION", "Scored size evidence is missing.", 502);
-  const facts_used = [size.text, ...(bite ? [bite.text] : [])];
+  const facts_used = [size.text, ...(bite ? [bite.text] : []),
+    ...(result.outcome.kind === "even" && environmentFactor ? [environmentFactor.text] : [])];
   const winner = result.outcome.kind === "favored" ? result.outcome.animal : null;
   const [favored, other] = winner === b.name ? [b, a] : [a, b];
   const place = environment.replaceAll("_", " ");

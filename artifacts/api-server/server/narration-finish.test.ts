@@ -15,6 +15,7 @@ import { fixtureBeats, fixtureResult, fixtureClimax, startFightServer } from "./
 const lion = animals.find(a => a.name === "Lion")!;
 const hippo = animals.find(a => a.name === "Hippopotamus")!;
 const shark = animals.find(a => a.name === "Great white shark")!;
+const croc = animals.find(a => a.name === "Saltwater crocodile")!;
 const context = { environment: "land", mode: "realistic", encounter: "face_off" } as const;
 
 test("favored fighting finish uses exact size text and only compared bite text, in either order", () => {
@@ -64,7 +65,7 @@ test("environmental template names the actual winner, other animal and selected 
 test("even template is exact, null-actor and still independently checked against engine outcome", () => {
   const result = scoreMatchup(lion, lion, context);
   const finish = deterministicFinish(result, lion, lion, narrationEvidence(result, lion, lion));
-  assert.equal(finish.text, "Too close to call. Body mass and comparable bite force don't separate these two.");
+  assert.equal(finish.text, "Too close to call. Scored factors (body mass, comparable bite force, environment) don't separate these two.");
   assert.equal(finish.animal, null);
   const beats = beatsSchemaFor(lion, lion).parse([...fixtureBeats(lion, null).slice(0, -1), finish]);
   assert.equal(narrationMatchesOutcome(result, beats), true);
@@ -75,29 +76,62 @@ test("even template is exact, null-actor and still independently checked against
 });
 
 const implied = JSON.parse(readFileSync(new URL("./__fixtures__/implied-advantage.json", import.meta.url), "utf8")) as { beat: Beat };
-test("implied-advantage fixture now fails even if it cites scored evidence", () => {
+test("implied incapacity of the favored animal fails regardless of citations", () => {
+  const result = fixtureResult({ kind: "favored", animal: lion.name });
   for (const facts_used of [implied.beat.facts_used, ["Test-only scored evidence"]]) {
-    assert.equal(nonFinishChecks([{ ...implied.beat, facts_used }])[0]?.check, "non_finish_verdict");
+    assert.equal(nonFinishChecks([{ ...implied.beat, facts_used }], result, lion, hippo)[0]?.check, "non_finish_verdict");
   }
   for (const text of [
-    "Lion wins.", "Lion is winning.", "Hippopotamus holds the advantage.",
-    "Lion controls the exchange.", "Lion forces the other animal back.",
+    "Hippopotamus wins.", "Hippopotamus is winning.", "Hippopotamus holds the advantage.",
+    "Hippopotamus controls the exchange.", "Hippopotamus forces the other animal back.",
     "Lion cannot free itself.", "Lion struggles to escape.",
-  ]) assert.equal(nonFinishChecks([{ ...implied.beat, text }]).length, 1, text);
-  assert.deepEqual(nonFinishChecks([{ ...implied.beat, text: "Lion attempts to bite, then steps sideways." }]), []);
+  ]) assert.equal(nonFinishChecks([{ ...implied.beat, text }], result, lion, hippo).length, 1, text);
+  for (const text of [
+    "Lion attempts to bite, then steps sideways.", "Lion holds the advantage.",
+    "Lion drives Hippopotamus back.", "Hippopotamus cannot free itself.",
+  ]) assert.deepEqual(nonFinishChecks([{ ...implied.beat, text }], result, lion, hippo), [], text);
 });
 
 test("hypothetical is rejected case-insensitively only as a whole word in non-finish beats", () => {
   const beat = fixtureBeats(lion, lion.name)[0]!;
+  const result = fixtureResult({ kind: "favored", animal: lion.name });
   for (const text of ["A hypothetical approach.", "HYPOTHETICAL movement.", "A hypothetical-looking charge."]) {
-    const checks = nonFinishChecks([{ ...beat, text }]);
+    const checks = nonFinishChecks([{ ...beat, text }], result, lion, hippo);
     assert.equal(checks.length, 1);
     assert.equal(checks[0]!.check, "text_consistency");
     assert.match(checks[0]!.issues![0]!.message, /hypothetical/);
   }
-  assert.deepEqual(nonFinishChecks([{ ...beat, text: "Lion approaches." }]), []);
-  assert.deepEqual(nonFinishChecks([{ ...beat, text: "Hypothetically, Lion approaches." }]), []);
-  assert.deepEqual(nonFinishChecks([{ ...beat, action: "finish", text: "A hypothetical finish." }]), []);
+  assert.deepEqual(nonFinishChecks([{ ...beat, text: "Lion approaches." }], result, lion, hippo), []);
+  assert.deepEqual(nonFinishChecks([{ ...beat, text: "Hypothetically, Lion approaches." }], result, lion, hippo), []);
+  assert.deepEqual(nonFinishChecks([{ ...beat, action: "finish", text: "A hypothetical finish." }], result, lion, hippo), []);
+});
+
+test("scored-environment verdict cites the factor and names the hampered animal, in both orders", () => {
+  for (const [first, second, environment, winner, suffix] of [
+    [hippo, lion, "shallow_water", hippo.name, "and the Lion is hampered in shallow water"],
+    [hippo, croc, "deep_water", hippo.name, "despite being hampered in deep water"],
+  ] as const) {
+    for (const [a, b] of [[first, second], [second, first]]) {
+      const result = scoreMatchup(a!, b!, { ...context, environment, mode: "forced_fight" });
+      assert.deepEqual(result.outcome, { kind: "favored", animal: winner });
+      const evidence = narrationEvidence(result, a!, b!);
+      const finish = deterministicFinish(result, a!, b!, evidence, environment);
+      assert.ok(finish.text.endsWith(`, ${suffix}.`), finish.text);
+      assert.ok(finish.facts_used.includes(evidence.find(e => e.factor_name === "Environment")!.text));
+      assert.deepEqual(narrationGroundingChecks([finish], result, evidence, a!, b!, environment), []);
+      if (second === lion) assert.equal(finish.text,
+        "The Hippopotamus is favored: it outweighs the Lion about 7.9 to 1 (1500 kg vs 190 kg), and the Lion is hampered in shallow water.");
+    }
+  }
+});
+
+test("even verdict includes environment wording and cites the compared environment", () => {
+  const result = scoreMatchup(croc, lion, { ...context, mode: "forced_fight" });
+  assert.equal(result.outcome.kind, "even");
+  const evidence = narrationEvidence(result, croc, lion);
+  const finish = deterministicFinish(result, croc, lion, evidence);
+  assert.equal(finish.text, "Too close to call. Scored factors (body mass, comparable bite force, environment) don't separate these two.");
+  assert.ok(finish.facts_used.includes(evidence.find(e => e.factor_name === "Environment")!.text));
 });
 
 test("neutral movements get exactly one server finish; implied wins retry once with no partial fallback", async () => {

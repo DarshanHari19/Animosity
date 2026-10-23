@@ -39,6 +39,7 @@ UI default: Arena (forced_fight). In the wild (realistic) is optional.
 
 UI labels: "[Animal] favored", "Too close to call", "No fight: [Animal] backs off" / "No fight: both animals back off", "Indeterminate", "No contest". Evidence: "Mostly higher-tier sources", "Mixed sources", "Mostly lower-tier or unknown sources".
 Even explanation: "Scored factors (body mass, comparable bite force, environment) don't separate these two." Result-card scope: "v1 scores body mass, environment, and, where comparable, bite force."
+When a scored Environment factor is present, favored verdicts add "and the {Other} is hampered in {environment}" if the other animal is hampered, or "despite being hampered in {environment}" if the favored animal is hampered. These are descriptions of the existing factor, not changes to scoring.
 
 Narration (5 to 8 beats) only for favored and even. Other outcomes return a one-line explanation, no LLM call.
 
