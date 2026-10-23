@@ -86,7 +86,7 @@ export default function Home() {
         <strong>Starter limitations</strong>
         <ul className="list-disc pl-5">
           <li>Seven adult-male trait profiles are loaded from user-provided data. Review field-level source notes and values before treating them as verified facts.</li>
-          <li>v1 scores body mass and, where comparable, bite force only. These hypothetical results are not scientific predictions.</li>
+          <li>v1 scores body mass, environment, and, where comparable, bite force. These hypothetical results are not scientific predictions.</li>
           <li>A valid verdict is shown even when narration is unavailable; non-narrated outcomes receive an explanation without an LLM call.</li>
         </ul>
       </section>

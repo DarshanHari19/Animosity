@@ -9,6 +9,10 @@ const physical = /\b(?:size|mass|weight|heavier|outweighs|bite|speed|strength|po
 const advantage = /\b(?:advantage|edge|favou?rs?|favou?red|outweighs|heavier|stronger|faster|superior|offset)\b/i;
 const negative = /\b(?:no|not|neither|without|never)\b/i;
 const clauses = (text: string) => text.split(/[.!?;,]|\b(?:but|although|yet|while)\b/i);
+const geographicEdge = /\b(?:water|river|shore|coast|bank|grass|field|lake|sea|stream)(?:['’]s)?\s+edge\b/gi;
+const withoutGeographicEdge = (text: string) => text.replace(geographicEdge, "");
+const hasCausalSignal = (text: string) => causal.test(withoutGeographicEdge(text));
+const hasAdvantageSignal = (text: string) => advantage.test(withoutGeographicEdge(text));
 
 /** Conservative English checks supplement the prompt; no scoring is done here. */
 export function narrationGroundingChecks(
@@ -40,11 +44,11 @@ export function narrationGroundingChecks(
       } else if (!scored.length) messages.push("An ordinary favored finish must cite a scored engine factor.");
     }
     if (final && result.outcome.kind === "even" &&
-      clauses(beat.text).some((clause) => advantage.test(clause) && !negative.test(clause))) {
+      clauses(beat.text).some((clause) => hasAdvantageSignal(clause) && !negative.test(clause))) {
       messages.push("An even finish may not credit any advantage.");
     }
     for (const clause of clauses(beat.text)) {
-      if (!causal.test(clause) || negative.test(clause)) continue;
+      if (!hasCausalSignal(clause) || negative.test(clause)) continue;
       if (!scored.length && !cited.some((item) => environmental && item.kind === "gate")) {
         messages.push("Context evidence is description only, not a reason for the outcome.");
         break;

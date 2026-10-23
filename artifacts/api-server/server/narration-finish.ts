@@ -21,10 +21,12 @@ export function deterministicFinish(
   }
   const size = evidence.find(({ kind, factor_name }) => kind === "scored" && factor_name === "Size");
   const bite = evidence.find(({ kind, factor_name }) => kind === "scored" && factor_name === "Bite force");
+  const environmentFactor = evidence.find(({ kind, factor_name }) => kind === "scored" && factor_name === "Environment");
   if (!size) throw new FightError("INVALID_NARRATION", "Scored size evidence is missing.", 502);
   const facts_used = [size.text, ...(bite ? [bite.text] : [])];
   const winner = result.outcome.kind === "favored" ? result.outcome.animal : null;
   const [favored, other] = winner === b.name ? [b, a] : [a, b];
+  const place = environment.replaceAll("_", " ");
   // Rephrase the engine's comparison, never recalculate its ratio or score.
   const reason = result.factors.find(f => f.name === "Size")!.reason;
   const ratio = reason.match(/\babout ([\d.]+) to 1\.$/)?.[1];
@@ -37,10 +39,25 @@ export function deterministicFinish(
     ? ` Comparable bite force: the ${a.name} ${a.bite_force_n} N vs the ${b.name} ${b.bite_force_n} N.`
     : "";
   return result.outcome.kind === "even" ? {
-    text: "Too close to call. Body mass and comparable bite force don't separate these two.",
+    text: "Too close to call. Scored factors (body mass, comparable bite force, environment) don't separate these two.",
     action: "finish", animal: null, facts_used,
   } : {
-    text: `The ${winner} is favored: ${comparison}${biteComparison}`,
+    text: (() => {
+      if (!environmentFactor) return `The ${winner} is favored: ${comparison}${biteComparison}`;
+      const modifiers: string[] = [];
+      if (other.environments[environment] === "hampered") {
+        modifiers.push(`and the ${other.name} is hampered in ${place}`);
+      }
+      if (favored.environments[environment] === "hampered") {
+        modifiers.push(`despite being hampered in ${place}`);
+      }
+      if (modifiers.length) facts_used.push(environmentFactor.text);
+      const biteFact = bite
+        ? `; comparable bite force: ${a.name} ${a.bite_force_n} N vs ${b.name} ${b.bite_force_n} N`
+        : "";
+      return `The ${winner} is favored: ${comparison.replace(/\.$/, "")}${biteFact}` +
+        `${modifiers.length ? `, ${modifiers.join(", ")}` : ""}.`;
+    })(),
     action: "finish", animal: result.outcome.animal, facts_used,
   };
 }

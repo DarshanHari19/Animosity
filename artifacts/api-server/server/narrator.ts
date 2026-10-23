@@ -186,7 +186,7 @@ export async function narrateMatchup(
         ...climaxChecks(resolved.climax, result, a, b, mode, environment),
         ...narrationTextChecks(checkedBeats, result, a, b),
         ...narrationGroundingChecks(checkedBeats, result, evidenceItems, a, b, environment),
-        ...nonFinishChecks(checkedBeats),
+        ...nonFinishChecks(checkedBeats, result, a, b),
       ];
       if (textFailures.length) {
         checks = textFailures;

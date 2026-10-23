@@ -21,7 +21,7 @@ export function MatchupResultCard({ result, explanation, narrationStatus, narrat
     <div className="border p-3 space-y-1" data-testid="card-result">
       <p data-testid="text-outcome"><strong>{outcomeLabel(result.outcome)}</strong></p>
       {result.outcome.kind === "even" && <p data-testid="text-even-scope">
-        Scored factors (body mass, comparable bite force) don't separate these two.
+        Scored factors (body mass, comparable bite force, environment) don't separate these two.
       </p>}
       {narrationStatus === "unavailable" && <p data-testid="text-narration-unavailable">
         Narration unavailable.{narrationReason && ` (${narrationReason})`}
@@ -36,7 +36,7 @@ export function MatchupResultCard({ result, explanation, narrationStatus, narrat
       <p data-testid="text-profile-assumption">Assumes adult males</p>
       {explanation && <p data-testid="text-explanation">{explanation}</p>}
       {result.advantage_score !== null && (
-        <p data-testid="text-scoring-scope">v1 scores body mass and, where comparable, bite force only.</p>
+        <p data-testid="text-scoring-scope">v1 scores body mass, environment, and, where comparable, bite force.</p>
       )}
       {result.factors.length > 0 && <>
         <p>Factors:</p>

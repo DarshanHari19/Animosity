@@ -9,7 +9,7 @@ environment-level references have been reviewed against zoological sources, with
 uncertainties recorded; other trait sources and numerical measurements have not
 been independently verified or changed. Habitat evidence does not validate
 fighting ability or the model's environment levels (see [METHODOLOGY.md](METHODOLOGY.md)). The scoring
-v1 engine scores body mass and, when source tiers match, bite force only.
+v1 scores body mass, environment, and, where comparable, bite force.
 No fake results or fallback narration are substituted. Favored/even outcomes
 require a configured LLM provider; gate outcomes can return explanations without it.
 
@@ -281,7 +281,7 @@ These deterministic English checks are conservative, not semantic fact proof.
   are ignored. Numerical results show the v1 scoring-scope note; gate results
   show explanations. Narrated playback requires a configured provider; verdicts do not.
   API outcome `even` is displayed as **Too close to call**, with
-  “Scored factors (body mass, comparable bite force) don't separate these two.”
+  “Scored factors (body mass, comparable bite force, environment) don't separate these two.”
   The deterministic finish preserves this distinction; the prompt also forbids
   claims of a stalemate or equally matched animals.
 
