@@ -1,169 +1,183 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { useCreateFight, useGetAnimals, getGetAnimalsQueryKey } from "@workspace/api-client-react";
-import type { FightInputEnvironment, FightInputMode, FightResponse } from "@workspace/api-client-react";
-import { StickFigure } from "@/components/stick-figure";
-import { MatchupResultCard } from "@/components/matchup-result";
-import { ReadableFact } from "@/components/readable-fact";
-
-const BEAT_MS = 1500;
+import type { Animal, FightResponse } from "@workspace/api-client-react";
+import { PickerStage } from "@/components/arena/picker-stage";
+import { VsStage } from "@/components/arena/vs-stage";
+import { BoutStage } from "@/components/arena/bout-stage";
+import { VerdictStage } from "@/components/arena/verdict-stage";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { readSelectionFromUrl, selectionSearch, skipsBout, type Selection, type Stage } from "@/lib/arena";
 
 function errorMessage(err: unknown): string {
-  const e = err as { data?: { error?: string; code?: string }; message?: string; status?: number } | null;
+  const e = err as { data?: { error?: string; code?: string }; message?: string } | null;
   const msg = e?.data?.error ?? e?.message ?? "Unknown error";
   return e?.data?.code ? `${msg} (${e.data.code})` : msg;
 }
 
-type Playback = { a: string; b: string; env: FightInputEnvironment; mode: FightInputMode; response: FightResponse };
+/** A stage-independent snapshot: later picker edits never relabel a submitted bout. */
+type FightState = {
+  id: number; sel: Selection; status: "pending" | "done" | "error";
+  response: FightResponse | null; error: string | null;
+};
+type HistoryState = { animosityStage: Stage; prev?: Stage };
+
+const DEFAULT_SEL: Selection = { a: "", b: "", environment: "land", mode: "forced_fight" };
+const urlFor = (sel: Partial<Selection>) => `${window.location.pathname}${selectionSearch(sel)}`;
+
+function validSelection(list: Animal[], search: string): { sel: Selection; complete: boolean } {
+  const p = readSelectionFromUrl(search);
+  const names = new Set(list.map((x) => x.name));
+  const sel: Selection = {
+    a: p.a && names.has(p.a) ? p.a : "",
+    b: p.b && names.has(p.b) ? p.b : "",
+    environment: p.environment ?? DEFAULT_SEL.environment,
+    mode: p.mode ?? DEFAULT_SEL.mode,
+  };
+  return { sel, complete: sel.a !== "" && sel.b !== "" && !!p.environment && !!p.mode };
+}
 
 export default function Home() {
   const animals = useGetAnimals({ query: { queryKey: getGetAnimalsQueryKey() } });
-  const fight = useCreateFight();
-  const [a, setA] = useState("");
-  const [b, setB] = useState("");
-  const [env, setEnv] = useState<FightInputEnvironment>("land");
-  const [mode, setMode] = useState<FightInputMode>("forced_fight");
-  const [playback, setPlayback] = useState<Playback | null>(null);
-  const [shown, setShown] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const timer = useRef<number | null>(null);
+  const createFight = useCreateFight();
+  const reducedMotion = useReducedMotion();
+  const [sel, setSelState] = useState<Selection>(() => ({ ...DEFAULT_SEL, ...readSelectionFromUrl(window.location.search) }));
+  const [stage, setStage] = useState<Stage>("picker");
+  const [fight, setFight] = useState<FightState | null>(null);
   const requestId = useRef(0);
+  const fightRef = useRef(fight);
+  fightRef.current = fight;
+  const stageRef = useRef(stage);
+  stageRef.current = stage;
+  const mutateRef = useRef(createFight.mutateAsync);
+  mutateRef.current = createFight.mutateAsync;
+  const list = animals.data ?? [];
 
-  const stop = () => {
-    if (timer.current !== null) window.clearInterval(timer.current);
-    timer.current = null;
-  };
-  useEffect(() => () => {
-    stop();
-    requestId.current += 1; // A response after unmount must not start a new timer.
+  const go = useCallback((next: Stage, url: string, replace = false) => {
+    const state: HistoryState = { animosityStage: next, prev: replace ? (window.history.state as HistoryState | null)?.prev : stageRef.current };
+    if (replace) window.history.replaceState(state, "", url);
+    else window.history.pushState(state, "", url);
+    stageRef.current = next;
+    setStage(next);
   }, []);
 
-  const list = animals.data ?? [];
-  const canFight = a !== "" && b !== "" && !fight.isPending;
-
-  async function onFight() {
-    stop();
-    setPlayback(null);
-    setShown(0);
-    setError(null);
+  const start = useCallback((snapshot: Selection) => {
     const id = ++requestId.current;
-    const sel = { a, b, env, mode };
-    try {
-      const response = await fight.mutateAsync({ data: {
-        animalA: sel.a, animalB: sel.b, environment: sel.env,
-        mode: sel.mode, encounter: "face_off",
-      } });
-      if (id !== requestId.current) return;
-      setPlayback({ ...sel, response });
-      const total = response.beats.length;
-      setShown(Math.min(1, total));
-      if (total <= 1) return; // Explanation-only outcomes have no playback timer.
-      let n = 1;
-      timer.current = window.setInterval(() => {
-        n += 1;
-        setShown(n);
-        if (n >= total) stop();
-      }, BEAT_MS);
-    } catch (err) {
-      if (id === requestId.current) setError(errorMessage(err));
+    setFight({ id, sel: snapshot, status: "pending", response: null, error: null });
+    mutateRef.current({ data: {
+      animalA: snapshot.a, animalB: snapshot.b, environment: snapshot.environment,
+      mode: snapshot.mode, encounter: "face_off",
+    } }).then(
+      (response) => {
+        if (id !== requestId.current) return;
+        setFight((f) => (f && f.id === id ? { ...f, status: "done", response } : f));
+      },
+      (err: unknown) => {
+        if (id !== requestId.current) return;
+        setFight((f) => (f && f.id === id ? { ...f, status: "error", error: errorMessage(err) } : f));
+      },
+    );
+  }, []);
+
+  const resetToPicker = useCallback(() => {
+    requestId.current += 1; // Any in-flight response is now stale.
+    setFight(null);
+  }, []);
+
+  // Late responses after unmount are ignored.
+  useEffect(() => () => { requestId.current += 1; }, []);
+
+  // Validate URL selections once animals load; a complete shared link starts the bout.
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (autoChecked.current || !animals.isSuccess || !animals.data) return;
+    autoChecked.current = true;
+    const { sel: valid, complete } = validSelection(animals.data, window.location.search);
+    setSelState(valid);
+    window.history.replaceState({ animosityStage: "picker" } satisfies HistoryState, "", urlFor(valid));
+    if (complete && stageRef.current === "picker") {
+      start(valid);
+      go("bout", urlFor(valid));
     }
+  }, [animals.isSuccess, animals.data, start, go]);
+
+  // Browser Back/Forward moves between stages.
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const next = (e.state as HistoryState | null)?.animosityStage ?? "picker";
+      if (next === "picker" || !fightRef.current) {
+        resetToPicker();
+        const data = animals.data;
+        if (data) setSelState(validSelection(data, window.location.search).sel);
+        if (next !== "picker") window.history.replaceState({ animosityStage: "picker" } satisfies HistoryState, "", window.location.href);
+        stageRef.current = "picker";
+        setStage("picker");
+        return;
+      }
+      stageRef.current = next;
+      setStage(next);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [animals.data, resetToPicker]);
+
+  // Gated outcomes have no bout to watch.
+  useEffect(() => {
+    if (stage === "bout" && fight?.status === "done" && fight.response && skipsBout(fight.response)) {
+      go("verdict", urlFor(fight.sel), true);
+    }
+  }, [stage, fight, go]);
+
+  useEffect(() => { document.documentElement.scrollTop = 0; }, [stage]);
+
+  const setSel = (patch: Partial<Selection>) => {
+    const next = { ...sel, ...patch };
+    setSelState(next);
+    window.history.replaceState({ animosityStage: "picker" } satisfies HistoryState, "", urlFor(next));
+  };
+
+  const onStart = () => {
+    const snapshot = { ...sel };
+    start(snapshot);
+    go("vs", urlFor(snapshot));
+  };
+  const toPicker = () => {
+    const f = fightRef.current;
+    if (f) setSelState(f.sel);
+    resetToPicker();
+    go("picker", urlFor(f?.sel ?? sel));
+  };
+  const onChangeFighters = () => {
+    if ((window.history.state as HistoryState | null)?.prev === "picker") window.history.back();
+    else toPicker();
+  };
+
+  const byName = (n: string) => list.find((x) => x.name === n);
+  const red = fight ? byName(fight.sel.a) : undefined;
+  const blue = fight ? byName(fight.sel.b) : undefined;
+
+  if (stage !== "picker" && fight && red && blue) {
+    const wrap = (node: ReactElement) => <main className={reducedMotion ? "reduced-motion" : undefined}>{node}</main>;
+    if (stage === "vs") {
+      return wrap(<VsStage sel={fight.sel} red={red} blue={blue} onChange={onChangeFighters} onRing={() => {
+        const f = fightRef.current;
+        if (f?.status === "done" && f.response && skipsBout(f.response)) go("verdict", urlFor(f.sel));
+        else go("bout", urlFor(fight.sel));
+      }} />);
+    }
+    if (stage === "verdict" && fight.response) {
+      return wrap(<VerdictStage key={fight.id} sel={fight.sel} red={red} blue={blue} response={fight.response}
+        onRematch={() => { start(fight.sel); go("bout", urlFor(fight.sel)); }} onNew={toPicker} />);
+    }
+    return wrap(<BoutStage key={fight.id} sel={fight.sel} red={red} blue={blue} response={fight.response}
+      error={fight.error} onRetry={() => start(fight.sel)} reducedMotion={reducedMotion}
+      onVerdict={() => go("verdict", urlFor(fight.sel))} />);
   }
 
-  const beats = playback?.response.beats ?? [];
-  const current = shown > 0 ? beats[shown - 1] : undefined;
-  // A non-winning finish should not put either figure in a defeated pose.
-  const currentAction = current?.animal === null ? null : current?.action ?? null;
-  const done = playback !== null && shown >= beats.length;
-  const result = playback?.response.result;
-
   return (
-    <main className="mx-auto max-w-2xl p-4 space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold">Animosity</h1>
-        <p className="text-sm text-muted-foreground">Fact-based animal matchups.</p>
-      </header>
-
-      <section className="border p-3 text-sm space-y-1" data-testid="text-limitations">
-        <strong>Starter limitations</strong>
-        <ul className="list-disc pl-5">
-          <li>Seven adult-male trait profiles are loaded from user-provided data. Review field-level source notes and values before treating them as verified facts.</li>
-          <li>v1 scores body mass, environment, and, where comparable, bite force. These hypothetical results are not scientific predictions.</li>
-          <li>A valid verdict is shown even when narration is unavailable; non-narrated outcomes receive an explanation without an LLM call.</li>
-        </ul>
-      </section>
-
-      <section className="space-y-3">
-        {animals.isLoading && <p data-testid="status-animals-loading">Loading animals...</p>}
-        {animals.isError && (
-          <p className="text-destructive" data-testid="status-animals-error">
-            Could not load animals: {errorMessage(animals.error)}{" "}
-            <button className="underline" onClick={() => animals.refetch()} data-testid="button-retry-animals">Retry</button>
-          </p>
-        )}
-        {animals.isSuccess && list.length === 0 && <p>No animals available.</p>}
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="flex flex-col text-sm">Animal A
-            <select className="border p-1 bg-card" value={a} onChange={(e) => setA(e.target.value)} disabled={!list.length} data-testid="select-animal-a">
-              <option value="">Select...</option>
-              {list.map((x) => <option key={x.name} value={x.name}>{x.name}</option>)}
-            </select>
-          </label>
-          <label className="flex flex-col text-sm">Animal B
-            <select className="border p-1 bg-card" value={b} onChange={(e) => setB(e.target.value)} disabled={!list.length} data-testid="select-animal-b">
-              <option value="">Select...</option>
-              {list.map((x) => <option key={x.name} value={x.name}>{x.name}</option>)}
-            </select>
-          </label>
-          <label className="flex flex-col text-sm">Environment
-            <select className="border p-1 bg-card" value={env} onChange={(e) => setEnv(e.target.value as FightInputEnvironment)} data-testid="select-environment">
-              <option value="land">Land</option>
-              <option value="shallow_water">Shallow water</option>
-              <option value="deep_water">Deep water</option>
-            </select>
-          </label>
-        </div>
-        <fieldset className="space-y-1">
-          <legend className="text-sm">Mode</legend>
-          <div className="flex gap-4 text-sm">
-            <label><input type="radio" name="mode" value="realistic" checked={mode === "realistic"} onChange={() => setMode("realistic")} data-testid="mode-realistic" /> In the wild</label>
-            <label><input type="radio" name="mode" value="forced_fight" checked={mode === "forced_fight"} onChange={() => setMode("forced_fight")} data-testid="mode-forced-fight" /> Arena</label>
-          </div>
-          <p className="text-sm" data-testid="text-mode-caption">{mode === "forced_fight"
-            ? "No retreat. Environmental disadvantages still count."
-            : "Animals may back off, the way most real encounters end."}</p>
-        </fieldset>
-        <button className="border px-4 py-1 bg-primary text-primary-foreground disabled:opacity-50" onClick={onFight} disabled={!canFight} data-testid="button-fight">
-          {fight.isPending ? "Fighting..." : "Fight"}
-        </button>
-        {error && <p className="text-destructive" role="alert" data-testid="status-fight-error">Fight failed: {error}</p>}
-      </section>
-
-      {playback && (
-        <section className="space-y-3" data-testid="section-playback">
-          <h2 className="font-semibold">{playback.a} vs {playback.b} ({playback.env.replaceAll("_", " ")}, {playback.mode === "forced_fight" ? "Arena" : "In the wild"})</h2>
-          {beats.length > 0 && <>
-          <svg viewBox="0 0 320 190" className="w-full border bg-card" role="img" aria-label="Stick figure fight">
-            <StickFigure side="left" label={playback.a} action={currentAction} isActor={current?.animal === playback.a} />
-            <StickFigure side="right" label={playback.b} action={currentAction} isActor={current?.animal === playback.b} />
-          </svg>
-          <ol className="list-decimal pl-5 space-y-2 text-sm">
-            {beats.slice(0, shown).map((beat, i) => (
-              <li key={i} data-testid={`text-beat-${i}`}>
-                <span className="font-semibold">{beat.animal ?? "No winner"}</span> [{beat.action}]: {beat.text}
-                <div className="text-muted-foreground">Facts: {beat.facts_used.map((fact, index) => (
-                  <span key={index}>{index > 0 && " | "}<ReadableFact fact={fact} /></span>
-                ))}</div>
-              </li>
-            ))}
-          </ol>
-          </>}
-          {done && result && (
-            <MatchupResultCard result={result} explanation={playback.response.explanation}
-              narrationStatus={playback.response.narration_status}
-              narrationReason={playback.response.narration_reason} />
-          )}
-        </section>
-      )}
+    <main className={reducedMotion ? "reduced-motion" : undefined}>
+      <PickerStage list={list} loading={animals.isLoading}
+        error={animals.isError ? errorMessage(animals.error) : null} onRetry={() => animals.refetch()}
+        sel={sel} setSel={setSel} onStart={onStart} />
     </main>
   );
 }

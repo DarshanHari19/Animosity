@@ -121,6 +121,7 @@ export async function narrateMatchup(
         "For even, no beat may name a winner. Do not call it a stalemate or say the animals are equally/evenly matched. Limited scoring is not proof of a draw or equal abilities.",
         "Never change the engine outcome. Describe movements, not scientific predictions.",
         "CLIMAX ONLY: write one conclusive sentence, under 25 words, present tense, no numbers (including number words), no reasons ('because', 'thanks to', 'due to'), no gore. Name both animals when favored.",
+        "Use articles before animal names in the climax: 'The Saltwater crocodile drives the Lion off,' never 'Saltwater crocodile drives Lion off.'",
         "Climax may conclude the action, unlike the neutral non-finish beats. Follow the supplied outcome, not a new winner; do not explain it using any physical trait or ability.",
         "In the wild (realistic), favored: the loser escapes hurt; say how it limps off, flees into the water if the selected terrain supports that, or breaks free and bolts. No death.",
         "Arena (forced_fight), favored: no retreat. Describe the finishing move concretely like a nature documentary: what the winner physically does, fitting its supplied fighting_style and the terrain. For example it clamps its jaws on the neck, drags its opponent under in water, tramples it, or pins it and bites down. The loser may die. No blood, wounds, or gore detail. Fighting style is choreography, NEVER a reason for winning. Never use the phrase 'cannot continue' or the substitute 'can\\'t continue'.",

@@ -159,6 +159,7 @@ test("invalid climax retries once through existing checks, without a verdict-onl
         assert.match(body.messages[0].content, /The loser may die. No blood, wounds, or gore detail/);
         assert.match(body.messages[0].content, /clamps its jaws on the neck/);
         assert.match(body.messages[0].content, /loser escapes hurt; say how/);
+        assert.match(body.messages[0].content, /Use articles before animal names in the climax/);
         assert.match(data.climax_requirements, /concrete finishing move/);
         assert.match(data.climax_requirements, /Never say 'cannot continue'/);
         if (calls === 2) assert.match(body.messages.at(-1).content, /Climax must contain no numbers/);

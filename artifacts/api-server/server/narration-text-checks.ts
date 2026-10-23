@@ -1,5 +1,6 @@
 import type { Animal, Beat, MatchupResult } from "./schemas";
 import type { FailureCheck } from "./narration-diagnostics";
+import { withoutPostureHalf } from "./narration-number-wording";
 
 const forbiddenNumbers = /\b(?:zero|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|half|quarter)\b/i;
 const forbiddenWording = /\b(?:sources?|sourced|unsourced|tiers?|unverified|unavailable|unknown|excluded|unscored)\b|\bmissing\s+(?:data|traits?|values?|measurements?|sources?|evidence|factors?)\b|\b(?:not|cannot|could not|can't|couldn't)\s+(?:be\s+)?(?:compared|scored|counted|included)\b/i;
@@ -37,7 +38,7 @@ export function narrationTextChecks(
     for (const value of new Set(numbers(beat.text))) {
       if (!evidenceNumbers.has(value)) messages.push(`Number ${value} is absent from this beat's facts_used.`);
     }
-    if (forbiddenNumbers.test(beat.text)) messages.push("Spelled-out numbers other than one and two are forbidden; use digits.");
+    if (forbiddenNumbers.test(withoutPostureHalf(beat.text))) messages.push("Spelled-out numbers other than one and two are forbidden; use digits.");
     if (forbiddenWording.test(beat.text) || missingData.test(beat.text)) messages.push("Do not mention sources, tiers, missing data, or excluded comparisons.");
     if (percentage.test(beat.text)) messages.push("Percent signs and percentage words are forbidden.");
     const clauses = beat.text.split(/[.!?;,]/);

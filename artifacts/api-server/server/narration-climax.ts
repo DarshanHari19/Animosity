@@ -1,5 +1,6 @@
 import type { Animal, Environment, EngineContext, MatchupResult } from "./schemas";
 import type { FailureCheck } from "./narration-diagnostics";
+import { withoutPostureHalf } from "./narration-number-wording";
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const number = /\d|\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|half|quarter)\b/i;
@@ -24,7 +25,7 @@ export function climaxChecks(
   _mode: EngineContext["mode"], _environment: Environment,
 ): FailureCheck[] {
   const messages: string[] = [];
-  if (number.test(text)) messages.push("Climax must contain no numbers.");
+  if (number.test(withoutPostureHalf(text))) messages.push("Climax must contain no numbers.");
   if (percentage.test(text)) messages.push("Climax must contain no percentages.");
   if (reason.test(text)) messages.push("Climax must not give reasons for the outcome.");
   if (/\bhypothetical\b/i.test(text)) messages.push("Climax must not use 'hypothetical'.");
