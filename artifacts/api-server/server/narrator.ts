@@ -109,7 +109,7 @@ export async function narrateMatchup(
         "Each beat's text must show its named animal physically performing its action: approach moves closer; charge charges; bite attempts a bite; dodge sidesteps or swerves; grapple grabs or wrestles; retreat moves away. Name the acting animal in the text. Do not substitute a trait observation for an action.",
         "Voice: short nature-documentary play-by-play, present tense, vivid verbs, fewer than 20 words per beat. No repeated phrases. Never use 'listed', 'on record', or 'supplied' in beat text.",
         "Include measurements in at most ONE non-finish beat; all other non-finish beats describe movement without measurements.",
-        "Do not describe an advantage, edge, domination, superior ability, injuries, successful restraint, inability to escape/shake an animal off, or one animal forcing the other back. Do not explain the verdict.",
+        "Do not describe domination, superior ability, injuries, successful restraint, or inability to escape/shake an animal off. The favored animal may push, press, or drive forward; never imply that the other animal has the upper hand. Do not explain the verdict.",
         "Every digit-number in a beat's text MUST occur in at least one of THAT beat's cited evidence items. Cite both IDs when comparing two measurements.",
         "Spelled-out numbers except 'one' and 'two' are forbidden. Use digits for measurements. No percentages, percent signs, or percentage words.",
         "Beat text MUST NOT mention sources, source tiers, missing/unknown data, or excluded/not-compared factors. Omit these topics entirely.",

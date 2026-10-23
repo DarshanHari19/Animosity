@@ -2,7 +2,7 @@ import type { Animal, Beat, MatchupResult } from "./schemas";
 import type { FailureCheck } from "./narration-diagnostics";
 
 const forbiddenNumbers = /\b(?:zero|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|half|quarter)\b/i;
-const forbiddenWording = /\b(?:sources?|sourced|unsourced|tiers?|missing|unverified|unavailable|unknown|excluded|unscored)\b|\b(?:not|cannot|could not|can't|couldn't)\s+(?:be\s+)?(?:compared|scored|counted|included)\b/i;
+const forbiddenWording = /\b(?:sources?|sourced|unsourced|tiers?|unverified|unavailable|unknown|excluded|unscored)\b|\bmissing\s+(?:data|traits?|values?|measurements?|sources?|evidence|factors?)\b|\b(?:not|cannot|could not|can't|couldn't)\s+(?:be\s+)?(?:compared|scored|counted|included)\b/i;
 
 /** Digit-numbers only: "one" / "two" are allowed wording, not measurements. */
 function numbers(text: string): string[] {
@@ -12,7 +12,7 @@ function numbers(text: string): string[] {
 
 const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const percentage = /[%％]|\b(?:percent(?:age|ages|s|ile|iles)?|per[\s-]+cent|pct)\b/i;
-const positiveClaim = /\b(?:wins?|won|winner|victor|victorious|victory|prevails?|prevailed|defeats?|defeated|beats|favored)\b/i;
+const positiveClaim = /\b(?:wins?|won|winner|victor|victorious|victory|prevails?|prevailed|defeats?|defeated|favored)\b/i;
 const negated = /\b(?:no|not|never|neither|without)\b/i;
 
 function namesWinner(clause: string, name: string): boolean {
@@ -41,7 +41,8 @@ export function narrationTextChecks(
     if (percentage.test(beat.text)) messages.push("Percent signs and percentage words are forbidden.");
     const clauses = beat.text.split(/[.!?;,]/);
     if (result.outcome.kind === "even") {
-      if (clauses.some((clause) => !negated.test(clause) && positiveClaim.test(clause))) {
+      if (clauses.some((clause) => !negated.test(clause) &&
+        (positiveClaim.test(clause) || [a.name, b.name].some(name => namesWinner(clause, name)))) {
         messages.push("An even matchup may not name a winner.");
       }
     } else if (result.outcome.kind === "favored") {
