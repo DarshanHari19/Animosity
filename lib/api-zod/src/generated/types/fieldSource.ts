@@ -10,5 +10,6 @@ import type { FieldSourceTier } from './fieldSourceTier';
 export interface FieldSource {
   /** @nullable */
   tier: FieldSourceTier;
-  ref: string;
+  /** Public source attribution and URL when known. Internal review notes are never returned. */
+  citation: string;
 }

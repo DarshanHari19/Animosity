@@ -12,7 +12,7 @@ const forced = { environment: "land", mode: "forced_fight", encounter: "face_off
 const level = (name: string, land: EnvironmentLevel): Animal => ({
   ...find("Lion"), name, mass_kg: 100, bite_force_n: null,
   environments: { land, shallow_water: "full", deep_water: "cannot" },
-  field_sources: { environments: { tier: null, ref: "Test-only unknown habitat source" } },
+  field_sources: { environments: { tier: null, citation: "Test-only unknown habitat source" } },
 });
 
 // Design anchors from METHODOLOGY.md, not measurements or probability claims.
@@ -89,7 +89,7 @@ test("Environment factor is scored evidence; raw levels never become trait evide
   const environment: Environment = "land";
   const result = scoreMatchup(a, b, { ...forced, environment });
   for (const tier of [1, 2, 3, null] as const) {
-    const subject = { ...a, field_sources: { ...a.field_sources, environments: { tier, ref: "Test-only habitat reference" } } };
+    const subject = { ...a, field_sources: { ...a.field_sources, environments: { tier, citation: "Test-only habitat reference" } } };
     const evidence = narrationEvidence(result, subject, b);
     const factor = result.factors.find(f => f.name === "Environment")!;
     const item = evidence.find(e => e.factor_name === "Environment")!;

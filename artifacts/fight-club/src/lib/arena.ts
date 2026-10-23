@@ -131,7 +131,7 @@ const FIELD_LABEL: Record<string, [string, string]> = {
 export type SourceLink = { href: string; label: string };
 export type ReadableFactParts = { text: string; links: SourceLink[]; note: string | null; key: string | null };
 
-export function sourceLinks(ref: string): SourceLink[] {
+export function sourceLinks(citation: string): SourceLink[] {
   const found = ref.match(/https?:\/\/[^\s;,)]+/g) ?? [];
   const out: SourceLink[] = [];
   for (const raw of found) {
@@ -148,7 +148,7 @@ export function sourceLinks(ref: string): SourceLink[] {
 }
 
 /** Bibliographic text left after links are removed, so non-URL references still show. */
-export function sourceNote(ref: string): string | null {
+export function sourceNote(citation: string): string | null {
   const stripped = ref.replace(/https?:\/\/[^\s;,)]+/g, "").replace(/[:;,\s]+$/g, "").trim();
   return stripped.length > 0 && !/^[:;,.\s]*$/.test(stripped) ? stripped : null;
 }
@@ -199,11 +199,11 @@ export function buildSources(response: FightResponse, red: Animal | undefined, b
     ];
     for (const [key, text] of fields) {
       const src = animal.field_sources[key];
-      if (!src || !src.ref.trim() || /\bTODO\b/i.test(src.ref)) continue;
+      if (!src || !src.citation.trim() || /\bTODO\b/i.test(src.citation)) continue;
       if (key === "mass_kg" && !(animal.mass_kg > 0)) continue;
       if (key === "bite_force_n" && animal.bite_force_n === null) continue;
-      const links = sourceLinks(src.ref);
-      add({ key: `${animal.name}.${key}`, text, links, note: links.length ? sourceNote(src.ref) : src.ref });
+      const links = sourceLinks(src.citation);
+      add({ key: `${animal.name}.${key}`, text, links, note: links.length ? sourceNote(src.citation) : src.citation });
     }
   }
   return entries;

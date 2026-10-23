@@ -33,6 +33,7 @@ export * from './fightInputEnvironment';
 export * from './fightInputMode';
 export * from './fightResponse';
 export * from './fightResponseNarrationReason';
+export * from './fightResponseNarrationSource';
 export * from './fightResponseNarrationStatus';
 export * from './healthStatus';
 export * from './indeterminateOutcome';

@@ -70,9 +70,9 @@ const figure = (side: "red" | "blue") => screen.getByTestId(`figure-${side}`);
 function heavyAnimals(): Animal[] {
   return [
     { ...animals[0]!, name: "Hippopotamus", mass_kg: 1500, fighting_style: "charge",
-      field_sources: { mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Hippopotamus" } } },
+      field_sources: { mass_kg: { tier: 3, citation: "https://en.wikipedia.org/wiki/Hippopotamus" } } },
     { ...animals[1]!, name: "Lion", mass_kg: 190, bite_force_n: 5500, fighting_style: "ambush",
-      field_sources: { mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" } } },
+      field_sources: { mass_kg: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" } } },
   ];
 }
 
@@ -636,8 +636,8 @@ describe("Verdict", () => {
   it.each([
     ["both tiers unknown", { bite_force_n: 4000 }, { bite_force_n: 4500 }, "no known source tier"],
     ["zero placeholder", { bite_force_n: 0 }, { bite_force_n: 4500 }, "Hippopotamus has no usable bite force value"],
-    ["unequal tiers", { bite_force_n: 4000, field_sources: { bite_force_n: { tier: 1, ref: "Field study" } } },
-      { bite_force_n: 4500, field_sources: { bite_force_n: { tier: 3, ref: "Summary" } } }, "tier 1 (Measured)"],
+    ["unequal tiers", { bite_force_n: 4000, field_sources: { bite_force_n: { tier: 1, citation: "Field study" } } },
+      { bite_force_n: 4500, field_sources: { bite_force_n: { tier: 3, citation: "Summary" } } }, "tier 1 (Measured)"],
   ] as const)("explains an un-compared bite: %s", async (_n, a, b, text) => {
     const [h, l] = heavyAnimals();
     const pair = [{ ...h!, ...a, field_sources: { ...h!.field_sources, ...("field_sources" in a ? a.field_sources : {}) } },

@@ -29,7 +29,7 @@ test("step 0 rejects invalid comparable bites before an environment gate", () =>
     for (const index of [0, 1]) {
       const pair = [animals[0]!, {
         ...animals[1]!, bite_force_n: 100,
-        field_sources: { bite_force_n: { tier: 2 as const, ref: "Test fixture" } },
+        field_sources: { bite_force_n: { tier: 2 as const, citation: "Test fixture" } },
       }];
       const bad = { ...pair[index]!, bite_force_n: value, environments: { land: "cannot", shallow_water: "cannot", deep_water: "cannot" } as const };
       pair[index] = bad;
@@ -51,7 +51,7 @@ function fixtureAnimal(name: string, mass_kg: number, environments: Animal["envi
     name, profile: "adult_male", mass_kg, length_m: 0, top_speed_kmh: 0,
     primary_weapon: "strike", bite_force_n: null, armor: "none",
     temperament: "avoids", fighting_style: "bluff", environments,
-    field_sources: { environments: { tier: 3, ref: "TODO: verify" } },
+    field_sources: { environments: { tier: 3, citation: "TODO: verify" } },
   });
 }
 const whale = fixtureAnimal("Blue whale", 2, { land: "cannot", shallow_water: "cannot", deep_water: "full" });

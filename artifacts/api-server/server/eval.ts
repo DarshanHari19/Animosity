@@ -72,7 +72,7 @@ async function main() {
         previousStart = Date.now();
         const started = new Date().toISOString();
         const response = await fetch(new URL("/api/fight", url), {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json", "X-Animosity-Eval-Bypass-Cache": "1" },
           body: JSON.stringify(c.input), signal: AbortSignal.timeout(80_000),
         });
         if (response.status === 429 && deferral < 2) {

@@ -70,7 +70,8 @@ export const FieldSourceTier = {
 export interface FieldSource {
   /** @nullable */
   tier: FieldSourceTier;
-  ref: string;
+  /** Public source attribution and URL when known. Internal review notes are never returned. */
+  citation: string;
 }
 
 export type AnimalFieldSources = {[key: string]: FieldSource};
@@ -305,6 +306,18 @@ export const FightResponseNarrationStatus = {
 } as const;
 
 /**
+ * Origin of available narration; null when unavailable or not required.
+ * @nullable
+ */
+export type FightResponseNarrationSource = typeof FightResponseNarrationSource[keyof typeof FightResponseNarrationSource] | null;
+
+
+export const FightResponseNarrationSource = {
+  cache: 'cache',
+  model: 'model',
+} as const;
+
+/**
  * @nullable
  */
 export type FightResponseNarrationReason = typeof FightResponseNarrationReason[keyof typeof FightResponseNarrationReason] | null;
@@ -336,6 +349,11 @@ export interface FightResponse {
      */
   explanation: string | null;
   narration_status: FightResponseNarrationStatus;
+  /**
+     * Origin of available narration; null when unavailable or not required.
+     * @nullable
+     */
+  narration_source: FightResponseNarrationSource;
   /** @nullable */
   narration_reason: FightResponseNarrationReason;
 }

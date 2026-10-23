@@ -7,6 +7,10 @@ import { FightInputSchema, resultSchemaFor, fightResponseSchemaFor, beatsSchemaF
 import { FightError } from "./errors";
 import { createFightRateLimiter } from "./limits";
 import { environmentPhrase, humanWording } from "./wording";
+import { BUILD_ID } from "../src/build-id";
+import { EVAL_BYPASS_HEADER, narrationCacheKey, type NarrationCache } from "./narration-cache";
+
+type RouterOptions = { cache?: NarrationCache; buildId?: string; development?: boolean };
 
 const narrationErrors = new Set([
   "INVALID_NARRATION", "LLM_PROVIDER_FAILURE", "NARRATION_DAILY_CAP_REACHED",
@@ -19,10 +23,15 @@ export function createFightRouter(
   narrate: typeof narrateMatchup = narrateMatchup,
   catalog: readonly Animal[] = animals,
   rateLimit = createFightRateLimiter(),
+  options: RouterOptions = {},
 ): IRouter {
   const router = Router();
   router.get("/animals", (_req, res) => {
-    res.json(GetAnimalsResponse.parse(catalog));
+    // Explicit allowlist boundary: review notes stay on the server even if generated schemas change.
+    res.json(GetAnimalsResponse.parse(catalog.map(animal => ({
+      ...animal, field_sources: Object.fromEntries(Object.entries(animal.field_sources)
+        .map(([field, source]) => [field, { citation: source.citation, tier: source.tier }])),
+    }))));
   });
   router.post("/fight", rateLimit, json({ limit: "16kb" }), urlencoded({ extended: true }), async (req, res): Promise<void> => {
     const parsed = FightInputSchema.safeParse(req.body);
@@ -51,17 +60,36 @@ export function createFightRouter(
       let narration_status = narrated ? "available" : "not_required";
       let narration_reason: string | null = null;
       let providerAttempts = 0;
+      let narration_source: "cache" | "model" | null = null;
+      const buildId = options.buildId ?? BUILD_ID;
+      const bypass = (options.development ?? process.env.NODE_ENV === "development")
+        && req.get(EVAL_BYPASS_HEADER) === "1";
+      const cache = bypass ? undefined : options.cache;
+      const key = narrationCacheKey(a.name, b.name, environment, mode, buildId);
       if (narrated) {
         try {
-          beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b, {
-            environment, mode, onProviderAttempt: () => { providerAttempts++; },
-          }));
+          let cached: unknown = null;
+          if (cache) {
+            try { cached = await cache.get(key); }
+            catch { console.warn("Narration cache read failed; generating narration normally."); }
+          }
+          const validated = beatsSchemaFor(a, b).safeParse(cached);
+          if (validated.success && narrationMatchesOutcome(result, validated.data)) {
+            beats = validated.data;
+            narration_source = "cache";
+          } else {
+            beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b, {
+              environment, mode, onProviderAttempt: () => { providerAttempts++; },
+            }));
+            narration_source = "model";
+          }
           if (!narrationMatchesOutcome(result, beats)) {
             throw new FightError("INVALID_NARRATION", "Narration does not match the engine outcome.", 502);
           }
         } catch (error) {
           beats = [];
           narration_status = "unavailable";
+          narration_source = null;
           // Never expose provider messages, raw output, or unexpected error details.
           narration_reason = error instanceof FightError && narrationErrors.has(error.code)
             ? error.code : error instanceof Error && error.name === "ZodError"
@@ -85,10 +113,14 @@ export function createFightRouter(
       }
       const response = fightResponseSchemaFor(a, b).safeParse({
         result: { ...result, factors: result.factors.map(factor => ({ ...factor, reason: humanWording(factor.reason) })) },
-        beats, explanation, narration_status, narration_reason,
+        beats, explanation, narration_status, narration_reason, narration_source,
       });
       if (!response.success) {
         throw new FightError("INVALID_NARRATION", "Response does not match the selected animals and engine outcome.", 502);
+      }
+      if (cache && narration_status === "available" && narration_source === "model") {
+        try { await cache.put(key, buildId, response.data.beats); }
+        catch { console.warn("Narration cache write failed; returning the validated model narration."); }
       }
       // Server-owned telemetry for pnpm eval; public JSON and UI are unchanged.
       res.setHeader("X-Narration-Attempts", String(providerAttempts));

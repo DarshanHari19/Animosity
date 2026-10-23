@@ -12,7 +12,7 @@ function animal(name: string, overrides: Partial<Animal> = {}): Animal {
     environments: { land: "full", shallow_water: "cannot", deep_water: "cannot" }, temperament: "defensive", fighting_style: "sustained",
     field_sources: Object.fromEntries(
       ["environments", "temperament", "fighting_style", "mass_kg", "bite_force_n"]
-        .map((field) => [field, { tier: 1 as const, ref: "Test-only fixture" }]),
+        .map((field) => [field, { tier: 1 as const, citation: "Test-only fixture" }]),
     ),
     ...overrides,
   };
@@ -39,8 +39,8 @@ test("missing bites or unequal/unknown tiers exclude the bite factor", () => {
   for (const b of [
     animal("B"),
     animal("B", { bite_force_n: 100, field_sources: {} }),
-    animal("B", { bite_force_n: 100, field_sources: { bite_force_n: { tier: null, ref: "Unknown" } } }),
-    animal("B", { bite_force_n: 100, field_sources: { bite_force_n: { tier: 2, ref: "Different tier" } } }),
+    animal("B", { bite_force_n: 100, field_sources: { bite_force_n: { tier: null, citation: "Unknown" } } }),
+    animal("B", { bite_force_n: 100, field_sources: { bite_force_n: { tier: 2, citation: "Different tier" } } }),
   ]) {
     const result = scoreMatchup(a, b, forced);
     assert.equal(result.factors[1]!.value, 0);
@@ -107,7 +107,7 @@ test("evidence quality uses exact 1/3 and 2/3 boundaries and only stage-consulte
       [a, "temperament"], [a, "fighting_style"], [b, "temperament"], [b, "fighting_style"],
     ] as const;
     fields.forEach(([target, field], index) => {
-      target.field_sources[field] = { tier: index < higher ? 1 : null, ref: "Test-only fixture" };
+      target.field_sources[field] = { tier: index < higher ? 1 : null, citation: "Test-only fixture" };
     });
     const result = scoreMatchup(a, b, realistic);
     // High-tier mass and bite sources do not count at a behavior gate.

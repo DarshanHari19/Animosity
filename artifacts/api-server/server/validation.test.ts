@@ -24,12 +24,12 @@ test("traits include all seven user-provided animals and their supplied values",
     environments: { land: "full", shallow_water: "hampered", deep_water: "cannot" },
     field_sources: {
       environments: a.field_sources.environments!,
-      mass_kg: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
-      length_m: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
-      top_speed_kmh: { tier: 3, ref: "https://en.wikipedia.org/wiki/Lion" },
+      mass_kg: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" },
+      length_m: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" },
+      top_speed_kmh: { tier: 3, citation: "https://en.wikipedia.org/wiki/Lion" },
       bite_force_n: {
         tier: 2,
-        ref: "Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table",
+        citation: "Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table",
       },
     },
   });
@@ -74,7 +74,7 @@ test("environment sources retain reviewed habitat references and original tiers"
     const reviewed = expected[index]!;
     assert.equal(source.tier, reviewed.tier, animal.name);
     for (const url of reviewed.urls) {
-      assert.ok(source.ref.includes(url), `${animal.name}: ${url}`);
+      assert.ok(source.citation.includes(url), `${animal.name}: ${url}`);
     }
   });
 });
@@ -104,23 +104,23 @@ test("animal validation uses exact enums and nonnegative nullable numeric fields
   assert.equal(AnimalSchema.safeParse({
     ...a,
     field_sources: {
-      mass_kg: { tier: 4, ref: "invalid tier" },
+      mass_kg: { tier: 4, citation: "invalid tier" },
     },
   }).success, false);
   assert.equal(AnimalSchema.safeParse({
     ...a,
     field_sources: {
-      mass_kg: { tier: null, ref: "Valid unknown-tier note" },
-      new_trait: { tier: 1, ref: "Valid arbitrary trait key" },
+      mass_kg: { tier: null, citation: "Valid unknown-tier note" },
+      new_trait: { tier: 1, citation: "Valid arbitrary trait key" },
     },
   }).success, true);
   assert.equal(AnimalSchema.safeParse({
     ...a,
-    field_sources: { mass_kg: { tier: 1, ref: 123 } },
+    field_sources: { mass_kg: { tier: 1, citation: 123 } },
   }).success, false);
   assert.equal(AnimalSchema.safeParse({
     ...a,
-    field_sources: { mass_kg: { tier: 1, ref: "valid", extra: true } },
+    field_sources: { mass_kg: { tier: 1, citation: "valid", extra: true } },
   }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, field_sources: undefined }).success, false);
 });

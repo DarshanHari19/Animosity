@@ -32,9 +32,9 @@ function TraitSources({ list }: { list: Animal[] }) {
       <ul className="muted" style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 8, fontSize: 14, lineHeight: 1.5 }} data-testid="list-trait-sources">
         {list.flatMap((animal) => SOURCE_FIELDS.flatMap(([key, label]) => {
           const src = animal.field_sources[key];
-          if (!src || !src.ref.trim() || /\bTODO\b/i.test(src.ref)) return [];
-          const links = sourceLinks(src.ref);
-          const note = links.length ? sourceNote(src.ref) : src.ref;
+          if (!src || !src.citation.trim() || /\bTODO\b/i.test(src.citation)) return [];
+          const links = sourceLinks(src.citation);
+          const note = links.length ? sourceNote(src.citation) : src.citation;
           return [<li key={`${animal.name}.${key}`}>
             {animal.name} {label}{src.tier !== null ? ` (tier ${src.tier})` : ""}
             {links.map((l) => <span key={l.href}> · <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a></span>)}

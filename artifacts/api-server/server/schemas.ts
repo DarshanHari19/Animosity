@@ -6,10 +6,11 @@ import {
 } from "@workspace/api-zod";
 
 // The OpenAPI contract defines the enums and generated field types. Add strict
-// nested validation too, so source entries match exactly { tier, ref }.
+// nested validation too. Internal review notes never enter the public schema.
 export const FieldSourceSchema = z.object({
   tier: z.union([z.literal(1), z.literal(2), z.literal(3), z.null()]),
-  ref: z.string(),
+  citation: z.string(),
+  note: z.string().optional(),
 }).strict();
 export type FieldSource = z.infer<typeof FieldSourceSchema>;
 export const EnvironmentSchema = z.enum(["land", "shallow_water", "deep_water"]);
@@ -97,17 +98,20 @@ export function fightResponseSchemaFor(a: Animal, b: Animal) {
   return CreateFightResponse.extend({
     result: resultSchemaFor(a, b),
     beats: z.array(BeatSchema).max(8),
-  }).strict().superRefine(({ result, beats, explanation, narration_status, narration_reason }, ctx) => {
+  }).strict().superRefine(({ result, beats, explanation, narration_status, narration_reason, narration_source }, ctx) => {
     const narrated = result.outcome.kind === "favored" || result.outcome.kind === "even";
     const hasExplanation = typeof explanation === "string" &&
       explanation.trim().length > 0 && !/[\r\n]/.test(explanation);
-    const validContent = narrated
+    const sourceValid = narration_status === "available"
+      ? narration_source === "cache" || narration_source === "model"
+      : narration_source === null;
+    const validContent = sourceValid && (narrated
       ? (result.deciding_factor === "environmental_advantage" ? hasExplanation : explanation === null) &&
         (narration_status === "unavailable"
           ? beats.length === 0 && narration_reason !== null
           : narration_status === "available" && narration_reason === null &&
             beatsSchemaFor(a, b).safeParse(beats).success && narrationMatchesOutcome(result, beats))
-      : beats.length === 0 && hasExplanation && narration_status === "not_required" && narration_reason === null;
+      : beats.length === 0 && hasExplanation && narration_status === "not_required" && narration_reason === null);
     if (!validContent) ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Response must contain matching narration or a one-line explanation, according to its outcome.",

@@ -29,10 +29,10 @@ function SourceList({ id, field, red, blue, caveat }: { id: string; field: strin
       <ul style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 4 }}>
         {[red, blue].map((a, i) => {
           const src = a.field_sources[field];
-          const usable = src && src.ref.trim() && !/\bTODO\b/i.test(src.ref);
+          const usable = src && src.citation.trim() && !/\bTODO\b/i.test(src.citation);
           if (!usable) return <li key={i} data-testid={`text-source-${id}-${i}`}>{a.name}: source unknown</li>;
-          const links = sourceLinks(src.ref);
-          const note = links.length ? sourceNote(src.ref) : src.ref;
+          const links = sourceLinks(src.citation);
+          const note = links.length ? sourceNote(src.citation) : src.citation;
           const tier = TIER_LABEL[src.tier as number];
           return (
             <li key={i} data-testid={`text-source-${id}-${i}`}>

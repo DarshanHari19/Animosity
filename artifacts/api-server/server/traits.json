@@ -10,53 +10,125 @@
     "armor": "none",
     "temperament": "aggressive",
     "fighting_style": "ambush",
-    "environments": { "land": "full", "shallow_water": "hampered", "deep_water": "cannot" },
+    "environments": {
+      "land": "full",
+      "shallow_water": "hampered",
+      "deep_water": "cannot"
+    },
     "field_sources": {
-      "environments": { "tier": null, "ref": "San Francisco Zoo, African lion: https://www.sfzoo.org/african-lion/; Braczkowski et al. (2024), doi:10.1002/ece3.11597: https://pmc.ncbi.nlm.nih.gov/articles/PMC11236087/. Caveat: observed swimming does not validate the retained land-only model list." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Lion" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Lion" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Lion" },
-      "bite_force_n": { "tier": 2, "ref": "Wroe et al. 2008 press summary (~560 kg force for a large lion); confirm in Wroe et al. 2005 table" }
+      "environments": {
+        "citation": "San Francisco Zoo, African lion: https://www.sfzoo.org/african-lion/; Braczkowski et al. (2024), doi:10.1002/ece3.11597: https://pmc.ncbi.nlm.nih.gov/articles/PMC11236087/",
+        "tier": null,
+        "note": "Current model: land full; shallow water hampered; deep water cannot. Observed swimming does not verify adult-male fighting performance at these levels."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion",
+        "tier": 3,
+        "note": ""
+      },
+      "bite_force_n": {
+        "citation": "Wroe et al. (2008), press summary",
+        "tier": 2,
+        "note": "Press summary reports approximately 560 kg force for a large lion; confirm in Wroe et al. (2005) table. Supplied value retained, not independently verified."
+      }
     }
   },
   {
     "name": "Grizzly bear",
     "profile": "adult_male",
     "mass_kg": 270,
-    "length_m": 2.0,
+    "length_m": 2,
     "top_speed_kmh": 56,
     "primary_weapon": "claws",
     "bite_force_n": null,
     "armor": "thick_hide",
     "temperament": "defensive",
     "fighting_style": "grapple",
-    "environments": { "land": "full", "shallow_water": "full", "deep_water": "cannot" },
+    "environments": {
+      "land": "full",
+      "shallow_water": "full",
+      "deep_water": "cannot"
+    },
     "field_sources": {
-      "environments": { "tier": null, "ref": "NPS Katmai, Brown Bear FAQ: https://www.nps.gov/katm/learn/photosmultimedia/brown-bear-frequently-asked-questions.htm; Mammals: https://www.nps.gov/katm/learn/nature/natscimamm.htm. Caveat: coastal brown bear observations do not validate this grizzly list's deep-water exclusion." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Grizzly_bear" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Grizzly_bear" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Grizzly_bear" },
-      "bite_force_n": { "tier": null, "ref": "Popular 975 psi figure unsourced; check Christiansen & Wroe 2007" }
+      "environments": {
+        "citation": "NPS Katmai, Brown Bear FAQ: https://www.nps.gov/katm/learn/photosmultimedia/brown-bear-frequently-asked-questions.htm; Mammals: https://www.nps.gov/katm/learn/nature/natscimamm.htm",
+        "tier": null,
+        "note": "Current model: land full; shallow water full; deep water cannot. Coastal brown-bear observations do not verify this grizzly profile's deep-water exclusion."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, Grizzly bear: https://en.wikipedia.org/wiki/Grizzly_bear",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, Grizzly bear: https://en.wikipedia.org/wiki/Grizzly_bear",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, Grizzly bear: https://en.wikipedia.org/wiki/Grizzly_bear",
+        "tier": 3,
+        "note": ""
+      },
+      "bite_force_n": {
+        "citation": "",
+        "tier": null,
+        "note": "Popular 975 psi figure unsourced; check Christiansen & Wroe 2007"
+      }
     }
   },
   {
     "name": "Saltwater crocodile",
     "profile": "adult_male",
     "mass_kg": 450,
-    "length_m": 5.0,
+    "length_m": 5,
     "top_speed_kmh": 29,
     "primary_weapon": "bite",
     "bite_force_n": 16400,
     "armor": "scales",
     "temperament": "aggressive",
     "fighting_style": "ambush",
-    "environments": { "land": "hampered", "shallow_water": "full", "deep_water": "full" },
+    "environments": {
+      "land": "hampered",
+      "shallow_water": "full",
+      "deep_water": "full"
+    },
     "field_sources": {
-      "environments": { "tier": 3, "ref": "Australian Museum, Estuarine Crocodile: https://australian.museum/learn/animals/reptiles/estuarine-crocodile/. Caveat: environmental access does not establish equal performance or fighting ability." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Saltwater_crocodile" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Saltwater_crocodile" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Saltwater_crocodile (short burst only)" },
-      "bite_force_n": { "tier": 1, "ref": "Erickson et al. 2012, PLoS ONE, doi:10.1371/journal.pone.0031781" }
+      "environments": {
+        "citation": "Australian Museum, Estuarine Crocodile: https://australian.museum/learn/animals/reptiles/estuarine-crocodile/",
+        "tier": 3,
+        "note": "Current model: land hampered; shallow water full; deep water full. Environmental access does not establish equal fighting performance."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",
+        "tier": 3,
+        "note": "Short burst only."
+      },
+      "bite_force_n": {
+        "citation": "Erickson et al. (2012), PLoS ONE, doi:10.1371/journal.pone.0031781; https://doi.org/10.1371/journal.pone.0031781",
+        "tier": 1,
+        "note": ""
+      }
     }
   },
   {
@@ -70,13 +142,37 @@
     "armor": "none",
     "temperament": "avoids",
     "fighting_style": "bluff",
-    "environments": { "land": "full", "shallow_water": "hampered", "deep_water": "cannot" },
+    "environments": {
+      "land": "full",
+      "shallow_water": "hampered",
+      "deep_water": "cannot"
+    },
     "field_sources": {
-      "environments": { "tier": null, "ref": "Denver Zoo, Western Lowland Gorilla: https://denverzoo.org/animals/western-lowland-gorilla/; Breuer et al. (2005), doi:10.1371/journal.pbio.0030380: https://pmc.ncbi.nlm.nih.gov/articles/PMC1236726/. Caveat: female wading observations do not validate this adult-male land-only model list." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Gorilla" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Gorilla" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Gorilla" },
-      "bite_force_n": { "tier": null, "ref": "Popular 1,300 psi figure unsourced" }
+      "environments": {
+        "citation": "Denver Zoo, Western Lowland Gorilla: https://denverzoo.org/animals/western-lowland-gorilla/; Breuer et al. (2005), doi:10.1371/journal.pbio.0030380: https://pmc.ncbi.nlm.nih.gov/articles/PMC1236726/",
+        "tier": null,
+        "note": "Current model: land full; shallow water hampered; deep water cannot. Female wading observations do not verify adult-male fighting performance at these levels."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, Gorilla: https://en.wikipedia.org/wiki/Gorilla",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, Gorilla: https://en.wikipedia.org/wiki/Gorilla",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, Gorilla: https://en.wikipedia.org/wiki/Gorilla",
+        "tier": 3,
+        "note": ""
+      },
+      "bite_force_n": {
+        "citation": "",
+        "tier": null,
+        "note": "Popular 1,300 psi figure unsourced"
+      }
     }
   },
   {
@@ -90,13 +186,37 @@
     "armor": "thick_hide",
     "temperament": "aggressive",
     "fighting_style": "charge",
-    "environments": { "land": "full", "shallow_water": "full", "deep_water": "hampered" },
+    "environments": {
+      "land": "full",
+      "shallow_water": "full",
+      "deep_water": "hampered"
+    },
     "field_sources": {
-      "environments": { "tier": 3, "ref": "San Diego Zoo Wildlife Alliance, Hippo: https://animals.sandiegozoo.org/animals/hippo. Caveat: underwater movement depends on usable substrate and access to air, not depth alone." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Hippopotamus" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Hippopotamus" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Hippopotamus" },
-      "bite_force_n": { "tier": null, "ref": "Popular 1,800 psi figure unsourced" }
+      "environments": {
+        "citation": "San Diego Zoo Wildlife Alliance, Hippo: https://animals.sandiegozoo.org/animals/hippo",
+        "tier": 3,
+        "note": "Current model: land full; shallow water full; deep water hampered. Underwater movement depends on usable substrate and access to air, not depth alone."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, Hippopotamus: https://en.wikipedia.org/wiki/Hippopotamus",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, Hippopotamus: https://en.wikipedia.org/wiki/Hippopotamus",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, Hippopotamus: https://en.wikipedia.org/wiki/Hippopotamus",
+        "tier": 3,
+        "note": ""
+      },
+      "bite_force_n": {
+        "citation": "",
+        "tier": null,
+        "note": "Popular 1,800 psi figure unsourced"
+      }
     }
   },
   {
@@ -110,13 +230,37 @@
     "armor": "none",
     "temperament": "defensive",
     "fighting_style": "ambush",
-    "environments": { "land": "cannot", "shallow_water": "cannot", "deep_water": "full" },
+    "environments": {
+      "land": "cannot",
+      "shallow_water": "cannot",
+      "deep_water": "full"
+    },
     "field_sources": {
-      "environments": { "tier": 3, "ref": "Aquarium of the Pacific, Great White Shark: https://www.aquariumofpacific.org/onlinelearningcenter/species/great_white_shark; Monterey Bay Aquarium, White shark: https://www.montereybayaquarium.org/animals-the-ocean/animals-a-to-z/white-shark. Caveat: shallow water must permit submersion, ventilation and movement." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Great_white_shark" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Great_white_shark" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/Great_white_shark" },
-      "bite_force_n": { "tier": null, "ref": "TODO: interpolate for 3.8 m from Wroe et al. 2008 (about 3,000 N at 2.5 m, about 18,000 N at 6.5 m)" }
+      "environments": {
+        "citation": "Aquarium of the Pacific, Great White Shark: https://www.aquariumofpacific.org/onlinelearningcenter/species/great_white_shark; Monterey Bay Aquarium, White shark: https://www.montereybayaquarium.org/animals-the-ocean/animals-a-to-z/white-shark",
+        "tier": 3,
+        "note": "Current model: land cannot; shallow water cannot; deep water full. Water must permit submersion, ventilation and movement; the retained shallow-water exclusion is a model assumption."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, Great white shark: https://en.wikipedia.org/wiki/Great_white_shark",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, Great white shark: https://en.wikipedia.org/wiki/Great_white_shark",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, Great white shark: https://en.wikipedia.org/wiki/Great_white_shark",
+        "tier": 3,
+        "note": ""
+      },
+      "bite_force_n": {
+        "citation": "",
+        "tier": null,
+        "note": "TODO: interpolate for 3.8 m from Wroe et al. 2008 (about 3,000 N at 2.5 m, about 18,000 N at 6.5 m)"
+      }
     }
   },
   {
@@ -130,13 +274,37 @@
     "armor": "thick_hide",
     "temperament": "defensive",
     "fighting_style": "charge",
-    "environments": { "land": "full", "shallow_water": "hampered", "deep_water": "cannot" },
+    "environments": {
+      "land": "full",
+      "shallow_water": "hampered",
+      "deep_water": "cannot"
+    },
     "field_sources": {
-      "environments": { "tier": null, "ref": "Maryland Zoo, Southern White Rhinoceros: https://www.marylandzoo.org/animal/southern-white-rhinoceros/. Caveat: white-rhino wallowing does not validate unrestricted shallow-water function." },
-      "mass_kg": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/White_rhinoceros" },
-      "length_m": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/White_rhinoceros" },
-      "top_speed_kmh": { "tier": 3, "ref": "https://en.wikipedia.org/wiki/White_rhinoceros" },
-      "bite_force_n": { "tier": null, "ref": "Not a biting fighter" }
+      "environments": {
+        "citation": "Maryland Zoo, Southern White Rhinoceros: https://www.marylandzoo.org/animal/southern-white-rhinoceros/",
+        "tier": null,
+        "note": "Current model: land full; shallow water hampered; deep water cannot. White-rhino wallowing does not verify fighting performance in shallow water."
+      },
+      "mass_kg": {
+        "citation": "Wikipedia, White rhinoceros: https://en.wikipedia.org/wiki/White_rhinoceros",
+        "tier": 3,
+        "note": ""
+      },
+      "length_m": {
+        "citation": "Wikipedia, White rhinoceros: https://en.wikipedia.org/wiki/White_rhinoceros",
+        "tier": 3,
+        "note": ""
+      },
+      "top_speed_kmh": {
+        "citation": "Wikipedia, White rhinoceros: https://en.wikipedia.org/wiki/White_rhinoceros",
+        "tier": 3,
+        "note": ""
+      },
+      "bite_force_n": {
+        "citation": "",
+        "tier": null,
+        "note": "Not a biting fighter"
+      }
     }
   }
 ]

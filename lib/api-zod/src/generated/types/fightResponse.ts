@@ -7,6 +7,7 @@
  */
 import type { Beat } from './beat';
 import type { FightResponseNarrationReason } from './fightResponseNarrationReason';
+import type { FightResponseNarrationSource } from './fightResponseNarrationSource';
 import type { FightResponseNarrationStatus } from './fightResponseNarrationStatus';
 import type { MatchupResult } from './matchupResult';
 
@@ -26,6 +27,11 @@ export interface FightResponse {
      */
   explanation: string | null;
   narration_status: FightResponseNarrationStatus;
+  /**
+     * Origin of available narration; null when unavailable or not required.
+     * @nullable
+     */
+  narration_source: FightResponseNarrationSource;
   /** @nullable */
   narration_reason: FightResponseNarrationReason;
 }

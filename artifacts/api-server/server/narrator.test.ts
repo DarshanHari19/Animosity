@@ -108,7 +108,7 @@ test("indeterminate, no_contest and no_engagement reject direct narration before
 
 test("sourced trait evidence is accepted; unknown values and TODO references are excluded", async () => {
   const source = a.field_sources.mass_kg!;
-  const fact = `${a.name}.mass_kg = ${a.mass_kg} [tier ${source.tier}; ${source.ref}]`;
+  const fact = `${a.name}.mass_kg = ${a.mass_kg} [tier ${source.tier}; ${source.citation}]`;
   const expected = beatsFor(a.name).map((beat, index) => ({
     ...beat, facts_used: index === 4 ? [fixtureEvidence] : [fact],
   }));
@@ -125,7 +125,7 @@ test("TODO references remain excluded even with a non-null source tier", async (
     ...a,
     field_sources: {
       ...a.field_sources,
-      mass_kg: { tier: 3 as const, ref: "TODO: verify measurement" },
+      mass_kg: { tier: 3 as const, citation: "TODO: verify measurement" },
     },
   };
   const mock = mockProvider([provider(beatsFor(a.name))]);
@@ -134,7 +134,7 @@ test("TODO references remain excluded even with a non-null source tier", async (
   assert.equal(payload.evidence.some(({ text }) => text.includes(`${a.name}.mass_kg`)), false);
   assert.equal(payload.evidence.some(({ text }) => /\bTODO\b/i.test(text)), false);
 
-  const unverifiedFact = `${a.name}.mass_kg = ${a.mass_kg} [tier 3; ${pending.field_sources.mass_kg.ref}]`;
+  const unverifiedFact = `${a.name}.mass_kg = ${a.mass_kg} [tier 3; ${pending.field_sources.mass_kg.citation}]`;
   const bad = provider(beatsFor(a.name).map((beat) => ({
     ...beat, facts_used: [unverifiedFact],
   })));
@@ -231,12 +231,12 @@ test("ID evidence retains zero, null, null-tier, empty-reference and missing-sou
   const subject = {
     ...a, mass_kg: 0, bite_force_n: null,
     field_sources: {
-      mass_kg: { tier: 1 as const, ref: "Test-only reference" },
-      bite_force_n: { tier: 1 as const, ref: "Test-only reference" },
-      length_m: { tier: null, ref: "Unverified" },
-      top_speed_kmh: { tier: 1 as const, ref: " " },
-      temperament: { tier: 1 as const, ref: "TODO: verify" },
-      environments: { tier: 1 as const, ref: "Excluded environment metadata" },
+      mass_kg: { tier: 1 as const, citation: "Test-only reference" },
+      bite_force_n: { tier: 1 as const, citation: "Test-only reference" },
+      length_m: { tier: null, citation: "Unverified" },
+      top_speed_kmh: { tier: 1 as const, citation: " " },
+      temperament: { tier: 1 as const, citation: "TODO: verify" },
+      environments: { tier: 1 as const, citation: "Excluded environment metadata" },
     },
   };
   const mock = mockProvider([wire("E1")]);

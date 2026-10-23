@@ -54,8 +54,8 @@ export async function startFightServer(
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   return {
     getAnimals: () => fetch(`${base}/animals`),
-    post: (input: unknown) => fetch(`${base}/fight`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+    post: (input: unknown, headers: Record<string, string> = {}) => fetch(`${base}/fight`, {
+      method: "POST", headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(input),
     }),
   };

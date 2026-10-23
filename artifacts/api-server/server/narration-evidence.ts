@@ -36,10 +36,10 @@ export function narrationEvidence(result: MatchupResult, a: Animal, b: Animal, e
       if (key === "field_sources" || key === "environments" ||
         (key === "bite_force_n" && !comparableBites) ||
         value === null || value === 0 || !source || source.tier === null ||
-        !source.ref.trim() || /\bTODO\b/i.test(source.ref)) continue;
+        !source.citation.trim() || /\bTODO\b/i.test(source.citation)) continue;
       items.push({
         kind: "context",
-        text: `${animal.name}.${key} = ${JSON.stringify(value)} [tier ${source.tier}; ${source.ref}]`,
+        text: `${animal.name}.${key} = ${JSON.stringify(value)} [tier ${source.tier}; ${source.citation}]`,
       });
     }
   }

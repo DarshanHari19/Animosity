@@ -115,10 +115,10 @@ components:
     FieldSource:
       type: object
       additionalProperties: false
-      required: [tier, ref]
+      required: [tier, citation]
       properties:
         tier: { type: [integer, "null"], enum: [1, 2, 3, null] }
-        ref: { type: string }
+        citation: { type: string, description: Public source attribution and URL when known. Internal review notes are never returned. }
     FightInput:
       type: object
       required: [animalA, animalB]
@@ -211,7 +211,7 @@ components:
     FightResponse:
       type: object
       additionalProperties: false
-      required: [result, beats, explanation, narration_status, narration_reason]
+      required: [result, beats, explanation, narration_status, narration_reason, narration_source]
       description: A valid verdict is returned even when narration is unavailable. Available narration has 5–8 beats. Unavailable narration has no beats and a reason code. Non-narrated gates have no beats and a one-line explanation.
       properties:
         result: { $ref: "#/components/schemas/MatchupResult" }
@@ -222,6 +222,10 @@ components:
           items: { $ref: "#/components/schemas/Beat" }
         explanation: { type: [string, "null"], minLength: 1 }
         narration_status: { type: string, enum: [available, unavailable, not_required] }
+        narration_source:
+          type: [string, "null"]
+          enum: [cache, model, null]
+          description: Origin of available narration; null when unavailable or not required.
         narration_reason:
           type: [string, "null"]
           enum: [INVALID_NARRATION, LLM_PROVIDER_FAILURE, NARRATION_DAILY_CAP_REACHED, LLM_NOT_CONFIGURED, LLM_CONFIGURATION, NARRATION_CAP_CONFIGURATION, NARRATION_FAILED, null]
