@@ -4,14 +4,18 @@ import { isEnvironmental } from "./narration-evidence";
 import type { FailureCheck } from "./narration-diagnostics";
 import { deterministicFinish } from "./narration-finish";
 
-const causal = /\b(?:because|due to|thanks to|decid(?:e|es|ed|ing)|determin(?:e|es|ed)|decisive|carried|carries|prevails?|wins?|winner|outcome|advantage|edge|favou?rs?|favou?red|offset|keeps)\b/i;
+const causal = /\b(?:because|due to|thanks to|decid(?:e|es|ed|ing)|determin(?:e|es)|determined\s+(?:(?:the|this|that)\s+)?(?:fight|outcome|winner|matchup|result|victory|defeat|which|who|whether|by)|decisive|carried|carries|prevails?|wins?|winner|outcome|advantage|edge|favou?rs?|favou?red|offset|keeps)\b/i;
 const physical = /\b(?:size|mass|weight|heavier|outweighs|bite|speed|strength|power|reach|length|physical|bulk)\b/i;
 const advantage = /\b(?:advantage|edge|favou?rs?|favou?red|outweighs|heavier|stronger|faster|superior|offset)\b/i;
 const negative = /\b(?:no|not|neither|without|never)\b/i;
 const clauses = (text: string) => text.split(/[.!?;,]|\b(?:but|although|yet|while)\b/i);
 const geographicEdge = /\b(?:water|river|shore|coast|bank|grass|field|lake|sea|stream)(?:['’]s)?\s+edge\b/gi;
 const withoutGeographicEdge = (text: string) => text.replace(geographicEdge, "");
-const hasCausalSignal = (text: string) => causal.test(withoutGeographicEdge(text));
+const hasCausalSignal = (text: string) => causal.test(
+  // Continuing a physical movement is not itself a reason for the verdict;
+  // nonFinishChecks separately rejects pressure that contradicts the outcome.
+  withoutGeographicEdge(text).replace(/\bkeeps\s+(?=(?:pushing|pressing|driving)\b)/gi, ""),
+);
 const hasAdvantageSignal = (text: string) => advantage.test(withoutGeographicEdge(text));
 
 /** Conservative English checks supplement the prompt; no scoring is done here. */

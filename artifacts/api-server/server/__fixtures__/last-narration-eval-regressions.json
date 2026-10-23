@@ -1,0 +1,44 @@
+[
+  {
+    "previous_check": "causal_grounding",
+    "animals": ["Hippopotamus", "Lion"],
+    "environment": "land",
+    "animal": "Lion",
+    "text": "The Lion lunges in and tries to bite at the Hippopotamus, but the great animal keeps pushing forward."
+  },
+  {
+    "previous_check": "causal_grounding",
+    "animals": ["Hippopotamus", "Lion"],
+    "environment": "land",
+    "animal": "Hippopotamus",
+    "text": "The Hippopotamus charges across the riverbank, closing distance on the Lion with heavy, determined strides."
+  },
+  {
+    "previous_check": "causal_grounding",
+    "animals": ["Gorilla", "Rhinoceros"],
+    "environment": "land",
+    "animal": "Rhinoceros",
+    "text": "The Rhinoceros lowers its head and surges forward in a heavy, determined charge across the grass."
+  },
+  {
+    "previous_check": "text_consistency",
+    "animals": ["Great white shark", "Lion"],
+    "environment": "deep_water",
+    "animal": "Lion",
+    "text": "The Lion lunges sideways, reaching for the shark but missing in the murky water."
+  },
+  {
+    "previous_check": "text_consistency",
+    "animals": ["Gorilla", "Grizzly bear"],
+    "environment": "land",
+    "animal": "Gorilla",
+    "text": "The Gorilla stands tall and beats its chest, squaring off against the Grizzly bear on open ground."
+  },
+  {
+    "previous_check": "text_consistency",
+    "animals": ["Great white shark", "Great white shark"],
+    "environment": "deep_water",
+    "animal": "Great white shark",
+    "text": "The first shark snaps its jaws toward the rival's flank, missing by a whisker."
+  }
+]

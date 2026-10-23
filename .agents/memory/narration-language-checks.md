@@ -17,3 +17,16 @@ prompt guidance; stylistic instructions alone do not authorize extra hard gates.
 intact. Distinguish actual model rule violations from false rejections before
 changing prompts or validators, and preserve authentic paraphrases in regression
 tests. Never imply that English pattern checks prove semantic correctness.
+
+Ambiguous words need their objects and grammatical role before they can act as
+hard verdict or evidence signals: “beats its chest” is not beating an opponent,
+“missing by a whisker” is not missing data, and “determined strides” does not
+say what determined the result.
+
+**Why:** Real narration was rejected on all three despite not making any of
+those prohibited claims; changing only the prompt would not repair a validator
+that mistakes ordinary action wording for a result.
+
+**How to apply:** Add the accepted sentence alongside a nearby real-rule
+rejection (beating an opponent, missing data, or a causal outcome explanation)
+so tightening one pattern does not weaken the other.

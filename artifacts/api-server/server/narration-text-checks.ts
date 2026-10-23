@@ -3,6 +3,7 @@ import type { FailureCheck } from "./narration-diagnostics";
 
 const forbiddenNumbers = /\b(?:zero|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|half|quarter)\b/i;
 const forbiddenWording = /\b(?:sources?|sourced|unsourced|tiers?|unverified|unavailable|unknown|excluded|unscored)\b|\bmissing\s+(?:data|traits?|values?|measurements?|sources?|evidence|factors?)\b|\b(?:not|cannot|could not|can't|couldn't)\s+(?:be\s+)?(?:compared|scored|counted|included)\b/i;
+const missingData = /\b(?:data|trait|value|measurement|evidence|factor|mass|length|speed|bite force)\b[^.!?;,]{0,30}\b(?:is|are|was|were)\s+missing\b/i;
 
 /** Digit-numbers only: "one" / "two" are allowed wording, not measurements. */
 function numbers(text: string): string[] {
@@ -20,7 +21,7 @@ function namesWinner(clause: string, name: string): boolean {
   const animal = `\\b${escapeRegex(name)}\\b`;
   return new RegExp(`${animal}(?:\\s+(?:clearly|decisively|ultimately))?\\s+` +
     `(?:(?:is|was|becomes|became|emerges|emerged|remains|stands)(?:\\s+(?:as|the|clear|sole))*\\s+)?` +
-    `(?:wins?|won|winner|victor|victorious|prevails?|prevailed|defeats?|defeated|beats|favored)\\b`, "i").test(clause) ||
+    `(?:wins?|won|winner|victor|victorious|prevails?|prevailed|defeats?|defeated|beats(?!\\s+(?:(?:its|his|her|their|the)\\s+)?chest\\b)|favored)\\b`, "i").test(clause) ||
     new RegExp(`\\b(?:(?:winner|victor)\\s*(?:(?:is|was)\\s*)?[:=]?|victory\\s+goes\\s+to)\\s*${animal}`, "i").test(clause);
 }
 
@@ -37,12 +38,13 @@ export function narrationTextChecks(
       if (!evidenceNumbers.has(value)) messages.push(`Number ${value} is absent from this beat's facts_used.`);
     }
     if (forbiddenNumbers.test(beat.text)) messages.push("Spelled-out numbers other than one and two are forbidden; use digits.");
-    if (forbiddenWording.test(beat.text)) messages.push("Do not mention sources, tiers, missing data, or excluded comparisons.");
+    if (forbiddenWording.test(beat.text) || missingData.test(beat.text)) messages.push("Do not mention sources, tiers, missing data, or excluded comparisons.");
     if (percentage.test(beat.text)) messages.push("Percent signs and percentage words are forbidden.");
     const clauses = beat.text.split(/[.!?;,]/);
     if (result.outcome.kind === "even") {
-      if (clauses.some((clause) => !negated.test(clause) &&
-        (positiveClaim.test(clause) || [a.name, b.name].some(name => namesWinner(clause, name)))) {
+      const winnerClaim = clauses.some((clause) => !negated.test(clause) &&
+        (positiveClaim.test(clause) || [a.name, b.name].some(name => namesWinner(clause, name))));
+      if (winnerClaim) {
         messages.push("An even matchup may not name a winner.");
       }
     } else if (result.outcome.kind === "favored") {

@@ -111,7 +111,7 @@ export async function narrateMatchup(
         "Include measurements in at most ONE non-finish beat; all other non-finish beats describe movement without measurements.",
         "Do not describe domination, superior ability, injuries, successful restraint, or inability to escape/shake an animal off. The favored animal may push, press, or drive forward; never imply that the other animal has the upper hand. Do not explain the verdict.",
         "Every digit-number in a beat's text MUST occur in at least one of THAT beat's cited evidence items. Cite both IDs when comparing two measurements.",
-        "Spelled-out numbers except 'one' and 'two' are forbidden. Use digits for measurements. No percentages, percent signs, or percentage words.",
+        "Spelled-out cardinal numbers except 'one' and 'two' are forbidden. Ordinals 'first' and 'second' may distinguish animals in mirror matches. Use digits for measurements. No percentages, percent signs, or percentage words.",
         "Beat text MUST NOT mention sources, source tiers, missing/unknown data, or excluded/not-compared factors. Omit these topics entirely.",
         "Evidence has kind scored, context, or gate. Only scored items may explain the ordinary outcome. Context is description ONLY, never an advantage, deciding reason, offset, or cause of winning.",
         "Do not attribute the result to speed, length, strength, style, or other traits not scored by the engine. Do not invent combat abilities or explanations.",
@@ -210,7 +210,7 @@ export async function narrateMatchup(
       }
       messages.push({
         role: "user",
-        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit complete corrected {beats,climax}: 4–7 non-finish physical-action beats plus the conclusive climax following the original mode/outcome rules. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No number words except one/two in non-finish beats; none in climax. No percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Non-finish beats may show the favored animal gaining ground, pushing, driving back or pressing, but never the other animal winning or gaining the upper hand. In even outcomes neither animal may decisively win. The server, not you, supplies the verdict.`,
+        content: `Validation failed; checks and offending text: ${JSON.stringify(checks)}. Submit complete corrected {beats,climax}: 4–7 non-finish physical-action beats plus the conclusive climax following the original mode/outcome rules. No finish field or action. Actors must be selected names, never null. Use 1–3 supplied fact_ids per beat; all digit-numbers must be in those citations. No cardinal number words except one/two in non-finish beats; first/second may distinguish mirror-match animals; no number words in climax. No percentages, sources, tiers, missing data, or excluded comparisons. Context never explains the outcome. Non-finish beats may show the favored animal gaining ground, pushing, driving back or pressing, but never the other animal winning or gaining the upper hand. In even outcomes neither animal may decisively win. The server, not you, supplies the verdict.`,
       });
     }
   }

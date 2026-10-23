@@ -5,7 +5,7 @@ import type { FailureCheck } from "./narration-diagnostics";
 // Directional pushing and driving are considered against the engine winner below.
 const decisive = /\b(?:win(?:s|ning)?|won|winner|victor(?:y|ious)?|prevail(?:s|ed|ing)?|defeat(?:s|ed|ing)?|favou?red|upper hand|advantage|dominat(?:e|es|ed|ing)|overpower(?:s|ed|ing)|overmatch(?:es|ed|ing)|overwhelm(?:s|ed|ing)|subdu(?:e|es|ed|ing)|pin(?:s|ned|ning)|immobili[sz](?:e|es|ed|ing)|helpless|defenseless|controls? (?:the|this) (?:fight|exchange|encounter)|gets? the better|wears? .{0,40}down|bears? down on)\b/i;
 const unableToContinue = /\b(?:unable to|cannot|can't|could not|couldn't|fails? to|struggles? to)\s+(?:\w+\s+){0,3}(?:shake|escape|retreat|free|resist|withstand|dislodge|break away|break free|hold off|continue)\b/i;
-const forcedBack = /\b(?:(?:forces?|forced|drives?|drove|push(?:es|ed)?|press(?:es|ed)?)\b[^.!?;]{0,70}\b(?:back|away|retreat|ground)|gains? ground)\b/i;
+const forcedBack = /\b(?:(?:forces?|forced|driv(?:e|es|ing)|drove|push(?:es|ed|ing)?|press(?:es|ed|ing)?)\b[^.!?;]{0,70}\b(?:back|away|retreat|ground)|gains? ground)\b/i;
 const negated = /\b(?:not|never|no longer|doesn't|does not|isn't|is not|cannot|can't)\b/i;
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
