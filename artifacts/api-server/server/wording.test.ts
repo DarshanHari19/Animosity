@@ -6,6 +6,7 @@ import { narrationEvidence, scoredFactorText } from "./narration-evidence";
 import { environmentPhrase, humanWording } from "./wording";
 import { startFightServer } from "./test-helpers";
 import { fightResponseSchemaFor } from "./schemas";
+import { FightError } from "./errors";
 
 const shark = animals.find(a => a.name === "Great white shark")!;
 const lion = animals.find(a => a.name === "Lion")!;
@@ -58,7 +59,10 @@ test("no-contest explanations use In the wild and on land", async t => {
 });
 
 test("response factor reasons are readable while all engine numerical outputs stay unchanged", async t => {
-  const server = await startFightServer(t, scoreMatchup);
+  // This checks route wording, not generation. Never contact either AI provider.
+  const server = await startFightServer(t, scoreMatchup, async () => {
+    throw new FightError("LLM_PROVIDER_FAILURE", "Test-only unavailable narration.", 502);
+  });
   const input = { animalA: croc.name, animalB: lion.name, environment: "shallow_water", mode: "realistic" } as const;
   const result = scoreMatchup(croc, lion, { ...context, ...input });
   const response = await server.post(input);

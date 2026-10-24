@@ -81,8 +81,11 @@ test("other written numbers and source/missing/excluded wording are rejected", (
   }
 });
 test("uncompared bites and their warnings are absent from both scored and context evidence", () => {
-  const result = scoreMatchup(a, b, { environment: "land", mode: "realistic", encounter: "face_off" });
-  const evidence = narrationEvidence(result, a, b);
+  const gorilla = animals.find(({ name }) => name === "Gorilla")!;
+  assert.equal(a.bite_point, "canine");
+  assert.equal(gorilla.bite_point, "molar");
+  const result = scoreMatchup(a, gorilla, { environment: "land", mode: "realistic", encounter: "face_off" });
+  const evidence = narrationEvidence(result, a, gorilla);
   assert.ok(result.factors.some(({ reason }) => reason.startsWith("Not compared:")));
   assert.equal(evidence.some(({ text }) => /bite_force_n|Not compared:/.test(text)), false);
   assert.equal(evidence.some(({ text }) => text.includes(".environments")), false);
@@ -91,6 +94,16 @@ test("uncompared bites and their warnings are absent from both scored and contex
   const compared = narrationEvidence(same, a, a);
   assert.ok(compared.some(({ kind, factor_name }) => kind === "scored" && factor_name === "Bite force"));
   assert.ok(compared.some(({ text }) => text.includes(".bite_force_n")));
+});
+test("Lion vs Grizzly bear compares matching canine bites in scored and context evidence", () => {
+  const result = scoreMatchup(a, b, { environment: "land", mode: "realistic", encounter: "face_off" });
+  const evidence = narrationEvidence(result, a, b);
+  assert.equal(a.bite_point, "canine");
+  assert.equal(b.bite_point, "canine");
+  assert.equal(result.factors.some(({ reason }) => reason.startsWith("Not compared:")), false);
+  assert.ok(evidence.some(({ kind, factor_name }) => kind === "scored" && factor_name === "Bite force"));
+  assert.ok(evidence.some(({ text }) => text.includes(`${a.name}.bite_force_n`)));
+  assert.ok(evidence.some(({ text }) => text.includes(`${b.name}.bite_force_n`)));
 });
 test("context cannot cause a result, even when a scored size item is also cited", () => {
   for (const facts of [[context], [context, scored]]) {
@@ -174,8 +187,13 @@ for (const fixture of fixtures.cases) {
     // Structural migration only: text/actors are untouched; do not add citations.
     const encoded = fixture.raw_output.beats.map(({ fact_id, ...rest }) => {
       const oldText = fixture.recorded_evidence.find(({ id }) => id === fact_id)?.text;
-      // The public factor presentation changed, not the recorded comparison.
-      const originalFactor = result.factors.find((factor) => JSON.stringify(factor) === oldText);
+      // Only the new bite-point explanation is removed for historical matching.
+      // Every factor identity/value and all other wording must still match.
+      const historicalWording = (text: string) => text
+        .replace(/ Bite point: (?:canine|molar|molariform)\./g, "")
+        .replace("Matching source tiers and bite points", "Matching source tiers");
+      const originalFactor = result.factors.find((factor) =>
+        historicalWording(JSON.stringify(factor)) === historicalWording(oldText ?? ""));
       // Bibliographic labels changed too. Match the identical trait/value prefix,
       // not the old attribution formatting; do not add or alter any cited trait.
       const context = evidence.find(item => item.kind === "context" &&

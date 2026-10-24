@@ -57,6 +57,45 @@ test("matching favored outcome returns validated beats in one call", async () =>
   assert.equal(payload.evidence.some(({ text }) => text.includes(".environments")), false);
 });
 
+test("shadow runs once after successful validation and cannot change beats or trigger retry", async () => {
+  const mock = mockProvider([provider(beatsFor(a.name))]);
+  let reviews = 0;
+  const output = await narrateMatchup(result, a, b, {
+    ...mock.options,
+    shadowReview: async (input) => {
+      reviews++;
+      assert.deepEqual(input.beats, beatsFor(a.name));
+      assert.ok(input.evidence.some(({ text }) => text === fixtureEvidence));
+      input.beats[0]!.text = "Test-only attempted mutation";
+      throw new Error("Shadow provider unavailable");
+    },
+  });
+  assert.equal(reviews, 1);
+  assert.equal(mock.calls.length, 1);
+  assert.deepEqual(output, beatsFor(a.name));
+});
+
+test("invalid narration never reaches Jev or gains acceptance from it", async () => {
+  const mock = mockProvider([provider([], true), provider([], true)]);
+  let reviews = 0;
+  await assert.rejects(narrateMatchup(result, a, b, {
+    ...mock.options, shadowReview: async () => { reviews++; },
+  }), errorCode("INVALID_NARRATION"));
+  assert.equal(reviews, 0);
+  assert.equal(mock.calls.length, 2);
+});
+
+test("a corrected retry reaches shadow once, not on the rejected attempt", async () => {
+  const mock = mockProvider([provider([], true), provider(beatsFor(a.name))]);
+  let reviews = 0;
+  const output = await narrateMatchup(result, a, b, {
+    ...mock.options, shadowReview: async () => { reviews++; },
+  });
+  assert.equal(reviews, 1);
+  assert.equal(mock.calls.length, 2);
+  assert.deepEqual(output, beatsFor(a.name));
+});
+
 test("a model-supplied wrong finish retries once; server keeps the favored actor", async () => {
   const mock = mockProvider([provider(beatsFor(b.name), true), provider(beatsFor(a.name))]);
   const beats = await narrateMatchup(result, a, b, mock.options);

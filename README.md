@@ -44,6 +44,18 @@ uses the development database and deletes its own test row (skipped when no
 Frontend regression tests use test-only HTTP responses with the real API hooks
 and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`.
 
+## Jev shadow observations
+
+After fresh narration passes every existing check, the backend sends one
+`jev-latest` request through Replit AI Integrations for OpenRouter, using managed
+credentials (no personal API key; calls are billed to Replit credits).
+Server-only `jev_shadow` logs contain each beat's text and probabilities of an
+unsupported causal claim or a contradictory winner. Jev never rejects, rewrites,
+or approves narration. Invalid narration never reaches Jev; cache hits make no
+provider calls. Jev failures/timeouts log `jev_shadow_unavailable` and leave the
+validated narration unchanged. The one shadow call has a 10-second timeout and
+no retries; it is separate from the unchanged narration retry and daily cap.
+
 ## Fill in the science
 
 The backend folder is **`artifacts/api-server/server/`**:

@@ -2,3 +2,4 @@
 - [Narration evaluation logs](narration-evaluation-logs.md) — correlate failures by embedded timestamps, not log arrival; buffered warnings can arrive during the next request.
 - [Narration language checks](narration-language-checks.md) — test legitimate paraphrases as well as violations; prose requirements are not exact templates unless specified.
 - [Git inspection protection](git-inspection-protection.md) — a Git read can print its result yet report blocked metadata access; do not confuse this with a failed app check.
+- [AI shadow isolation](ai-shadow-isolation.md) — shadow observations never decide acceptance; cache hits stay provider-free, and route tests must inject narration.

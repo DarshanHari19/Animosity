@@ -94,11 +94,11 @@ Each animal has a level for each environment: full, hampered, or cannot.
 | Environment handicap | −0.8 if A is hampered; +0.8 if B is hampered; both hampered cancel out | Lost footing, speed, and grappling, not lost mass. 0.8 equals the size score of a 2:1 mass edge. Set by calibration against the anchors below |
 
 **Calibration anchors** (design expectations, not findings):
-- Saltwater crocodile vs Lion, shallow water: crocodile favored (about +1.69)
-- Saltwater crocodile vs Lion, land: too close to call (about +0.09)
+- Saltwater crocodile vs Lion, shallow water: crocodile favored (about +1.7)
+- Saltwater crocodile vs Lion, land: too close to call (about +0.1)
 - Hippopotamus vs Saltwater crocodile, deep water: hippopotamus favored (about +0.59)
 - Saltwater crocodile vs Grizzly bear, land: too close to call (about +0.07)
-- Hippopotamus vs Lion, shallow water: hippopotamus favored (about +3.08)
+- Hippopotamus vs Lion, shallow water: hippopotamus favored (about +3.1)
 
 Differences of logs are used instead of log of a ratio to avoid overflow.
 

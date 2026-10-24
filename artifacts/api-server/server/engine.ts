@@ -45,7 +45,7 @@ export function scoreMatchup(
   const biteTierB = tier(b, "bite_force_n");
   const comparableSources = a.bite_force_n !== null && b.bite_force_n !== null &&
     biteTierA !== null && biteTierB !== null && biteTierA === biteTierB;
-  const compareBites = comparableSources && a.bite_point != null &&
+  const compareBites = comparableSources && a.bite_point !== null &&
     a.bite_point === b.bite_point;
   if (compareBites) {
     requirePositive(a, "bite_force_n");

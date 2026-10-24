@@ -16,6 +16,7 @@ import { narrationGroundingChecks } from "./narration-grounding";
 import { deterministicFinish } from "./narration-finish";
 import { nonFinishChecks } from "./narration-non-finish";
 import { climaxChecks } from "./narration-climax";
+import { reviewJevShadow, type ShadowInput } from "./jev-shadow";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -27,6 +28,7 @@ type Options = {
   environment?: Environment;
   mode?: EngineContext["mode"];
   onProviderAttempt?: () => void;
+  shadowReview?: (input: ShadowInput) => Promise<void>;
 };
 
 const ProviderResponseSchema = z.object({
@@ -195,6 +197,17 @@ export async function narrateMatchup(
       if (textFailures.length) {
         checks = textFailures;
         throw new FightError("INVALID_NARRATION", "Narration text failed deterministic checks.", 502);
+      }
+      // Test transports do not make real Jev calls. Shadow failures must never
+      // enter the narrator's validation retry path or hide a valid narration.
+      const shadowReview = options.shadowReview ?? (options.fetch ? undefined : reviewJevShadow);
+      if (shadowReview) {
+        try {
+          await shadowReview({
+            narration_id: narrationId, animals: [a.name, b.name], environment,
+            mode, result, evidence: evidenceItems, beats: structuredClone(envelope.beats),
+          });
+        } catch { /* shadow mode cannot change acceptance */ }
       }
       return envelope.beats;
     } catch (error) {
