@@ -172,7 +172,7 @@ test("invalid climax retries once through existing checks, without a verdict-onl
       const beats = await promise;
       const finish = beats.at(-1)!;
       assert.equal(beats.length, 5);
-      assert.equal(finish.text, `${arena} The Hippopotamus is favored: it outweighs the Lion about 7.9 to 1 (1500 kg vs 190 kg).`);
+      assert.equal(finish.text, `${arena} The Hippopotamus is favored: it outweighs the Lion about 7.2 to 1 (1354 kg vs 188 kg).`);
       assert.equal(finish.animal, hippo.name);
       assert.deepEqual(finish.facts_used, [narrationEvidence(favored, hippo, lion).find(e => e.factor_name === "Size")!.text]);
     }

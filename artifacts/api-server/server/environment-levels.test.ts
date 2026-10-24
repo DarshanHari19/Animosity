@@ -17,11 +17,11 @@ const level = (name: string, land: EnvironmentLevel): Animal => ({
 
 // Design anchors from METHODOLOGY.md, not measurements or probability claims.
 const anchors = [
-  ["Saltwater crocodile", "Lion", "shallow_water", "Saltwater crocodile", 1.8],
-  ["Saltwater crocodile", "Lion", "land", null, 0.2],
+  ["Saltwater crocodile", "Lion", "shallow_water", "Saltwater crocodile", 1.69],
+  ["Saltwater crocodile", "Lion", "land", null, 0.09],
   ["Hippopotamus", "Saltwater crocodile", "deep_water", "Hippopotamus", 0.59],
-  ["Saltwater crocodile", "Grizzly bear", "land", null, -0.2],
-  ["Hippopotamus", "Lion", "shallow_water", "Hippopotamus", 3.2],
+  ["Saltwater crocodile", "Grizzly bear", "land", null, 0.07],
+  ["Hippopotamus", "Lion", "shallow_water", "Hippopotamus", 3.08],
 ] as const;
 
 for (const [first, second, environment, winner, approximate] of anchors) {

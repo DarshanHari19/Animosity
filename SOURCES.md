@@ -58,6 +58,8 @@ Never used as a source: YouTube compilations, fight forums, "who would win" wiki
 
 These circulate widely online and should not be treated as facts:
 
+- **Lion 5500 N:** no peer-reviewed source; likely a press figure for one large skull's carnassial (5612 N, Wroe 2008).
+
 - **"psi" bite forces.** Most viral bite force figures are labeled psi (pressure) when they are really pounds of force. The croc's famous 3,700 is pounds of force, not psi. Animosity stores bite force in newtons.
 - **Great white "4,000 psi."** This is the modeled estimate for a 6.5 m shark, mislabeled as psi. It does not apply to an average adult.
 - **Gorilla "1,300 psi" and grizzly "975 psi."** No peer-reviewed measurement found yet. Treated as unknown until sourced.
@@ -65,14 +67,42 @@ These circulate widely online and should not be treated as facts:
 
 ## Open items
 
-- [ ] Look up lion and brown bear values in Wroe et al. 2005 and Christiansen & Wroe 2007 tables
+- [x] Lion and grizzly canine estimates sourced to Christiansen & Wroe (2007), Table 1; original unsupported lion 5500 N retired.
 - [ ] Interpolate a great white estimate for a 3.8 m male from Wroe et al. 2008
-- [ ] Replace Wikipedia mass and length values with PanTHERIA or AnimalTraits values
+- [x] Replace the seven starter masses with the approved primary-source/estimated source upgrade below.
+- [ ] Replace remaining Wikipedia length values with sourced values.
 - [ ] Find fighting style and temperament references for each animal
 - [ ] Verify functions_in (land, shallow_water, deep_water) for each animal; define "shallow water"
 - [ ] Find sourced hide thickness and canine or tooth length values before any defense rule
 
-## functions_in review
+## Approved mass and bite source upgrade — Oct 23, 2026
+
+All specimen/population caveats and review instructions are stored in the
+internal `note` field; public `citation` fields contain attribution only.
+
+| Animal | Mass (kg) | Tier | Source |
+|---|---:|---:|---|
+| Lion | 188 | 1 | Haas, Hayssen & Krausman (2005), *Mammalian Species* 762, citing Smuts, Robinson & Whyte (1980), *J. Zool.* 190:365–373 |
+| Grizzly bear | 192 | 1 | Blanchard (1987), *Ursus* 7:99–107 |
+| Saltwater crocodile | 408 | 2 | Seebacher, Grigg & Beard (1999), *J. Exp. Biol.* 202:77–86, Table 1 |
+| Gorilla | 168 | 1 | Emery Thompson & Sabbi (2024), *Evolutionary Demography of the Great Apes*, Table 2 |
+| Hippopotamus | 1354 | 1 | Meireles et al. (2025), *J. Zoo Aquar. Res.* 13(2):108–116, Table 2 |
+| Great white shark | 548 | 2 | Animosity, **calculated from** Kohler, Casey & Turner (1996), NOAA Tech. Memo. NMFS-NE-110, Tables 1 and 3 |
+| Rhinoceros | 2012 | 1 | Garand et al. (2025), *Zoo Biology*, Table 3 |
+
+| Animal | Bite force (N) | Tier | Bite point | Source |
+|---|---:|---:|---|---|
+| Lion | 1315 | 2 | canine | Christiansen & Wroe (2007), *Ecology* 88(2):347–358, Table 1 |
+| Grizzly bear | 1410 | 2 | canine | Christiansen & Wroe (2007), *Ecology* 88(2):347–358, Table 1 |
+| Saltwater crocodile | 16414 | 1 | molariform | Erickson et al. (2012), *PLoS ONE* 7:e31781 |
+| Gorilla | 4067 | 2 | molar | Eng et al. (2013), *Am. J. Phys. Anthropol.*, Table 4 |
+| Great white shark, Hippopotamus, Rhinoceros | unknown | null | unknown | Not scored |
+
+Matching tiers alone are insufficient: only equal known bite points can be
+compared. The source-tier definitions above and environment review below are
+unchanged.
+
+## functions_in review (historical review)
 
 These references now support the environment levels in METHODOLOGY.md. They document habitat use, not fighting performance; levels remain model assumptions.
 

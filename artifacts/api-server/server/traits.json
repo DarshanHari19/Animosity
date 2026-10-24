@@ -2,11 +2,11 @@
   {
     "name": "Lion",
     "profile": "adult_male",
-    "mass_kg": 190,
+    "mass_kg": 188,
     "length_m": 2.5,
     "top_speed_kmh": 80,
     "primary_weapon": "bite",
-    "bite_force_n": 5500,
+    "bite_force_n": 1315,
     "armor": "none",
     "temperament": "aggressive",
     "fighting_style": "ambush",
@@ -22,9 +22,9 @@
         "note": "Current model: land full; shallow water hampered; deep water cannot. Observed swimming does not verify adult-male fighting performance at these levels."
       },
       "mass_kg": {
-        "citation": "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion",
-        "tier": 3,
-        "note": ""
+        "citation": "Haas, Hayssen & Krausman (2005), Mammalian Species 762, citing Smuts, Robinson & Whyte (1980), J. Zool. 190:365-373.",
+        "tier": 1,
+        "note": "Adult males; primary paper read via Haas (2005)."
       },
       "length_m": {
         "citation": "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion",
@@ -37,20 +37,21 @@
         "note": ""
       },
       "bite_force_n": {
-        "citation": "Wroe et al. (2008), press summary",
+        "citation": "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
         "tier": 2,
-        "note": "Press summary reports approximately 560 kg force for a large lion; confirm in Wroe et al. (2005) table. Supplied value retained, not independently verified."
+        "note": "Bite point: canine."
       }
-    }
+    },
+    "bite_point": "canine"
   },
   {
     "name": "Grizzly bear",
     "profile": "adult_male",
-    "mass_kg": 270,
+    "mass_kg": 192,
     "length_m": 2,
     "top_speed_kmh": 56,
     "primary_weapon": "claws",
-    "bite_force_n": null,
+    "bite_force_n": 1410,
     "armor": "thick_hide",
     "temperament": "defensive",
     "fighting_style": "grapple",
@@ -66,9 +67,9 @@
         "note": "Current model: land full; shallow water full; deep water cannot. Coastal brown-bear observations do not verify this grizzly profile's deep-water exclusion."
       },
       "mass_kg": {
-        "citation": "Wikipedia, Grizzly bear: https://en.wikipedia.org/wiki/Grizzly_bear",
-        "tier": 3,
-        "note": ""
+        "citation": "Blanchard (1987), Ursus 7:99-107.",
+        "tier": 1,
+        "note": "Yellowstone adult males, n=65."
       },
       "length_m": {
         "citation": "Wikipedia, Grizzly bear: https://en.wikipedia.org/wiki/Grizzly_bear",
@@ -81,20 +82,21 @@
         "note": ""
       },
       "bite_force_n": {
-        "citation": "",
-        "tier": null,
-        "note": "Popular 975 psi figure unsourced; check Christiansen & Wroe 2007"
+        "citation": "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
+        "tier": 2,
+        "note": "Bite point: canine."
       }
-    }
+    },
+    "bite_point": "canine"
   },
   {
     "name": "Saltwater crocodile",
     "profile": "adult_male",
-    "mass_kg": 450,
+    "mass_kg": 408,
     "length_m": 5,
     "top_speed_kmh": 29,
     "primary_weapon": "bite",
-    "bite_force_n": 16400,
+    "bite_force_n": 16414,
     "armor": "scales",
     "temperament": "aggressive",
     "fighting_style": "ambush",
@@ -110,9 +112,9 @@
         "note": "Current model: land hampered; shallow water full; deep water full. Environmental access does not establish equal fighting performance."
       },
       "mass_kg": {
-        "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",
-        "tier": 3,
-        "note": ""
+        "citation": "Seebacher, Grigg & Beard (1999), J. Exp. Biol. 202:77-86, Table 1.",
+        "tier": 2,
+        "note": "4.3 m dominant male; mass estimated from length."
       },
       "length_m": {
         "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",
@@ -125,20 +127,21 @@
         "note": "Short burst only."
       },
       "bite_force_n": {
-        "citation": "Erickson et al. (2012), PLoS ONE, doi:10.1371/journal.pone.0031781; https://doi.org/10.1371/journal.pone.0031781",
+        "citation": "Erickson et al. (2012), PLoS ONE 7:e31781; https://doi.org/10.1371/journal.pone.0031781",
         "tier": 1,
-        "note": ""
+        "note": "Bite point: molariform."
       }
-    }
+    },
+    "bite_point": "molariform"
   },
   {
     "name": "Gorilla",
     "profile": "adult_male",
-    "mass_kg": 180,
+    "mass_kg": 168,
     "length_m": 1.7,
     "top_speed_kmh": 40,
     "primary_weapon": "strike",
-    "bite_force_n": null,
+    "bite_force_n": 4067,
     "armor": "none",
     "temperament": "avoids",
     "fighting_style": "bluff",
@@ -154,9 +157,9 @@
         "note": "Current model: land full; shallow water hampered; deep water cannot. Female wading observations do not verify adult-male fighting performance at these levels."
       },
       "mass_kg": {
-        "citation": "Wikipedia, Gorilla: https://en.wikipedia.org/wiki/Gorilla",
-        "tier": 3,
-        "note": ""
+        "citation": "Emery Thompson & Sabbi (2024), Evolutionary Demography of the Great Apes, Table 2.",
+        "tier": 1,
+        "note": "Wild males, n=11."
       },
       "length_m": {
         "citation": "Wikipedia, Gorilla: https://en.wikipedia.org/wiki/Gorilla",
@@ -169,16 +172,17 @@
         "note": ""
       },
       "bite_force_n": {
-        "citation": "",
-        "tier": null,
-        "note": "Popular 1,300 psi figure unsourced"
+        "citation": "Eng et al. (2013), Am. J. Phys. Anthropol., Table 4.",
+        "tier": 2,
+        "note": "Bite point: molar."
       }
-    }
+    },
+    "bite_point": "molar"
   },
   {
     "name": "Hippopotamus",
     "profile": "adult_male",
-    "mass_kg": 1500,
+    "mass_kg": 1354,
     "length_m": 3.5,
     "top_speed_kmh": 30,
     "primary_weapon": "bite",
@@ -198,9 +202,9 @@
         "note": "Current model: land full; shallow water full; deep water hampered. Underwater movement depends on usable substrate and access to air, not depth alone."
       },
       "mass_kg": {
-        "citation": "Wikipedia, Hippopotamus: https://en.wikipedia.org/wiki/Hippopotamus",
-        "tier": 3,
-        "note": ""
+        "citation": "Meireles et al. (2025), J. Zoo Aquar. Res. 13(2):108-116, Table 2.",
+        "tier": 1,
+        "note": "Wild adult males, n=439."
       },
       "length_m": {
         "citation": "Wikipedia, Hippopotamus: https://en.wikipedia.org/wiki/Hippopotamus",
@@ -217,12 +221,13 @@
         "tier": null,
         "note": "Popular 1,800 psi figure unsourced"
       }
-    }
+    },
+    "bite_point": null
   },
   {
     "name": "Great white shark",
     "profile": "adult_male",
-    "mass_kg": 750,
+    "mass_kg": 548,
     "length_m": 3.8,
     "top_speed_kmh": 40,
     "primary_weapon": "bite",
@@ -242,9 +247,9 @@
         "note": "Current model: land cannot; shallow water cannot; deep water full. Water must permit submersion, ventilation and movement; the retained shallow-water exclusion is a model assumption."
       },
       "mass_kg": {
-        "citation": "Wikipedia, Great white shark: https://en.wikipedia.org/wiki/Great_white_shark",
-        "tier": 3,
-        "note": ""
+        "citation": "Animosity, calculated from Kohler, Casey & Turner (1996), NOAA Tech. Memo. NMFS-NE-110, Tables 1 and 3.",
+        "tier": 2,
+        "note": "Calculated at 3.8 m total length; not a direct mass measurement."
       },
       "length_m": {
         "citation": "Wikipedia, Great white shark: https://en.wikipedia.org/wiki/Great_white_shark",
@@ -261,12 +266,13 @@
         "tier": null,
         "note": "TODO: interpolate for 3.8 m from Wroe et al. 2008 (about 3,000 N at 2.5 m, about 18,000 N at 6.5 m)"
       }
-    }
+    },
+    "bite_point": null
   },
   {
     "name": "Rhinoceros",
     "profile": "adult_male",
-    "mass_kg": 2300,
+    "mass_kg": 2012,
     "length_m": 3.8,
     "top_speed_kmh": 50,
     "primary_weapon": "horns",
@@ -286,9 +292,9 @@
         "note": "Current model: land full; shallow water hampered; deep water cannot. White-rhino wallowing does not verify fighting performance in shallow water."
       },
       "mass_kg": {
-        "citation": "Wikipedia, White rhinoceros: https://en.wikipedia.org/wiki/White_rhinoceros",
-        "tier": 3,
-        "note": ""
+        "citation": "Garand et al. (2025), Zoo Biology, Table 3.",
+        "tier": 1,
+        "note": "Adult males, n=129."
       },
       "length_m": {
         "citation": "Wikipedia, White rhinoceros: https://en.wikipedia.org/wiki/White_rhinoceros",
@@ -305,6 +311,7 @@
         "tier": null,
         "note": "Not a biting fighter"
       }
-    }
+    },
+    "bite_point": null
   }
 ]

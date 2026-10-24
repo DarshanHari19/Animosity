@@ -93,8 +93,9 @@ Return the following structured result; the API validates it before use:
 
 The numerical score is
 `0.8 * (log2(massA) - log2(massB))`, plus
-`0.5 * (log2(biteA) - log2(biteB))` only when both bites and equal non-null
-source tiers are present. Otherwise the bite factor is zero. Cutoffs are
+`0.5 * (log2(biteA) - log2(biteB))` only when both bites, equal non-null
+source tiers, and equal non-null `bite_point` values are present. The bite point
+is `canine`, `molar`, `molariform`, or unknown (`null`). Otherwise the bite factor is zero. Cutoffs are
 `>= 0.5` for A favored, `<= -0.5` for B favored, and even otherwise; with bite
 excluded this requires roughly a 1.54x mass advantage. No other physical traits
 contribute. Matching tiers do not establish that measurement methods match, and

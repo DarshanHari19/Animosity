@@ -11,6 +11,7 @@ export const animals: Animal[] = ["Lion", "Grizzly bear"].map((name) => ({
   top_speed_kmh: 0,
   primary_weapon: "bite",
   bite_force_n: null,
+  bite_point: null,
   armor: "none",
   temperament: "defensive",
   fighting_style: "grapple",

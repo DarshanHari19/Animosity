@@ -83,7 +83,7 @@ components:
     Animal:
       type: object
       additionalProperties: false
-      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_n, armor, temperament, fighting_style, environments, field_sources]
+      required: [name, profile, mass_kg, length_m, top_speed_kmh, primary_weapon, bite_force_n, bite_point, armor, temperament, fighting_style, environments, field_sources]
       properties:
         name: { type: string, minLength: 1 }
         profile: { type: string, enum: [adult_male, adult_female] }
@@ -92,6 +92,7 @@ components:
         top_speed_kmh: { type: number, minimum: 0 }
         primary_weapon: { type: string, enum: [bite, claws, horns, tusks, strike, constriction] }
         bite_force_n: { type: [number, "null"], minimum: 0 }
+        bite_point: { type: [string, "null"], enum: [canine, molar, molariform, null], description: Tooth position for the cited bite force; null when unknown. }
         armor: { type: string, enum: [none, thick_hide, shell, scales] }
         temperament: { type: string, enum: [avoids, defensive, aggressive] }
         fighting_style: { type: string, enum: [ambush, sustained, bluff, grapple, charge] }

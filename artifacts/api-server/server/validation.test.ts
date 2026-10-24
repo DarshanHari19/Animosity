@@ -18,25 +18,32 @@ test("traits include all seven user-provided animals and their supplied values",
     "Hippopotamus", "Great white shark", "Rhinoceros",
   ]);
   assert.deepEqual(animals[0], {
-    name: "Lion", profile: "adult_male", mass_kg: 190, length_m: 2.5,
-    top_speed_kmh: 80, primary_weapon: "bite", bite_force_n: 5500,
+    name: "Lion", profile: "adult_male", mass_kg: 188, length_m: 2.5,
+    top_speed_kmh: 80, primary_weapon: "bite", bite_force_n: 1315, bite_point: "canine",
     armor: "none", temperament: "aggressive", fighting_style: "ambush",
     environments: { land: "full", shallow_water: "hampered", deep_water: "cannot" },
     field_sources: {
       environments: a.field_sources.environments!,
-      mass_kg: { tier: 3, citation: "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion", note: "" },
+      mass_kg: { tier: 1,
+        citation: "Haas, Hayssen & Krausman (2005), Mammalian Species 762, citing Smuts, Robinson & Whyte (1980), J. Zool. 190:365-373.",
+        note: "Adult males; primary paper read via Haas (2005)." },
       length_m: { tier: 3, citation: "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion", note: "" },
       top_speed_kmh: { tier: 3, citation: "Wikipedia, Lion: https://en.wikipedia.org/wiki/Lion", note: "" },
       bite_force_n: {
         tier: 2,
-        citation: "Wroe et al. (2008), press summary",
-        note: "Press summary reports approximately 560 kg force for a large lion; confirm in Wroe et al. (2005) table. Supplied value retained, not independently verified.",
+        citation: "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
+        note: "Bite point: canine.",
       },
     },
   });
   assert.equal(animals[6]?.bite_force_n, null);
   assert.equal(animals.every((animal) => animal.profile === "adult_male"), true);
   assert.equal(animals.every((animal) => animal.field_sources !== undefined), true);
+  assert.deepEqual(animals.map(animal => animal.bite_point),
+    ["canine", "canine", "molariform", "molar", null, null, null]);
+  assert.deepEqual(animals.map(animal => animal.field_sources.mass_kg!.tier), [1, 1, 2, 1, 1, 2, 1]);
+  assert.deepEqual(animals.map(animal => animal.field_sources.bite_force_n!.tier), [2, 2, 1, 2, null, null, null]);
+  assert.match(animals[5]!.field_sources.mass_kg!.citation, /calculated from/);
   assert.deepEqual(animals.map((animal) => Object.values(animal.environments)), [
     ["full", "hampered", "cannot"], ["full", "full", "cannot"], ["hampered", "full", "full"],
     ["full", "hampered", "cannot"], ["full", "full", "hampered"], ["cannot", "cannot", "full"],
@@ -46,11 +53,11 @@ test("traits include all seven user-provided animals and their supplied values",
     animals.map(({ mass_kg, length_m, top_speed_kmh, bite_force_n }) =>
       [mass_kg, length_m, top_speed_kmh, bite_force_n]),
     [
-      [190, 2.5, 80, 5500], [270, 2.0, 56, null], [450, 5.0, 29, 16400],
-      [180, 1.7, 40, null], [1500, 3.5, 30, null], [750, 3.8, 40, null],
-      [2300, 3.8, 50, null],
+      [188, 2.5, 80, 1315], [192, 2.0, 56, 1410], [408, 5.0, 29, 16414],
+      [168, 1.7, 40, 4067], [1354, 3.5, 30, null], [548, 3.8, 40, null],
+      [2012, 3.8, 50, null],
     ],
-    "Source review must not silently change the supplied measurements",
+    "Only the explicitly approved source upgrade changes measurements",
   );
 });
 
@@ -81,6 +88,10 @@ test("environment sources retain reviewed habitat references and original tiers"
 });
 
 test("animal validation uses exact enums and nonnegative nullable numeric fields", () => {
+  for (const bite_point of ["canine", "molar", "molariform", null]) {
+    assert.equal(AnimalSchema.safeParse({ ...a, bite_point }).success, true);
+  }
+  assert.equal(AnimalSchema.safeParse({ ...a, bite_point: "carnassial" }).success, false);
   for (const field of ["primary_weapon", "armor", "temperament"] as const) {
     assert.equal(AnimalSchema.safeParse({ ...a, [field]: "invented" }).success, false);
   }

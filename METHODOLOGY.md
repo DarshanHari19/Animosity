@@ -90,15 +90,15 @@ Each animal has a level for each environment: full, hampered, or cannot.
 | Factor | Rule | Notes |
 |---|---|---|
 | Size | 0.8 × (log2(mass A) − log2(mass B)) | Counts doublings so huge ratios don't dominate. 0.8 is a tuning choice |
-| Bite force comparison | 0.5 × (log2(bite A) − log2(bite B)), only when both values are non-null and both source tiers are non-null and equal; otherwise 0 | A source-tier filter, not proof of the same measurement method. Compares bites to each other, not bites against defenses |
+| Bite force comparison | 0.5 × (log2(bite A) − log2(bite B)), only when both values are non-null, both source tiers are non-null and equal, and both bite_point values are non-null and equal; otherwise 0 | Source-tier and bite-point filters, not proof of the same measurement method. Compares bites to each other, not bites against defenses |
 | Environment handicap | −0.8 if A is hampered; +0.8 if B is hampered; both hampered cancel out | Lost footing, speed, and grappling, not lost mass. 0.8 equals the size score of a 2:1 mass edge. Set by calibration against the anchors below |
 
 **Calibration anchors** (design expectations, not findings):
-- Saltwater crocodile vs Lion, shallow water: crocodile favored (about +1.8)
-- Saltwater crocodile vs Lion, land: too close to call (about +0.2)
+- Saltwater crocodile vs Lion, shallow water: crocodile favored (about +1.69)
+- Saltwater crocodile vs Lion, land: too close to call (about +0.09)
 - Hippopotamus vs Saltwater crocodile, deep water: hippopotamus favored (about +0.59)
-- Saltwater crocodile vs Grizzly bear, land: too close to call (about −0.2)
-- Hippopotamus vs Lion, shallow water: hippopotamus favored (about +3.2)
+- Saltwater crocodile vs Grizzly bear, land: too close to call (about +0.07)
+- Hippopotamus vs Lion, shallow water: hippopotamus favored (about +3.08)
 
 Differences of logs are used instead of log of a ratio to avoid overflow.
 
@@ -125,7 +125,7 @@ Differences of logs are used instead of log of a ratio to avoid overflow.
 - [ ] **Encounter labels.** Ranges overlap needs range data; documented needs a curated list of field studies.
 - [ ] **Both animals incapacitated.** Returns indeterminate; no endurance comparison until there's evidence.
 - [ ] **Sex and age.** All profiles are adult males; adult females planned.
-- [ ] **Tuning cases.** Gorilla vs. grizzly in forced fight (about +0.47, even). Decide and log.
+- [ ] **Tuning cases.** Gorilla vs. grizzly in forced fight (about −0.15 with Gorilla as A, even). Decide and log.
 - [ ] **Environment handicap size.** One fixed value for every hampered animal. Real effects vary by animal, opponent, depth, and footing.
 - [ ] **Two water levels.** If shallow vs. deep keeps causing confusion, merge them into a single water environment.
 
@@ -133,6 +133,7 @@ Differences of logs are used instead of log of a ratio to avoid overflow.
 
 | Date | Change | Reason |
 |---|---|---|
+| Oct 23, 2026 | Source upgrade (6 masses to tier 1 or 2; lion bite corrected from an unsupported 5500 N); bite force compared only at the same bite point | Better provenance; avoid comparing different teeth. |
 | Oct 22, 2026 | Environment levels (full, hampered, cannot) replace functions_in; environment handicap factor of 0.8 | A lion in shallow water can fight, but not at full strength; on/off gates couldn't express that |
 | Oct 22, 2026 | UI shows forced_fight as "Arena" (default) and realistic as "In the wild"; even shown as "Too close to call" | Most users want the fight; "even" read as 50/50 |
 | Oct 22, 2026 | Engine writes the verdict sentence; model writes action beats and a climax; failed narration still returns the verdict | Model-written verdicts caused most narration failures |

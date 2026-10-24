@@ -3,6 +3,7 @@ import { test } from "node:test";
 import fs from "node:fs";
 import { z } from "zod";
 import { animals } from "./animals";
+import { historicalAnimals } from "./__fixtures__/historical-animals";
 import { scoreMatchup } from "./engine";
 import { narrateMatchup } from "./narrator";
 import { narrationEvidence, scoredFactorText, type EvidenceItem } from "./narration-evidence";
@@ -166,8 +167,8 @@ type Recorded = {
 const fixtures = JSON.parse(fs.readFileSync(new URL("./__fixtures__/narration-regressions.json", import.meta.url), "utf8")) as { cases: Recorded[] };
 for (const fixture of fixtures.cases) {
   test(`recorded regression: ${fixture.name} → ${fixture.expected_under_new_rules.verdict}`, () => {
-    const first = animals.find(({ name }) => name === fixture.animals[0])!;
-    const second = animals.find(({ name }) => name === fixture.animals[1])!;
+    const first = historicalAnimals.find(({ name }) => name === fixture.animals[0])!;
+    const second = historicalAnimals.find(({ name }) => name === fixture.animals[1])!;
     const result = scoreMatchup(first, second, { environment: "land", mode: fixture.mode, encounter: "face_off" });
     const evidence = narrationEvidence(result, first, second);
     // Structural migration only: text/actors are untouched; do not add citations.

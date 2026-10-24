@@ -49,7 +49,7 @@ test("step 0 rejects invalid comparable bites before an environment gate", () =>
 function fixtureAnimal(name: string, mass_kg: number, environments: Animal["environments"]): Animal {
   return AnimalSchema.parse({
     name, profile: "adult_male", mass_kg, length_m: 0, top_speed_kmh: 0,
-    primary_weapon: "strike", bite_force_n: null, armor: "none",
+    primary_weapon: "strike", bite_force_n: null, bite_point: null, armor: "none",
     temperament: "avoids", fighting_style: "bluff", environments,
     field_sources: { environments: { tier: 3, citation: "TODO: verify" } },
   });
@@ -88,7 +88,7 @@ const scenarios: Scenario[] = [
     expected: { kind: "even" } },
   { title: "5. Great white vs Croc: deep water", a: "Great white shark", b: "Saltwater crocodile",
     context: { environment: "deep_water", mode: "realistic" },
-    expected: { kind: "favored", animal: "Great white shark" }, deciding: "fighting_ability" },
+    expected: { kind: "even" }, deciding: null },
   { title: "6. Great white vs Lion: forced land", a: "Great white shark", b: "Lion",
     context: { environment: "land", mode: "forced_fight" },
     expected: { kind: "favored", animal: "Lion" }, deciding: "environmental_advantage" },

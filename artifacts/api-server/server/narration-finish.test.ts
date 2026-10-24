@@ -25,8 +25,8 @@ test("favored fighting finish uses exact size text and only compared bite text, 
     const evidence = narrationEvidence(result, a, b);
     const size = evidence.find(e => e.factor_name === "Size")!;
     const finish = deterministicFinish(result, a, b, evidence);
-    assert.equal(finish.text, "The Hippopotamus is favored: it outweighs the Lion about 7.9 to 1 (1500 kg vs 190 kg).");
-    assert.ok(size.text.includes("7.9 to 1"));
+    assert.equal(finish.text, "The Hippopotamus is favored: it outweighs the Lion about 7.2 to 1 (1354 kg vs 188 kg).");
+    assert.ok(size.text.includes("7.2 to 1"));
     assert.deepEqual(finish.facts_used, [size.text]);
     assert.equal(finish.animal, hippo.name);
     assert.equal(finish.action, "finish");
@@ -122,7 +122,7 @@ test("scored-environment verdict cites the factor and names the hampered animal,
       assert.ok(finish.facts_used.includes(evidence.find(e => e.factor_name === "Environment")!.text));
       assert.deepEqual(narrationGroundingChecks([finish], result, evidence, a!, b!, environment), []);
       if (second === lion) assert.equal(finish.text,
-        "The Hippopotamus is favored: it outweighs the Lion about 7.9 to 1 (1500 kg vs 190 kg), and the Lion is hampered in shallow water.");
+        "The Hippopotamus is favored: it outweighs the Lion about 7.2 to 1 (1354 kg vs 188 kg), and the Lion is hampered in shallow water.");
     }
   }
 });

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AnimalArmor } from './animalArmor';
+import type { AnimalBitePoint } from './animalBitePoint';
 import type { AnimalFieldSources } from './animalFieldSources';
 import type { AnimalFightingStyle } from './animalFightingStyle';
 import type { AnimalPrimaryWeapon } from './animalPrimaryWeapon';
@@ -29,6 +30,11 @@ export interface Animal {
      * @nullable
      */
   bite_force_n: number | null;
+  /**
+     * Tooth position for the cited bite force; null when unknown.
+     * @nullable
+     */
+  bite_point: AnimalBitePoint;
   armor: AnimalArmor;
   temperament: AnimalTemperament;
   fighting_style: AnimalFightingStyle;

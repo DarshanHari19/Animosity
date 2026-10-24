@@ -32,7 +32,7 @@ test("narrator evidence uses only public citation and tier, never review notes",
     Object.entries(animals[0]!.field_sources).map(([field, source]) =>
       [field, { ...source, note: sentinel }])) };
   const evidence = narrationEvidence(fixtureResult({ kind: "favored", animal: a.name }), a, animals[1]!);
-  assert.ok(evidence.some(item => item.kind === "context" && item.text.includes("Wikipedia, Lion")));
+  assert.ok(evidence.some(item => item.kind === "context" && item.text.includes("Haas, Hayssen & Krausman")));
   assert.equal(JSON.stringify(evidence).includes(sentinel), false);
   assert.equal(JSON.stringify(evidence).includes("confirm in"), false);
 });

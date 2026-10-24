@@ -30,6 +30,7 @@ export const GetAnimalsResponseItem = zod.object({
   "top_speed_kmh": zod.number().min(getAnimalsResponseTopSpeedKmhMin),
   "primary_weapon": zod.enum(['bite', 'claws', 'horns', 'tusks', 'strike', 'constriction']),
   "bite_force_n": zod.number().min(getAnimalsResponseBiteForceNMin).nullable(),
+  "bite_point": zod.union([zod.literal('canine'),zod.literal('molar'),zod.literal('molariform'),zod.literal(null)]).nullable().describe('Tooth position for the cited bite force; null when unknown.'),
   "armor": zod.enum(['none', 'thick_hide', 'shell', 'scales']),
   "temperament": zod.enum(['avoids', 'defensive', 'aggressive']),
   "fighting_style": zod.enum(['ambush', 'sustained', 'bluff', 'grapple', 'charge']),

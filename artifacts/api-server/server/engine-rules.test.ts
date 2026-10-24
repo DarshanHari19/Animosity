@@ -51,6 +51,28 @@ test("missing bites or unequal/unknown tiers exclude the bite factor", () => {
   assert.equal(scoreMatchup({ ...a, bite_force_n: -1 }, animal("B"), forced).factors[1]!.value, 0);
 });
 
+test("equal tiers compare bites only at the same known bite point, in both orders", () => {
+  const a = animal("A", { bite_force_n: 200, bite_point: "canine" });
+  for (const bite_point of ["molar", "molariform", null] as const) {
+    const b = animal("B", { bite_force_n: 100, bite_point });
+    for (const [first, second] of [[a, b], [b, a]] as const) {
+      const result = scoreMatchup(first, second, forced);
+      assert.equal(result.factors[1]!.value, 0);
+      assert.equal(result.advantage_score, 0);
+      assert.deepEqual(result.outcome, { kind: "even" });
+      assert.match(result.factors[1]!.reason, /bite points are unknown or differ/);
+    }
+  }
+  for (const bite_point of ["canine", "molar", "molariform"] as const) {
+    const first = { ...a, bite_point };
+    const second = animal("B", { bite_force_n: 100, bite_point });
+    assert.equal(scoreMatchup(first, second, forced).factors[1]!.value, 0.5);
+    assert.equal(scoreMatchup(second, first, forced).factors[1]!.value, -0.5);
+  }
+  const unknown = { ...a, bite_point: null };
+  assert.equal(scoreMatchup(unknown, unknown, forced).factors[1]!.value, 0);
+});
+
 test("cutoffs are inclusive at +/-0.5; smaller scored advantages are even", () => {
   const a = animal("A", { bite_force_n: 2 });
   const b = animal("B", { bite_force_n: 1 });

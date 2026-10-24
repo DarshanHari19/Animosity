@@ -8,6 +8,7 @@
 
 export * from './animal';
 export * from './animalArmor';
+export * from './animalBitePoint';
 export * from './animalFieldSources';
 export * from './animalFightingStyle';
 export * from './animalPrimaryWeapon';

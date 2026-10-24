@@ -43,8 +43,10 @@ export function scoreMatchup(
   requirePositive(b, "mass_kg");
   const biteTierA = tier(a, "bite_force_n");
   const biteTierB = tier(b, "bite_force_n");
-  const compareBites = a.bite_force_n !== null && b.bite_force_n !== null &&
+  const comparableSources = a.bite_force_n !== null && b.bite_force_n !== null &&
     biteTierA !== null && biteTierB !== null && biteTierA === biteTierB;
+  const compareBites = comparableSources && a.bite_point != null &&
+    a.bite_point === b.bite_point;
   if (compareBites) {
     requirePositive(a, "bite_force_n");
     requirePositive(b, "bite_force_n");
@@ -99,14 +101,16 @@ export function scoreMatchup(
   }, {
     name: "Bite force",
     value: 0,
-    reason: "Not compared: bite-force values are missing or have different source tiers.",
+    reason: comparableSources
+      ? "Not compared: bite points are unknown or differ."
+      : "Not compared: bite-force values are missing or have different source tiers.",
   }];
   if (compareBites) {
     consulted.push(biteTierA, biteTierB);
     factors[1] = {
       name: "Bite force",
       value: 0.5 * (Math.log2(a.bite_force_n!) - Math.log2(b.bite_force_n!)),
-      reason: `${a.name}: ${a.bite_force_n} N; ${b.name}: ${b.bite_force_n} N. Matching source tiers do not guarantee matching measurement methods; this compares bites to bites, not bites against defenses.`,
+      reason: `${a.name}: ${a.bite_force_n} N; ${b.name}: ${b.bite_force_n} N. Bite point: ${a.bite_point}. Matching source tiers and bite points do not guarantee matching measurement methods; this compares bites to bites, not bites against defenses.`,
     };
   }
   if (aLevel === "hampered" || bLevel === "hampered") {

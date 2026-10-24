@@ -107,7 +107,8 @@ export function TaleOfTheTape({ sel, red, blue, result, onShowMath }: {
     : isScored(bite) ? "Scored. Compares bites to bites, not bites against defenses."
       : biteMissing ? "Not compared: one value is missing."
         : unknownTier.length ? "Not compared: a source tier is unknown."
-          : "Not compared: the values come from different source tiers.";
+          : tierNum(red) !== tierNum(blue) ? "Not compared: the values come from different source tiers."
+            : "Not compared: bite points are unknown or differ.";
   const rl = red.environments[sel.environment];
   const bl = blue.environments[sel.environment];
   const cannotAnimal = rl === "cannot" ? red.name : bl === "cannot" ? blue.name : null;

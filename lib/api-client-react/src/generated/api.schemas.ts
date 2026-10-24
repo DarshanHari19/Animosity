@@ -25,6 +25,19 @@ export const AnimalPrimaryWeapon = {
   constriction: 'constriction',
 } as const;
 
+/**
+ * Tooth position for the cited bite force; null when unknown.
+ * @nullable
+ */
+export type AnimalBitePoint = typeof AnimalBitePoint[keyof typeof AnimalBitePoint] | null;
+
+
+export const AnimalBitePoint = {
+  canine: 'canine',
+  molar: 'molar',
+  molariform: 'molariform',
+} as const;
+
 export type AnimalArmor = typeof AnimalArmor[keyof typeof AnimalArmor];
 
 
@@ -107,6 +120,11 @@ export interface Animal {
      * @nullable
      */
   bite_force_n: number | null;
+  /**
+     * Tooth position for the cited bite force; null when unknown.
+     * @nullable
+     */
+  bite_point: AnimalBitePoint;
   armor: AnimalArmor;
   temperament: AnimalTemperament;
   fighting_style: AnimalFightingStyle;

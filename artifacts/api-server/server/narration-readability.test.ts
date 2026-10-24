@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { animals } from "./animals";
+import { historicalAnimals } from "./__fixtures__/historical-animals";
 import { scoreMatchup } from "./engine";
 import { narrationEvidence } from "./narration-evidence";
 import { resolveEvidence } from "./narration-tool";
@@ -41,6 +42,8 @@ type Regression = {
 const recorded = JSON.parse(readFileSync(new URL("./__fixtures__/hippo-citation-regressions.json", import.meta.url), "utf8")) as { cases: Regression[] };
 for (const fixture of recorded.cases) {
   test(`${fixture.name}: original missing number is covered by readable comparison evidence`, async () => {
+    const hippo = historicalAnimals.find(animal => animal.name === "Hippopotamus")!;
+    const lion = historicalAnimals.find(animal => animal.name === "Lion")!;
     const result = scoreMatchup(hippo, lion, context);
     const evidence = narrationEvidence(result, hippo, lion);
     const oldEvidence = evidence.map((item) => item.factor_name === "Size"
