@@ -22,3 +22,16 @@ contacted providers once managed credentials were available.
 
 **How to apply:** Never assume ignoring narration in assertions prevents calls;
 inject a deterministic test transport or an explicit unavailable-provider stub.
+
+The managed OpenRouter transport rejects zstd-compressed TypeSafe SDK requests.
+
+**Why:** A manual real-bout probe returned HTTP 415 with
+`protocol.http.UnsupportedEncoding` for zstd. The SDK automatically compresses
+bodies at least 1 KiB on supported Node versions, so a tiny availability probe
+can succeed while real narration evaluations fail. Historical shadow failures
+did not retain exception classifications or Jev-only timings; do not invent them.
+
+**How to apply:** When authorized to fix transport configuration, use the SDK's
+documented `compression: false` option, preserving typed System One requests.
+Keep safe error categories and durations if adding diagnostics; never expose
+credentials or attribute historical statuses/latencies without recorded evidence.
