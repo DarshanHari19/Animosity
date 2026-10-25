@@ -9,6 +9,7 @@ import { createFightRateLimiter } from "./limits";
 import { environmentPhrase, humanWording } from "./wording";
 import { BUILD_ID } from "../src/build-id";
 import { EVAL_BYPASS_HEADER, narrationCacheKey, type NarrationCache } from "./narration-cache";
+import { JevReportSchema, type JevReport } from "./jev-telemetry";
 
 type RouterOptions = { cache?: NarrationCache; buildId?: string; development?: boolean };
 
@@ -64,6 +65,7 @@ export function createFightRouter(
       const buildId = options.buildId ?? BUILD_ID;
       const bypass = (options.development ?? process.env.NODE_ENV === "development")
         && req.get(EVAL_BYPASS_HEADER) === "1";
+      let jevReport: JevReport = { status: "not_scored" };
       const cache = bypass ? undefined : options.cache;
       const key = narrationCacheKey(a.name, b.name, environment, mode, buildId);
       if (narrated) {
@@ -80,6 +82,11 @@ export function createFightRouter(
           } else {
             beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b, {
               environment, mode, onProviderAttempt: () => { providerAttempts++; },
+              ...(bypass ? { onShadowResult: (report: JevReport) => {
+                // Never let malformed observational data affect a valid bout.
+                const checked = JevReportSchema.safeParse(report);
+                jevReport = checked.success ? checked.data : { status: "failed", reason: "failed_or_timed_out" };
+              } } : {}),
             }));
             narration_source = "model";
           }
@@ -124,7 +131,8 @@ export function createFightRouter(
       }
       // Server-owned telemetry for pnpm eval; the UI does not display cache provenance.
       res.setHeader("X-Narration-Attempts", String(providerAttempts));
-      res.json(response.data);
+      // This is a development-only eval extension, not part of the public API.
+      res.json(bypass ? { ...response.data, jev_shadow: jevReport } : response.data);
     } catch (error) {
       if (error instanceof FightError) {
         res.status(error.status).json({ error: error.message, code: error.code });

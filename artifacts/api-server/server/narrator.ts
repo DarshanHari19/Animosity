@@ -17,6 +17,7 @@ import { deterministicFinish } from "./narration-finish";
 import { nonFinishChecks } from "./narration-non-finish";
 import { climaxChecks } from "./narration-climax";
 import { reviewJevShadow, type ShadowInput } from "./jev-shadow";
+import type { JevReport } from "./jev-telemetry";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -28,7 +29,8 @@ type Options = {
   environment?: Environment;
   mode?: EngineContext["mode"];
   onProviderAttempt?: () => void;
-  shadowReview?: (input: ShadowInput) => Promise<void>;
+  shadowReview?: (input: ShadowInput) => Promise<JevReport | void>;
+  onShadowResult?: (report: JevReport) => void;
 };
 
 const ProviderResponseSchema = z.object({
@@ -203,11 +205,15 @@ export async function narrateMatchup(
       const shadowReview = options.shadowReview ?? (options.fetch ? undefined : reviewJevShadow);
       if (shadowReview) {
         try {
-          await shadowReview({
+          const report = await shadowReview({
             narration_id: narrationId, animals: [a.name, b.name], environment,
             mode, result, evidence: evidenceItems, beats: structuredClone(envelope.beats),
           });
-        } catch { /* shadow mode cannot change acceptance */ }
+          if (report) options.onShadowResult?.(report);
+        } catch {
+          // Telemetry callbacks are observational too; neither can trigger retry.
+          try { options.onShadowResult?.({ status: "failed", reason: "failed_or_timed_out" }); } catch { /* no effect */ }
+        }
       }
       return envelope.beats;
     } catch (error) {

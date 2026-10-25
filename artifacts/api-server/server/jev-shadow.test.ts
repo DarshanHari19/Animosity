@@ -17,7 +17,7 @@ test("Jev makes one request with all evidence/beats and logs two probabilities p
   let calls = 0;
   const logs: Record<string, unknown>[] = [];
   const before = structuredClone(input);
-  await reviewJevShadow(input, {
+  const report = await reviewJevShadow(input, {
     log: (entry) => { logs.push(entry); },
     request: async (request) => {
       calls++;
@@ -40,17 +40,25 @@ test("Jev makes one request with all evidence/beats and logs two probabilities p
     assert.equal(entry.contradictory_winner_probability, 0.8);
   });
   assert.deepEqual(input, before, "even high probabilities never alter beats or verdict");
+  assert.equal(report.status, "scored");
+  if (report.status === "scored") {
+    assert.equal(report.beats.length, input.beats.length);
+    assert.equal(report.beats[0]!.text, input.beats[0]!.text);
+    assert.equal(report.beats[0]!.unsupported_reason_probability, 0.9);
+    assert.equal(report.beats[0]!.contradictory_winner_probability, 0.8);
+  }
 });
 
 test("Jev provider failure is sanitized, not retried, and cannot reject narration", async () => {
   let calls = 0;
   const logs: Record<string, unknown>[] = [];
-  await reviewJevShadow(input, {
+  const report = await reviewJevShadow(input, {
     request: async () => { calls++; throw new Error("private provider credentials"); },
     log: (entry) => { logs.push(entry); },
   });
   assert.equal(calls, 1);
   assert.deepEqual(logs, [{ event: "jev_shadow_unavailable", narration_id: input.narration_id }]);
+  assert.deepEqual(report, { status: "failed", reason: "failed_or_timed_out" });
 });
 
 test("invalid Jev probabilities never become decisions or partial successful logs", async () => {

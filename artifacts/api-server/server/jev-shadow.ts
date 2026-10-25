@@ -2,6 +2,7 @@ import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { z } from "zod";
 import type { Beat, Environment, EngineContext, MatchupResult } from "./schemas";
 import type { EvidenceItem } from "./narration-evidence";
+import type { JevReport } from "./jev-telemetry";
 
 export type ShadowInput = {
   narration_id: string;
@@ -35,7 +36,7 @@ async function managedRequest(request: Request): Promise<unknown> {
 }
 
 /** Observation only. No answer or failure may affect narration or its retry. */
-export async function reviewJevShadow(input: ShadowInput, dependencies: Dependencies = {}): Promise<void> {
+export async function reviewJevShadow(input: ShadowInput, dependencies: Dependencies = {}): Promise<JevReport> {
   const log = dependencies.log ?? ((entry) => console.info(JSON.stringify(entry)));
   try {
     const questions: Request["questions"] = {};
@@ -68,8 +69,14 @@ export async function reviewJevShadow(input: ShadowInput, dependencies: Dependen
       contradictory_winner_probability: probability.parse(response.answers[`contradiction_${index}`]).noul,
     }));
     entries.forEach(log);
+    return {
+      status: "scored",
+      beats: entries.map(({ beat_index, text, unsupported_reason_probability, contradictory_winner_probability }) =>
+        ({ beat_index, text, unsupported_reason_probability, contradictory_winner_probability })),
+    };
   } catch {
     // Never log SDK errors: they can contain request/authentication details.
     try { log({ event: "jev_shadow_unavailable", narration_id: input.narration_id }); } catch { /* logging is also observational */ }
+    return { status: "failed", reason: "failed_or_timed_out" };
   }
 }

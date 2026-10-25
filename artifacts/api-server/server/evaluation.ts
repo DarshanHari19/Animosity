@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type { fightResponseSchemaFor, EngineContext } from "./schemas";
+import type { JevReport } from "./jev-telemetry";
 
 // The same twenty baseline scenarios; not invented scoring or narration.
 export const evaluationCases = [
@@ -32,6 +33,7 @@ export const evaluationCases = [
 export type EvaluationRun = {
   case_id: number; run: number; attempts: number; started: string; finished: string;
   body: z.infer<ReturnType<typeof fightResponseSchemaFor>>;
+  jev_shadow?: JevReport;
 };
 export function summarizeEvaluation(runs: EvaluationRun[]) {
   const firstPass = runs.filter(r => r.body.narration_status === "available" && r.attempts === 1).length;

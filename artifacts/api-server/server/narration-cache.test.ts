@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { z } from "zod";
 import { animals } from "./animals";
 import { fightResponseSchemaFor } from "./schemas";
 import { FightError } from "./errors";
@@ -117,7 +118,10 @@ test("development eval header bypasses cache reads and writes without replacing 
     return beats;
   }, undefined, undefined, { cache, development: true });
   const original = await (await server.post(input)).json().then(body => fightResponseSchemaFor(animals[0]!, animals[1]!).parse(body));
-  const bypass = await (await server.post(input, { [EVAL_BYPASS_HEADER]: "1" })).json().then(body => fightResponseSchemaFor(animals[0]!, animals[1]!).parse(body));
+  const { jev_shadow, ...bypassBody } = z.object({}).passthrough().parse(
+    await (await server.post(input, { [EVAL_BYPASS_HEADER]: "1" })).json());
+  assert.deepEqual(jev_shadow, { status: "not_scored" }); // injected narrator makes no Jev call
+  const bypass = fightResponseSchemaFor(animals[0]!, animals[1]!).parse(bypassBody);
   assert.equal(bypass.narration_source, "model");
   assert.notDeepEqual(original.beats, bypass.beats);
   assert.equal(stats.reads, 1);

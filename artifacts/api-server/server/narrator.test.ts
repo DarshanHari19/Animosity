@@ -96,6 +96,36 @@ test("a corrected retry reaches shadow once, not on the rejected attempt", async
   assert.deepEqual(output, beatsFor(a.name));
 });
 
+test("Jev telemetry reports success or failure without changing acceptance, beats or provider calls", async () => {
+  for (const fails of [false, true]) {
+    const mock = mockProvider([provider(beatsFor(a.name))]);
+    const reports: unknown[] = [];
+    const report = { status: "scored" as const, beats: [{
+      beat_index: 0, text: beatsFor(a.name)[0]!.text,
+      unsupported_reason_probability: 0.9, contradictory_winner_probability: 0.8,
+    }] };
+    const output = await narrateMatchup(result, a, b, {
+      ...mock.options,
+      shadowReview: async () => { if (fails) throw Error("test-only timeout"); return report; },
+      onShadowResult: r => { reports.push(r); },
+    });
+    assert.deepEqual(output, beatsFor(a.name));
+    assert.equal(mock.calls.length, 1);
+    assert.deepEqual(reports, [fails ? { status: "failed", reason: "failed_or_timed_out" } : report]);
+  }
+});
+
+test("a throwing Jev telemetry observer cannot trigger narration retry or hide valid beats", async () => {
+  const mock = mockProvider([provider(beatsFor(a.name))]);
+  const output = await narrateMatchup(result, a, b, {
+    ...mock.options,
+    shadowReview: async () => ({ status: "failed", reason: "failed_or_timed_out" }),
+    onShadowResult: () => { throw Error("test-only observer failure"); },
+  });
+  assert.deepEqual(output, beatsFor(a.name));
+  assert.equal(mock.calls.length, 1);
+});
+
 test("a model-supplied wrong finish retries once; server keeps the favored actor", async () => {
   const mock = mockProvider([provider(beatsFor(b.name), true), provider(beatsFor(a.name))]);
   const beats = await narrateMatchup(result, a, b, mock.options);

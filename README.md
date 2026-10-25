@@ -381,3 +381,15 @@ retrieve remote logs. Missing, truncated or ambiguous diagnostics stop the run
 with an explicit incomplete-summary error instead of reporting invented zeroes.
 The saved evaluation JSON includes the matched diagnostics and check summary.
 Raw model output remains in server logs and is never sent through the API.
+
+The **Jev shadow** section reports narrations scored, calls failed or timed out,
+and narrations not scored (for example, rejected before Jev). For each question,
+it counts beats strictly above 0.5, 0.7, and 0.9, and shows up to five
+highest-probability examples above 0.5 with their probabilities. These counts are
+observations, not acceptance thresholds. The saved JSON includes per-run scores
+and the Jev summary.
+
+Jev telemetry comes from the `jev_shadow` response extension, returned only when
+`X-Animosity-Eval-Bypass-Cache: 1` is sent to a **development** API. Normal
+responses (and production responses even with that header) are unchanged. Eval
+stops on missing/invalid Jev telemetry instead of assuming zero scores.

@@ -6,6 +6,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
 import { AnimalSchema, fightResponseSchemaFor } from "./schemas";
 import { evaluationCases, summarizeEvaluation, type EvaluationRun } from "./evaluation";
+import { JevReportSchema, summarizeJev } from "./jev-telemetry";
 import { diagnosticOffset, readDiagnostics, diagnosticsForRun, summarizeDiagnosticChecks,
   type EvaluationDiagnostic } from "./narration-diagnostic-store";
 
@@ -60,6 +61,7 @@ async function main() {
     build_id: build, rate_deferrals: rateDeferrals, summary: summarizeEvaluation(runs), runs,
     diagnostics_complete: diagnosticsComplete,
     failed_checks: summarizeDiagnosticChecks(diagnostics), diagnostics,
+    jev: summarizeJev(runs),
   }, null, 2));
   let previousStart = 0;
   let rateDeferrals = 0;
@@ -86,14 +88,19 @@ async function main() {
         if (response.status !== 200) throw Error(`Case ${c.case_id}: HTTP ${response.status}; evaluation stopped.`);
         const a = animals.find(a => a.name === c.input.animalA)!;
         const b = animals.find(a => a.name === c.input.animalB)!;
-        const body = fightResponseSchemaFor(a, b).parse(await response.json());
+        const { jev_shadow: rawJev, ...publicBody } = z.object({
+          jev_shadow: z.unknown(),
+        }).passthrough().parse(await response.json());
+        const jev = JevReportSchema.safeParse(rawJev);
+        if (!jev.success) throw Error("Missing/invalid Jev eval telemetry; restart the current development API. Jev counts were not guessed from logs.");
+        const body = fightResponseSchemaFor(a, b).parse(publicBody);
         if (body.narration_status === "not_required") throw Error(`Case ${c.case_id} is no longer narrated; stopped rather than inflate pass rates.`);
         const count = response.headers.get("X-Narration-Attempts");
         if (count === null || !/^[012]$/.test(count) || (body.narration_status === "available" && count === "0")) {
           throw Error("Missing/invalid attempt telemetry; restart the current API. Pass rate was not guessed from logs.");
         }
         runs.push({ case_id: c.case_id, run: repeat, attempts: Number(count), started,
-          finished: new Date().toISOString(), body });
+          finished: new Date().toISOString(), body, jev_shadow: jev.data });
         console.log(`Case ${c.case_id}, run ${repeat}: ${body.narration_status}; calls=${count}; reason=${body.narration_reason ?? "null"}`);
         try {
           const records = readDiagnostics(diagnosticCursor);
@@ -128,6 +135,15 @@ async function main() {
     })));
     else console.log(diagnosticsComplete ? "No failed checks." : "Diagnostics incomplete; do not interpret missing counts as zero.");
     if (!diagnosticsComplete) console.error("FAILED-CHECK SUMMARY IS INCOMPLETE.");
+    const jev = summarizeJev(runs);
+    console.log(`Jev shadow: ${jev.narrations_scored} narrations scored; ${jev.calls_failed_or_timed_out} calls failed or timed out; ${jev.not_scored} narrations not scored.`);
+    console.table(jev.questions.map(({ examples, ...counts }) => counts));
+    for (const question of jev.questions) {
+      console.log(`Jev ${question.question}: up to 5 highest-probability examples above 0.5`);
+      if (question.examples.length) console.table(question.examples);
+      else console.log("No beats above 0.5.");
+    }
+    if (jev.missing_telemetry) console.error(`JEV SUMMARY INCOMPLETE: ${jev.missing_telemetry} responses missing telemetry.`);
     console.log(`${summary.provider_attempts} provider calls; ${rateDeferrals} rate-limit deferrals. Saved ${output}`);
   }
 }
