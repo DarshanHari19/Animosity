@@ -31,7 +31,9 @@ bodies at least 1 KiB on supported Node versions, so a tiny availability probe
 can succeed while real narration evaluations fail. Historical shadow failures
 did not retain exception classifications or Jev-only timings; do not invent them.
 
-**How to apply:** When authorized to fix transport configuration, use the SDK's
-documented `compression: false` option, preserving typed System One requests.
+**How to apply:** Use the SDK's documented `compression: false` option with this
+managed transport, preserving typed System One requests. A real-bout request
+returned typed probabilities successfully once compression was disabled; do not
+replace the question protocol or narration rules to address this transport issue.
 Keep safe error categories and durations if adding diagnostics; never expose
 credentials or attribute historical statuses/latencies without recorded evidence.

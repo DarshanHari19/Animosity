@@ -9,7 +9,7 @@ import { createFightRateLimiter } from "./limits";
 import { environmentPhrase, humanWording } from "./wording";
 import { BUILD_ID } from "../src/build-id";
 import { EVAL_BYPASS_HEADER, narrationCacheKey, type NarrationCache } from "./narration-cache";
-import { JevReportSchema, type JevReport } from "./jev-telemetry";
+import { JevReportSchema, unavailableJevReport, type JevReport } from "./jev-telemetry";
 
 type RouterOptions = { cache?: NarrationCache; buildId?: string; development?: boolean };
 
@@ -85,7 +85,7 @@ export function createFightRouter(
               ...(bypass ? { onShadowResult: (report: JevReport) => {
                 // Never let malformed observational data affect a valid bout.
                 const checked = JevReportSchema.safeParse(report);
-                jevReport = checked.success ? checked.data : { status: "failed", reason: "failed_or_timed_out" };
+                jevReport = checked.success ? checked.data : unavailableJevReport();
               } } : {}),
             }));
             narration_source = "model";

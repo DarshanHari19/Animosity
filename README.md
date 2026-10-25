@@ -55,6 +55,8 @@ or approves narration. Invalid narration never reaches Jev; cache hits make no
 provider calls. Jev failures/timeouts log `jev_shadow_unavailable` and leave the
 validated narration unchanged. The one shadow call has a 10-second timeout and
 no retries; it is separate from the unchanged narration retry and daily cap.
+TypeSafe requests use `compression: false`: the managed transport does not accept
+zstd-compressed bodies.
 
 ## Fill in the science
 
@@ -393,3 +395,10 @@ Jev telemetry comes from the `jev_shadow` response extension, returned only when
 `X-Animosity-Eval-Bypass-Cache: 1` is sent to a **development** API. Normal
 responses (and production responses even with that header) are unchanged. Eval
 stops on missing/invalid Jev telemetry instead of assuming zero scores.
+Each Jev call now records `elapsed_ms` and `http_status` (null if no HTTP response
+was received). Failures include a sanitized `failure_category`: `timeout`,
+`http_error`, `parse_error`, or the separate `transport_error`,
+`configuration_error`, and `internal_error` categories. Eval prints category
+counts, HTTP-error counts by status, and a per-call latency table; the saved JSON
+includes these fields too. SDK error messages, headers, and raw error bodies are
+never included in this telemetry.

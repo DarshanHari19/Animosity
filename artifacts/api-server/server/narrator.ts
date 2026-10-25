@@ -17,7 +17,7 @@ import { deterministicFinish } from "./narration-finish";
 import { nonFinishChecks } from "./narration-non-finish";
 import { climaxChecks } from "./narration-climax";
 import { reviewJevShadow, type ShadowInput } from "./jev-shadow";
-import type { JevReport } from "./jev-telemetry";
+import { unavailableJevReport, type JevReport } from "./jev-telemetry";
 
 type Options = {
   // Dependency injection is for tests; production reads configuration only here.
@@ -212,7 +212,7 @@ export async function narrateMatchup(
           if (report) options.onShadowResult?.(report);
         } catch {
           // Telemetry callbacks are observational too; neither can trigger retry.
-          try { options.onShadowResult?.({ status: "failed", reason: "failed_or_timed_out" }); } catch { /* no effect */ }
+          try { options.onShadowResult?.(unavailableJevReport()); } catch { /* no effect */ }
         }
       }
       return envelope.beats;

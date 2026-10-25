@@ -137,6 +137,11 @@ async function main() {
     if (!diagnosticsComplete) console.error("FAILED-CHECK SUMMARY IS INCOMPLETE.");
     const jev = summarizeJev(runs);
     console.log(`Jev shadow: ${jev.narrations_scored} narrations scored; ${jev.calls_failed_or_timed_out} calls failed or timed out; ${jev.not_scored} narrations not scored.`);
+    console.log("Jev failures by sanitized category:");
+    console.table(jev.failure_counts);
+    if (jev.http_error_counts.length) console.table(jev.http_error_counts);
+    console.log("Jev call timings (milliseconds):");
+    console.table(jev.calls);
     console.table(jev.questions.map(({ examples, ...counts }) => counts));
     for (const question of jev.questions) {
       console.log(`Jev ${question.question}: up to 5 highest-probability examples above 0.5`);

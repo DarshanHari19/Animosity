@@ -6,6 +6,7 @@ import { FightError } from "./errors";
 import type { MatchupResult } from "./schemas";
 import { fixtureResult, fixtureBeats, fixtureEvidence, fixtureClimax } from "./test-helpers";
 import type { EvidenceItem } from "./narration-tool";
+import { unavailableJevReport } from "./jev-telemetry";
 
 // Fictional test-only output; this is NOT a scoring implementation.
 const a = animals[0]!;
@@ -100,7 +101,7 @@ test("Jev telemetry reports success or failure without changing acceptance, beat
   for (const fails of [false, true]) {
     const mock = mockProvider([provider(beatsFor(a.name))]);
     const reports: unknown[] = [];
-    const report = { status: "scored" as const, beats: [{
+    const report = { status: "scored" as const, elapsed_ms: 25, http_status: 200, beats: [{
       beat_index: 0, text: beatsFor(a.name)[0]!.text,
       unsupported_reason_probability: 0.9, contradictory_winner_probability: 0.8,
     }] };
@@ -111,7 +112,7 @@ test("Jev telemetry reports success or failure without changing acceptance, beat
     });
     assert.deepEqual(output, beatsFor(a.name));
     assert.equal(mock.calls.length, 1);
-    assert.deepEqual(reports, [fails ? { status: "failed", reason: "failed_or_timed_out" } : report]);
+    assert.deepEqual(reports, [fails ? unavailableJevReport() : report]);
   }
 });
 
@@ -119,7 +120,7 @@ test("a throwing Jev telemetry observer cannot trigger narration retry or hide v
   const mock = mockProvider([provider(beatsFor(a.name))]);
   const output = await narrateMatchup(result, a, b, {
     ...mock.options,
-    shadowReview: async () => ({ status: "failed", reason: "failed_or_timed_out" }),
+    shadowReview: async () => unavailableJevReport(),
     onShadowResult: () => { throw Error("test-only observer failure"); },
   });
   assert.deepEqual(output, beatsFor(a.name));

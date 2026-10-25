@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { z } from "zod";
 import { animals } from "./animals";
 import { fixtureBeats, fixtureResult, startFightServer } from "./test-helpers";
-import { JevReportSchema, summarizeJev, type JevReport } from "./jev-telemetry";
+import { JevReportSchema, summarizeJev, unavailableJevReport, type JevReport } from "./jev-telemetry";
 import { EVAL_BYPASS_HEADER } from "./narration-cache";
 import type { narrateMatchup } from "./narrator";
 import { FightError } from "./errors";
@@ -13,12 +13,12 @@ const a = animals[0]!, b = animals[1]!;
 const input = { animalA: a.name, animalB: b.name, environment: "land", mode: "forced_fight" };
 const result = fixtureResult({ kind: "favored", animal: a.name });
 const scored: JevReport = {
-  status: "scored", beats: [{ beat_index: 0, text: "Test-only beat.",
+  status: "scored", elapsed_ms: 27, http_status: 200, beats: [{ beat_index: 0, text: "Test-only beat.",
     unsupported_reason_probability: 0.92, contradictory_winner_probability: 0.72 }],
 };
 
 test("only the development eval header exposes Jev scores or failures; regular API shape stays identical", async t => {
-  for (const report of [scored, { status: "failed", reason: "failed_or_timed_out" } as const]) {
+  for (const report of [scored, unavailableJevReport()]) {
     for (const development of [true, false]) {
       let observed = 0;
       const narrate: typeof narrateMatchup = async (_r, _a, _b, options) => {
@@ -53,13 +53,13 @@ test("narration rejected before Jev is explicitly not scored, not a failed Jev c
 
 test("Jev summary counts strict thresholds per question and keeps at most five examples with probabilities", () => {
   const values = [0.5, 0.5001, 0.7, 0.7001, 0.9, 0.9001, 1];
-  const report: JevReport = { status: "scored", beats: values.map((p, index) => ({
+  const report: JevReport = { status: "scored", elapsed_ms: 27, http_status: 200, beats: values.map((p, index) => ({
     beat_index: index, text: `Test beat ${index}`,
     unsupported_reason_probability: p, contradictory_winner_probability: 0.1,
   })) };
   const summary = summarizeJev([
     { case_id: 1, run: 1, jev_shadow: report },
-    { case_id: 2, run: 1, jev_shadow: { status: "failed", reason: "failed_or_timed_out" } },
+    { case_id: 2, run: 1, jev_shadow: unavailableJevReport() },
     { case_id: 3, run: 1, jev_shadow: { status: "not_scored" } },
   ]);
   assert.equal(summary.narrations_scored, 1);
