@@ -112,13 +112,14 @@ export function ArenaStage({ red, blue, environment, mode, beat, reducedMotion, 
 
       {fighters.map(([side, animal, scale]) => {
         const pose = phasePose(beat, side, actorSide, mode, phase);
-        const croc = bodyTypeFor(animal).type === "reptile";
+        const spec = bodyTypeFor(animal);
+        const croc = spec.type === "reptile" && spec.variant !== "komodo";
         const submerged = croc && floor !== "sand";
         return (
           <div key={side} className={`fighter fighter-${side}${submerged ? " submerged" : ""}`} data-testid={`figure-${side}`}
             data-scale={scale.toFixed(3)} data-motion={reducedMotion ? "reduced" : "full"} data-submerged={submerged ? "true" : "false"}
             style={{
-              bottom: footFor(floor, submerged), zIndex: 2, width: `${Math.round(36 * scale * 10) / 10}%`, minWidth: 64, maxWidth: 400,
+              bottom: footFor(floor, submerged), zIndex: 2, width: `${36 * scale}%`,
               transform: reducedMotion ? undefined : transformFor(pose, side),
               opacity: reducedMotion ? undefined : pose.o,
             }}>

@@ -64,12 +64,24 @@ Each animal has a level for each environment: full, hampered, or cannot.
 | Animal | Land | Shallow water | Deep water |
 |---|---|---|---|
 | Lion | full | hampered | cannot |
-| Grizzly bear | full | full | cannot |
+| Grizzly bear | full | full | hampered |
 | Gorilla | full | hampered | cannot |
 | Rhinoceros | full | hampered | cannot |
 | Hippopotamus | full | full | hampered |
 | Saltwater crocodile | hampered | full | full |
 | Great white shark | cannot | cannot | full |
+| Tiger | full | full | hampered |
+| Polar bear | full | full | hampered |
+| African bush elephant | full | full | hampered |
+| Orca | cannot | cannot | full |
+| Komodo dragon | full | hampered | hampered |
+
+The five additions use unsourced temperament labels (tier null): Tiger, Orca,
+and Komodo dragon aggressive; Polar bear and African bush elephant defensive.
+These are model assumptions, not sourced behavior findings. Komodo mass and
+snout-vent length come from a sex-unrecorded sample despite the app's adult-male
+profile. Missing lengths and speeds stay null. Length definitions differ across
+sources and do not enter scoring or cube-root mass scaling.
 
 ## How the outcome is calculated
 
@@ -133,6 +145,7 @@ Differences of logs are used instead of log of a ratio to avoid overflow.
 
 | Date | Change | Reason |
 |---|---|---|
+| Oct 25, 2026 | Added tiger, polar bear, African bush elephant, orca, Komodo dragon; grizzly hampered in deep water | Grow to 12 animals; consistency for strong swimmers |
 | Oct 23, 2026 | Source upgrade (6 masses to tier 1 or 2; lion bite corrected from an unsupported 5500 N); bite force compared only at the same bite point | Better provenance; avoid comparing different teeth. |
 | Oct 22, 2026 | Environment levels (full, hampered, cannot) replace functions_in; environment handicap factor of 0.8 | A lion in shallow water can fight, but not at full strength; on/off gates couldn't express that |
 | Oct 22, 2026 | UI shows forced_fight as "Arena" (default) and realistic as "In the wild"; even shown as "Too close to call" | Most users want the fight; "even" read as 50/50 |

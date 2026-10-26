@@ -357,6 +357,24 @@ describe("Bout playback", () => {
     expect(figure("blue").dataset.motion).toBe("full");
   });
 
+  it("preserves cube-root figure widths across the elephant/Komodo mass range", async () => {
+    animalReply = async () => jsonResponse([
+      { ...animals[0]!, name: "African bush elephant", mass_kg: 6000 },
+      { ...animals[1]!, name: "Komodo dragon", mass_kg: 66 },
+    ]);
+    mountHome();
+    await advance();
+    selectAnimals("African bush elephant", "Komodo dragon");
+    fireEvent.click(startButton());
+    await advance();
+    fireEvent.click(screen.getByRole("button", { name: "Ring the bell" }));
+    await advance();
+    const red = figure("red"), blue = figure("blue");
+    expect(parseFloat(red.style.width) / parseFloat(blue.style.width)).toBeCloseTo(Math.cbrt(6000 / 66), 8);
+    expect(blue.style.minWidth).toBe("");
+    expect(red.style.maxWidth).toBe("");
+  });
+
   it.each([
     ["land", "sand"], ["shallow_water", "shallows"], ["deep_water", "ocean"],
   ] as const)("terrain %s sets the %s stage floor", async (env, floor) => {
@@ -620,7 +638,7 @@ describe("Verdict", () => {
     fireEvent.click(screen.getByTestId("button-expand-bite"));
     expect(screen.getByTestId("text-detail-bite-reason")).toHaveTextContent("Hippopotamus has no usable bite force value");
     expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("No peer-reviewed value.");
-    expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("The widely shared 8,100 N figure comes from a TV program, not a study.");
+    expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("The widely shared 8,100 N ('1,800 psi') figure traces to a TV segment and has been repeated in papers without a measurement.");
     expect(screen.getByTestId("detail-tape-bite")).toHaveTextContent("Bite force is compared only when both values come from the same source tier and were measured at the same kind of tooth.");
     fireEvent.click(screen.getByTestId("button-expand-style"));
     expect(screen.getByTestId("text-source-style-0")).toHaveTextContent("A label that shapes the narration. Not sourced or scored yet.");

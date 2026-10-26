@@ -3,14 +3,23 @@ import { test } from "node:test";
 import { evaluationCases, summarizeEvaluation, type EvaluationRun } from "./evaluation";
 import { fixtureResult } from "./test-helpers";
 
-test("evaluation preserves all 20 baseline scenarios, seven animals, three environments and both modes", () => {
-  assert.equal(evaluationCases.length, 20);
-  assert.equal(new Set(evaluationCases.map(c => JSON.stringify(c.input))).size, 20);
-  assert.equal(new Set(evaluationCases.flatMap(c => [c.input.animalA, c.input.animalB])).size, 7);
+test("evaluation preserves 20 baseline scenarios and adds five, covering twelve animals", () => {
+  assert.equal(evaluationCases.length, 25);
+  assert.equal(new Set(evaluationCases.map(c => JSON.stringify(c.input))).size, 25);
+  assert.equal(new Set(evaluationCases.slice(0, 20).flatMap(c => [c.input.animalA, c.input.animalB])).size, 7);
+  assert.equal(new Set(evaluationCases.flatMap(c => [c.input.animalA, c.input.animalB])).size, 12);
   assert.deepEqual([...new Set(evaluationCases.map(c => c.input.environment))].sort(), ["deep_water", "land", "shallow_water"]);
   assert.deepEqual([...new Set(evaluationCases.map(c => c.input.mode))].sort(), ["forced_fight", "realistic"]);
-  assert.equal(evaluationCases.length * 3, 60);
+  assert.equal(evaluationCases.length * 3, 75);
   assert.deepEqual(evaluationCases[9]!.input, { animalA: "Great white shark", animalB: "Lion", environment: "deep_water", mode: "forced_fight", encounter: "face_off" });
+  assert.deepEqual(evaluationCases.slice(20).map(({ case_id, input }) =>
+    [case_id, input.animalA, input.animalB, input.environment, input.mode]), [
+    [21, "Tiger", "Lion", "land", "forced_fight"],
+    [22, "Polar bear", "Grizzly bear", "land", "forced_fight"],
+    [23, "African bush elephant", "Rhinoceros", "land", "forced_fight"],
+    [24, "Orca", "Great white shark", "deep_water", "forced_fight"],
+    [25, "Komodo dragon", "Gorilla", "land", "forced_fight"],
+  ]);
 });
 test("evaluation distinguishes first-pass, recovered retry, invalid and capped outcomes without reading raw logs", () => {
   // Test-only response records; never used by the live evaluator.

@@ -20,15 +20,15 @@ async function main() {
     "base-url": { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) {
-    console.log("pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nDefault: all 20 scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.");
+    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.`);
     return;
   }
   const repeats = Number(values.runs);
   if (!Number.isInteger(repeats) || repeats < 1 || repeats > 3) throw Error("--runs must be 1, 2 or 3.");
   const selected = values.scenarios?.split(",").map(Number) ?? evaluationCases.map(c => c.case_id);
   if (!selected.length || new Set(selected).size !== selected.length ||
-    selected.some(id => !Number.isInteger(id) || id < 1 || id > 20)) {
-    throw Error("--scenarios must contain distinct IDs from 1 through 20.");
+    selected.some(id => !evaluationCases.some(c => c.case_id === id))) {
+    throw Error(`--scenarios must contain distinct IDs from 1 through ${evaluationCases.length}.`);
   }
   const cases = selected.map(id => evaluationCases[id - 1]!);
   const base = values["base-url"] ?? (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "");

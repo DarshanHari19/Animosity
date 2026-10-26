@@ -2,7 +2,7 @@ import type { z } from "zod";
 import type { fightResponseSchemaFor, EngineContext } from "./schemas";
 import type { JevReport } from "./jev-telemetry";
 
-// The same twenty baseline scenarios; not invented scoring or narration.
+// Original twenty baseline scenarios plus five approved additions.
 export const evaluationCases = [
   ["Lion", "Lion", "land", "realistic"],
   ["Hippopotamus", "Lion", "land", "realistic"],
@@ -24,6 +24,11 @@ export const evaluationCases = [
   ["Great white shark", "Great white shark", "deep_water", "realistic"],
   ["Saltwater crocodile", "Saltwater crocodile", "shallow_water", "realistic"],
   ["Hippopotamus", "Hippopotamus", "shallow_water", "realistic"],
+  ["Tiger", "Lion", "land", "forced_fight"],
+  ["Polar bear", "Grizzly bear", "land", "forced_fight"],
+  ["African bush elephant", "Rhinoceros", "land", "forced_fight"],
+  ["Orca", "Great white shark", "deep_water", "forced_fight"],
+  ["Komodo dragon", "Gorilla", "land", "forced_fight"],
 ].map(([animalA, animalB, environment, mode], index) => ({
   case_id: index + 1,
   input: { animalA: animalA!, animalB: animalB!, environment, mode, encounter: "face_off" } as

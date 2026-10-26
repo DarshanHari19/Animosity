@@ -10,12 +10,13 @@ const a = animals[0]!;
 const b = animals[1]!;
 const validInput = { animalA: a.name, animalB: b.name, environment: "land" };
 
-test("traits include all seven user-provided animals and their supplied values", () => {
-  assert.equal(animals.length, 7);
-  assert.equal(new Set(animals.map((item) => item.name)).size, 7);
+test("traits include all twelve approved animals and their supplied values", () => {
+  assert.equal(animals.length, 12);
+  assert.equal(new Set(animals.map((item) => item.name)).size, 12);
   assert.deepEqual(animals.map((animal) => animal.name), [
     "Lion", "Grizzly bear", "Saltwater crocodile", "Gorilla",
     "Hippopotamus", "Great white shark", "Rhinoceros",
+    "Tiger", "Polar bear", "African bush elephant", "Orca", "Komodo dragon",
   ]);
   assert.deepEqual(animals[0], {
     name: "Lion", profile: "adult_male", mass_kg: 188, length_m: 2.5,
@@ -32,7 +33,7 @@ test("traits include all seven user-provided animals and their supplied values",
       bite_force_n: {
         tier: 2,
         citation: "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
-        note: "Bite point: canine.",
+        note: "Bite point: canine. Christiansen & Wroe (2007) body masses are literature averages weighted by sex ratio, not specimen masses; not the same population as this profile's mass_kg.",
       },
     },
   });
@@ -40,14 +41,16 @@ test("traits include all seven user-provided animals and their supplied values",
   assert.equal(animals.every((animal) => animal.profile === "adult_male"), true);
   assert.equal(animals.every((animal) => animal.field_sources !== undefined), true);
   assert.deepEqual(animals.map(animal => animal.bite_point),
-    ["canine", "canine", "molariform", "molar", null, null, null]);
-  assert.deepEqual(animals.map(animal => animal.field_sources.mass_kg!.tier), [1, 1, 2, 1, 1, 2, 1]);
-  assert.deepEqual(animals.map(animal => animal.field_sources.bite_force_n!.tier), [2, 2, 1, 2, null, null, null]);
+    ["canine", "canine", "molariform", "molar", null, null, null, "canine", "canine", null, null, "front_teeth"]);
+  assert.deepEqual(animals.map(animal => animal.field_sources.mass_kg!.tier), [1, 1, 2, 1, 1, 2, 1, 3, 1, 2, 3, 1]);
+  assert.deepEqual(animals.map(animal => animal.field_sources.bite_force_n!.tier), [2, 2, 1, 2, null, null, null, 2, 2, null, null, 1]);
   assert.match(animals[5]!.field_sources.mass_kg!.citation, /calculated from/);
   assert.deepEqual(animals.map((animal) => Object.values(animal.environments)), [
-    ["full", "hampered", "cannot"], ["full", "full", "cannot"], ["hampered", "full", "full"],
+    ["full", "hampered", "cannot"], ["full", "full", "hampered"], ["hampered", "full", "full"],
     ["full", "hampered", "cannot"], ["full", "full", "hampered"], ["cannot", "cannot", "full"],
     ["full", "hampered", "cannot"],
+    ["full", "full", "hampered"], ["full", "full", "hampered"], ["full", "full", "hampered"],
+    ["cannot", "cannot", "full"], ["full", "hampered", "hampered"],
   ]);
   assert.deepEqual(
     animals.map(({ mass_kg, length_m, top_speed_kmh, bite_force_n }) =>
@@ -56,6 +59,8 @@ test("traits include all seven user-provided animals and their supplied values",
       [188, 2.5, 80, 1315], [192, 2.0, 56, 1410], [408, 4.3, 29, 16414],
       [168, 1.7, 40, 4067], [1354, 3.5, 30, null], [548, 3.8, 40, null],
       [2012, 3.8, 50, null],
+      [235, 2.8, null, 1472], [398, 2.26, null, 1647], [6000, null, null, null],
+      [4860, 7.2, null, null], [66, 1.46, null, 149],
     ],
     "Only the explicitly approved source upgrade changes measurements",
   );
@@ -87,7 +92,7 @@ test("environment sources retain reviewed habitat references and original tiers"
     ] },
     { tier: null, urls: ["https://www.marylandzoo.org/animal/southern-white-rhinoceros/"] },
   ];
-  animals.forEach((animal, index) => {
+  animals.slice(0, 7).forEach((animal, index) => {
     const source = animal.field_sources.environments!;
     const reviewed = expected[index]!;
     assert.equal(source.tier, reviewed.tier, animal.name);
@@ -98,7 +103,7 @@ test("environment sources retain reviewed habitat references and original tiers"
 });
 
 test("animal validation uses exact enums and nonnegative nullable numeric fields", () => {
-  for (const bite_point of ["canine", "molar", "molariform", null]) {
+  for (const bite_point of ["canine", "molar", "molariform", "front_teeth", null]) {
     assert.equal(AnimalSchema.safeParse({ ...a, bite_point }).success, true);
   }
   assert.equal(AnimalSchema.safeParse({ ...a, bite_point: "carnassial" }).success, false);
@@ -120,6 +125,9 @@ test("animal validation uses exact enums and nonnegative nullable numeric fields
   assert.equal(AnimalSchema.safeParse({ ...a, profile: undefined }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, mass_kg: -1 }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, bite_force_n: null }).success, true);
+  assert.equal(AnimalSchema.safeParse({ ...a, length_m: null, top_speed_kmh: null }).success, true);
+  assert.equal(AnimalSchema.safeParse({ ...a, length_m: -1 }).success, false);
+  assert.equal(AnimalSchema.safeParse({ ...a, top_speed_kmh: -1 }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, bite_force_n: -1 }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, bite_force_psi: 5500 }).success, false);
   assert.equal(AnimalSchema.safeParse({ ...a, sources: [] }).success, false);

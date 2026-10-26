@@ -3,7 +3,7 @@
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
 Replit PostgreSQL stores validated narration only. No authentication, hit points, or game loop.
 
-**This is a limited hypothetical model, not a scientific prediction.** The seven
+**This is a limited hypothetical model, not a scientific prediction.** The twelve
 animal profiles and trait values were entered from user-provided data. The
 environment-level references have been reviewed against zoological sources, with
 uncertainties recorded; other trait sources and numerical measurements have not
@@ -64,9 +64,10 @@ zstd-compressed bodies.
 
 The backend folder is **`artifacts/api-server/server/`**:
 
-- `traits.json`: seven animal records copied from the user-provided file:
+- `traits.json`: twelve approved animal profiles:
   Lion, Grizzly bear, Saltwater crocodile, Gorilla, Hippopotamus, Great white
-  shark, and Rhinoceros. These are the values now sent to the animal selectors
+  shark, Rhinoceros, Tiger, Polar bear, African bush elephant, Orca, and Komodo dragon.
+  These are the values now sent to the animal selectors
   and API. Review the supplied numbers and URLs for accuracy before relying on
   them. `bite_force_n` accepts `null` for unknown or not applicable, and
   `field_sources` records `{ citation, tier, note }` per trait. `citation` holds
@@ -111,7 +112,7 @@ The numerical score is
 `0.8 * (log2(massA) - log2(massB))`, plus
 `0.5 * (log2(biteA) - log2(biteB))` only when both bites, equal non-null
 source tiers, and equal non-null `bite_point` values are present. The bite point
-is `canine`, `molar`, `molariform`, or unknown (`null`). Otherwise the bite factor is zero. Cutoffs are
+is `canine`, `molar`, `molariform`, `front_teeth`, or unknown (`null`). Otherwise the bite factor is zero. Cutoffs are
 `>= 0.5` for A favored, `<= -0.5` for B favored, and even otherwise; with bite
 excluded this requires roughly a 1.54x mass advantage. No other physical traits
 contribute. Matching tiers do not establish that measurement methods match, and
@@ -345,7 +346,7 @@ PostgreSQL `DATABASE_URL`.
 With the managed API workflow running, use the Shell from the project root:
 
 ```sh
-pnpm eval                            # same baseline: 20 scenarios × 3 runs
+pnpm eval                            # 20 baseline + 5 added scenarios × 3 runs
 pnpm eval --scenarios 2,10 --runs 1   # just two scenarios once
 pnpm eval --help
 ```
@@ -355,7 +356,8 @@ normal rate limit and daily provider-call cap. It never reads LLM credentials or
 resets/bypasses limits. It sends `X-Animosity-Eval-Bypass-Cache: 1`, which bypasses
 cache reads **and writes only in development**; production ignores this header.
 Requests start at least 6.5 seconds apart; expect the full
-batch to take several minutes and use up to 120 provider calls.
+batch to take several minutes and use up to 150 narration-provider calls,
+plus one Jev shadow call per accepted narration.
 
 Before every fight it compares `/api/health` against the current build manifest
 and stops on a mismatch. Default host is `REPLIT_DEV_DOMAIN`; `--base-url` can

@@ -39,7 +39,7 @@
       "bite_force_n": {
         "citation": "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
         "tier": 2,
-        "note": "Bite point: canine."
+        "note": "Bite point: canine. Christiansen & Wroe (2007) body masses are literature averages weighted by sex ratio, not specimen masses; not the same population as this profile's mass_kg."
       }
     },
     "bite_point": "canine"
@@ -58,13 +58,13 @@
     "environments": {
       "land": "full",
       "shallow_water": "full",
-      "deep_water": "cannot"
+      "deep_water": "hampered"
     },
     "field_sources": {
       "environments": {
         "citation": "NPS Katmai, Brown Bear FAQ: https://www.nps.gov/katm/learn/photosmultimedia/brown-bear-frequently-asked-questions.htm; Mammals: https://www.nps.gov/katm/learn/nature/natscimamm.htm",
         "tier": null,
-        "note": "Current model: land full; shallow water full; deep water cannot. Coastal brown-bear observations do not verify this grizzly profile's deep-water exclusion."
+        "note": "Current model: land full; shallow water full; deep water hampered. Bears swim well; swimming ability does not verify unrestricted fighting performance in deep water."
       },
       "mass_kg": {
         "citation": "Blanchard (1987), Ursus 7:99-107.",
@@ -84,7 +84,7 @@
       "bite_force_n": {
         "citation": "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
         "tier": 2,
-        "note": "Bite point: canine."
+        "note": "Bite point: canine. Christiansen & Wroe (2007) body masses are literature averages weighted by sex ratio, not specimen masses; not the same population as this profile's mass_kg."
       }
     },
     "bite_point": "canine"
@@ -313,5 +313,188 @@
       }
     },
     "bite_point": null
+  },
+  {
+    "name": "Tiger",
+    "profile": "adult_male",
+    "mass_kg": 235,
+    "length_m": 2.8,
+    "top_speed_kmh": null,
+    "primary_weapon": "bite",
+    "bite_force_n": 1472,
+    "bite_point": "canine",
+    "armor": "none",
+    "temperament": "aggressive",
+    "fighting_style": "ambush",
+    "environments": { "land": "full", "shallow_water": "full", "deep_water": "hampered" },
+    "field_sources": {
+      "mass_kg": {
+        "citation": "Smith et al. (1983), J. Wildl. Manage. 47:255-259, cited via Wikipedia, Tiger: https://en.wikipedia.org/wiki/Tiger",
+        "tier": 3,
+        "note": "Seven Chitwan males; primary paper not yet read. Retained at reference-summary tier."
+      },
+      "length_m": {
+        "citation": "Wikipedia, Tiger: https://en.wikipedia.org/wiki/Tiger",
+        "tier": 3,
+        "note": "Upper end of the cited 1.4-2.8 m head-body range, not an average or a matched measurement of the 235 kg Chitwan profile."
+      },
+      "bite_force_n": {
+        "citation": "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
+        "tier": 2,
+        "note": "Bite point: canine. Body masses in this study are literature averages weighted by sex ratio, not specimen masses; not the same population as this profile's mass_kg."
+      },
+      "environments": {
+        "citation": "Smithsonian's National Zoo, Tiger: https://nationalzoo.si.edu/animals/tiger",
+        "tier": 3,
+        "note": "Excellent swimmers. Current model: land full; shallow water full; deep water hampered. Habitat observations do not measure fighting performance."
+      },
+      "temperament": { "citation": "", "tier": null, "note": "Unsourced aggressive label, chosen from the existing enum; a model assumption, not a measured trait." },
+      "fighting_style": { "citation": "", "tier": null, "note": "Ambush label for narration; unsourced and unscored." },
+      "top_speed_kmh": { "citation": "", "tier": null, "note": "No speed supplied; left unknown rather than guessed." }
+    }
+  },
+  {
+    "name": "Polar bear",
+    "profile": "adult_male",
+    "mass_kg": 398,
+    "length_m": 2.26,
+    "top_speed_kmh": null,
+    "primary_weapon": "claws",
+    "bite_force_n": 1647,
+    "bite_point": "canine",
+    "armor": "thick_hide",
+    "temperament": "defensive",
+    "fighting_style": "grapple",
+    "environments": { "land": "full", "shallow_water": "full", "deep_water": "hampered" },
+    "field_sources": {
+      "mass_kg": {
+        "citation": "Rode, Amstrup & Regehr (2010), Ecological Applications 20:768-782.",
+        "tier": 1,
+        "note": "Asymptotic adult male mass, Southern Beaufort Sea; not a single specimen."
+      },
+      "length_m": {
+        "citation": "Rode, Amstrup & Regehr (2010), Ecological Applications 20:768-782.",
+        "tier": 1,
+        "note": "Head-body length, Southern Beaufort Sea male profile."
+      },
+      "bite_force_n": {
+        "citation": "Christiansen & Wroe (2007), Ecology 88(2):347-358, Table 1.",
+        "tier": 2,
+        "note": "Bite point: canine. Body masses in this study are literature averages weighted by sex ratio, not specimen masses; not the same population as this profile's mass_kg."
+      },
+      "environments": {
+        "citation": "Pagano et al. (2012), Canadian Journal of Zoology 90:663-676.",
+        "tier": 1,
+        "note": "Swimming observations. Current model: land full; shallow water full; deep water hampered. These fighting levels remain model assumptions."
+      },
+      "temperament": { "citation": "", "tier": null, "note": "Unsourced defensive label, chosen from the existing enum; a model assumption, not a measured trait." },
+      "fighting_style": { "citation": "", "tier": null, "note": "Grapple label for narration; unsourced and unscored." },
+      "top_speed_kmh": { "citation": "", "tier": null, "note": "No speed supplied; left unknown rather than guessed." }
+    }
+  },
+  {
+    "name": "African bush elephant",
+    "profile": "adult_male",
+    "mass_kg": 6000,
+    "length_m": null,
+    "top_speed_kmh": null,
+    "primary_weapon": "tusks",
+    "bite_force_n": null,
+    "bite_point": null,
+    "armor": "thick_hide",
+    "temperament": "defensive",
+    "fighting_style": "charge",
+    "environments": { "land": "full", "shallow_water": "full", "deep_water": "hampered" },
+    "field_sources": {
+      "mass_kg": {
+        "citation": "Larramendi (2016), Acta Palaeontologica Polonica 61:537-574.",
+        "tier": 2,
+        "note": "Average adult male mass estimate."
+      },
+      "length_m": { "citation": "", "tier": null, "note": "Length not supplied; unknown." },
+      "bite_force_n": { "citation": "", "tier": null, "note": "No peer-reviewed bite value supplied; not compared." },
+      "environments": {
+        "citation": "West (2002), News in Physiological Sciences 17:47-50.",
+        "tier": 1,
+        "note": "Current model: land full; shallow water full; deep water hampered. Swimming physiology is not a direct measure of fighting performance."
+      },
+      "temperament": { "citation": "", "tier": null, "note": "Unsourced defensive label, chosen from the existing enum; a model assumption, not a measured trait." },
+      "fighting_style": { "citation": "", "tier": null, "note": "Charge label for narration; unsourced and unscored." },
+      "top_speed_kmh": { "citation": "", "tier": null, "note": "No speed supplied; left unknown rather than guessed." }
+    }
+  },
+  {
+    "name": "Orca",
+    "profile": "adult_male",
+    "mass_kg": 4860,
+    "length_m": 7.2,
+    "top_speed_kmh": null,
+    "primary_weapon": "bite",
+    "bite_force_n": null,
+    "bite_point": null,
+    "armor": "none",
+    "temperament": "aggressive",
+    "fighting_style": "charge",
+    "environments": { "land": "cannot", "shallow_water": "cannot", "deep_water": "full" },
+    "field_sources": {
+      "mass_kg": {
+        "citation": "Alliance of Marine Mammal Parks and Aquariums (AMMPA), Killer Whale Fact Sheet.",
+        "tier": 3,
+        "note": "Two captive adult males; not the same sample as the length reference."
+      },
+      "length_m": {
+        "citation": "Kotik et al. (2022), Marine Mammal Science.",
+        "tier": 1,
+        "note": "Total length; different population/source from the AMMPA mass profile."
+      },
+      "bite_force_n": { "citation": "", "tier": null, "note": "No peer-reviewed bite value supplied; not compared." },
+      "environments": {
+        "citation": "NOAA Fisheries, Killer Whale: https://www.fisheries.noaa.gov/species/killer-whale",
+        "tier": 3,
+        "note": "Current model: land cannot; shallow water cannot; deep water full. The retained shallow-water exclusion is a model assumption, not a claim that orcas never enter shallow water."
+      },
+      "temperament": { "citation": "", "tier": null, "note": "Unsourced aggressive label, chosen from the existing enum; a model assumption, not a measured trait." },
+      "fighting_style": { "citation": "", "tier": null, "note": "Charge label for narration; unsourced and unscored." },
+      "top_speed_kmh": { "citation": "", "tier": null, "note": "No speed supplied; left unknown rather than guessed." }
+    }
+  },
+  {
+    "name": "Komodo dragon",
+    "profile": "adult_male",
+    "mass_kg": 66,
+    "length_m": 1.46,
+    "top_speed_kmh": null,
+    "primary_weapon": "bite",
+    "bite_force_n": 149,
+    "bite_point": "front_teeth",
+    "armor": "scales",
+    "temperament": "aggressive",
+    "fighting_style": "ambush",
+    "environments": { "land": "full", "shallow_water": "hampered", "deep_water": "hampered" },
+    "field_sources": {
+      "mass_kg": {
+        "citation": "Jessop et al. (2006), Oikos 112:422-429.",
+        "tier": 1,
+        "note": "Largest 15% of wild dragons; sex not recorded. The adult_male app profile is an assumption, not a sex-verified sample."
+      },
+      "length_m": {
+        "citation": "Jessop et al. (2006), Oikos 112:422-429.",
+        "tier": 1,
+        "note": "Snout-vent length, not total length; same largest-15% sample, sex not recorded."
+      },
+      "bite_force_n": {
+        "citation": "D'Amore et al. (2011), PLoS ONE 6:e26226: https://doi.org/10.1371/journal.pone.0026226",
+        "tier": 1,
+        "note": "Measured at the front teeth. Slashing and venom are not modeled by this engine."
+      },
+      "environments": {
+        "citation": "Akron Zoo, Komodo Dragon: https://www.akronzoo.org/komodo-dragon",
+        "tier": 3,
+        "note": "Current model: land full; shallow water hampered; deep water hampered. Swimming observations do not measure fighting performance."
+      },
+      "temperament": { "citation": "", "tier": null, "note": "Unsourced aggressive label, chosen from the existing enum; a model assumption, not a measured trait." },
+      "fighting_style": { "citation": "", "tier": null, "note": "Ambush label for narration; unsourced and unscored." },
+      "top_speed_kmh": { "citation": "", "tier": null, "note": "No speed supplied; left unknown rather than guessed." }
+    }
   }
 ]

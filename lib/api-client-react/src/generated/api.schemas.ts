@@ -36,6 +36,7 @@ export const AnimalBitePoint = {
   canine: 'canine',
   molar: 'molar',
   molariform: 'molariform',
+  front_teeth: 'front_teeth',
 } as const;
 
 export type AnimalArmor = typeof AnimalArmor[keyof typeof AnimalArmor];
@@ -110,10 +111,18 @@ export interface Animal {
   profile: AnimalProfile;
   /** @minimum 0 */
   mass_kg: number;
-  /** @minimum 0 */
-  length_m: number;
-  /** @minimum 0 */
-  top_speed_kmh: number;
+  /**
+     * Cited length in metres; null when unavailable. Length definitions may differ by source.
+     * @minimum 0
+     * @nullable
+     */
+  length_m: number | null;
+  /**
+     * Cited top speed; null when unavailable.
+     * @minimum 0
+     * @nullable
+     */
+  top_speed_kmh: number | null;
   primary_weapon: AnimalPrimaryWeapon;
   /**
      * @minimum 0

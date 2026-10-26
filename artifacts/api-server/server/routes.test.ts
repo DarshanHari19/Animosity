@@ -12,7 +12,7 @@ const input = { animalA: a.name, animalB: b.name };
 test("HTTP boundary rejects unknown/invalid requests and reports step 0 errors", async (t) => {
   const server = await startFightServer(t);
   const list = await (await server.getAnimals()).json() as unknown[];
-  assert.equal(list.length, 7);
+  assert.equal(list.length, 12);
   for (const invalid of [
     {}, { ...input, animalA: "Unknown" }, { ...input, environment: "air" },
     { ...input, mode: "invented" }, { ...input, encounter: "ambush" }, { ...input, extra: 1 },

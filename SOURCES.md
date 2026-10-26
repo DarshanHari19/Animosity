@@ -102,6 +102,53 @@ Matching tiers alone are insufficient: only equal known bite points can be
 compared. The source-tier definitions above and environment review below are
 unchanged.
 
+## Twelve-animal expansion — Oct 25, 2026
+
+Citation text is public; population caveats, assumptions, and review notes remain
+in internal `note` fields. No missing speed or length is guessed.
+
+| Animal | Mass (kg), tier | Length (m), tier | Mass / length attribution |
+|---|---|---|---|
+| Tiger | 235, 3 | 2.8 head-body, 3 | Smith et al. (1983), *J. Wildl. Manage.* 47:255–259, via Wikipedia; Wikipedia length |
+| Polar bear | 398, 1 | 2.26 head-body, 1 | Rode, Amstrup & Regehr (2010), *Ecol. Appl.* 20:768–782 |
+| African bush elephant | 6000, 2 | unknown, null | Larramendi (2016), *Acta Palaeontol. Pol.* 61:537–574 |
+| Orca | 4860, 3 | 7.2 total, 1 | AMMPA killer whale fact sheet / Kotik et al. (2022), *Mar. Mamm. Sci.* |
+| Komodo dragon | 66, 1 | 1.46 snout-vent, 1 | Jessop et al. (2006), *Oikos* 112:422–429 |
+
+Tiger mass is seven Chitwan males via a secondary source (primary not yet read).
+Its 2.8 m length is the upper end of Wikipedia's 1.4–2.8 m range, not a matched
+cohort mean. Polar bear mass is asymptotic male mass for the Southern Beaufort
+Sea. Orca mass is two captive adult males, not the length study's sample.
+Komodo values describe the largest 15% of wild dragons, sex unrecorded; the
+adult-male app profile does not establish the sample's sex.
+
+| Animal | Bite (N) | Tier | Bite point | Attribution |
+|---|---:|---:|---|---|
+| Tiger | 1472 | 2 | canine | Christiansen & Wroe (2007), Table 1 |
+| Polar bear | 1647 | 2 | canine | Christiansen & Wroe (2007), Table 1 |
+| Komodo dragon | 149 | 1 | front teeth (`front_teeth`) | D'Amore et al. (2011), *PLoS ONE* 6:e26226, measured |
+| African bush elephant, Orca | unknown | null | unknown | Not compared |
+
+Christiansen & Wroe (2007) masses are literature averages weighted by sex ratio,
+**not specimen masses**. Their bite estimates do not imply a mass-matched
+specimen for Lion, Grizzly bear, Tiger, or Polar bear.
+
+New environment references: Smithsonian National Zoo (Tiger, tier 3);
+Pagano et al. (2012), *Can. J. Zool.* 90:663–676 (Polar bear, tier 1);
+West (2002), *News Physiol. Sci.* 17:47–50 (Elephant, tier 1);
+NOAA Fisheries (Orca, tier 3); Akron Zoo (Komodo dragon, tier 3).
+Levels remain model assumptions about fighting, not measured swimming scores.
+Grizzly deep water is now **hampered**, not cannot; the historical review below
+is retained as historical context, not the current environment table.
+
+All five temperament labels have null tiers: Tiger, Orca, Komodo dragon
+aggressive; Polar bear, African bush elephant defensive. Styles are narration
+labels, unsourced and unscored.
+
+Hippo bite caveat: the widely shared 8,100 N ('1,800 psi') traces to a TV
+segment and has been repeated in papers without a measurement. Komodo dragons
+have a weak bite; slashing and venom are outside this engine's scoring.
+
 ## functions_in review (historical review)
 
 These references now support the environment levels in METHODOLOGY.md. They document habitat use, not fighting performance; levels remain model assumptions.

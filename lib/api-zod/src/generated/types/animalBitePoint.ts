@@ -17,4 +17,5 @@ export const AnimalBitePoint = {
   canine: 'canine',
   molar: 'molar',
   molariform: 'molariform',
+  front_teeth: 'front_teeth',
 } as const;

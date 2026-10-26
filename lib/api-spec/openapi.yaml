@@ -88,11 +88,11 @@ components:
         name: { type: string, minLength: 1 }
         profile: { type: string, enum: [adult_male, adult_female] }
         mass_kg: { type: number, minimum: 0 }
-        length_m: { type: number, minimum: 0 }
-        top_speed_kmh: { type: number, minimum: 0 }
+        length_m: { type: [number, "null"], minimum: 0, description: Cited length in metres; null when unavailable. Length definitions may differ by source. }
+        top_speed_kmh: { type: [number, "null"], minimum: 0, description: Cited top speed; null when unavailable. }
         primary_weapon: { type: string, enum: [bite, claws, horns, tusks, strike, constriction] }
         bite_force_n: { type: [number, "null"], minimum: 0 }
-        bite_point: { type: [string, "null"], enum: [canine, molar, molariform, null], description: Tooth position for the cited bite force; null when unknown. }
+        bite_point: { type: [string, "null"], enum: [canine, molar, molariform, front_teeth, null], description: Tooth position for the cited bite force; null when unknown. }
         armor: { type: string, enum: [none, thick_hide, shell, scales] }
         temperament: { type: string, enum: [avoids, defensive, aggressive] }
         fighting_style: { type: string, enum: [ambush, sustained, bluff, grapple, charge] }

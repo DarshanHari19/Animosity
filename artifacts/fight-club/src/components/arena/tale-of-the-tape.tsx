@@ -33,7 +33,7 @@ function SourceList({ id, field, red, blue, caveat }: { id: string; field: strin
           </li>;
           if (field === "bite_force_n" && a.bite_force_n === null) return <li key={i} data-testid={`text-source-${id}-${i}`}>
             {a.name}: No peer-reviewed value.
-            {a.name === "Hippopotamus" && " The widely shared 8,100 N figure comes from a TV program, not a study."}
+            {a.name === "Hippopotamus" && " The widely shared 8,100 N ('1,800 psi') figure traces to a TV segment and has been repeated in papers without a measurement."}
           </li>;
           const src = a.field_sources[field];
           const usable = src && src.citation.trim() && !/\bTODO\b/i.test(src.citation);
@@ -177,6 +177,9 @@ export function TaleOfTheTape({ sel, red, blue, result, onShowMath }: {
       <Row id="bite" label="BITE FORCE" rowLabel={biteLabel} red={formatBite(red.bite_force_n)} blue={formatBite(blue.bite_force_n)} edge={edgeSide(bite, outcome)} note={biteNote}
         redTone={red.bite_force_n === null ? "var(--dim)" : undefined} blueTone={blue.bite_force_n === null ? "var(--dim)" : undefined}>
         <p style={{ margin: 0 }}>Bite force is compared only when both values come from the same source tier and were measured at the same kind of tooth.</p>
+        {[red, blue].some(a => a.name === "Komodo dragon") && <p style={{ margin: 0 }} data-testid="text-komodo-bite">
+          A weak bite; Komodo dragons kill by slashing and venom, which the engine doesn't model.
+        </p>}
         {!bite ? <p style={{ margin: 0 }}>Not counted: this bout was decided by a gate before bite force was weighed.</p>
           : isScored(bite) ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-factor-bite">Bite force factor from the engine: {signedFactor(bite.value)}. {bite.reason}</p>
             : <p style={{ margin: 0 }} data-testid="text-detail-bite-reason">
