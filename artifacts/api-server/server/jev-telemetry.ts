@@ -62,8 +62,16 @@ export function summarizeJev(records: Record[]) {
         above_0_5: scores.filter(s => s.probability > 0.5).length,
         above_0_7: scores.filter(s => s.probability > 0.7).length,
         above_0_9: scores.filter(s => s.probability > 0.9).length,
-        examples: scores.filter(s => s.probability > 0.5)
-          .sort((a, b) => b.probability - a.probability).slice(0, 5),
+        // Disjoint bands preserve the existing strict threshold boundaries.
+        bands: [
+          { band: "0.5 < p <= 0.7", lower: 0.5, upper: 0.7 },
+          { band: "0.7 < p <= 0.9", lower: 0.7, upper: 0.9 },
+          { band: "p > 0.9", lower: 0.9, upper: 1 },
+        ].map(({ band, lower, upper }) => {
+          const matches = scores.filter(s => s.probability > lower && s.probability <= upper);
+          return { band, count: matches.length,
+            examples: matches.sort((a, b) => b.probability - a.probability).slice(0, 10) };
+        }),
       };
     }),
   };

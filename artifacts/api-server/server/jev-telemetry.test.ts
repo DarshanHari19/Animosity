@@ -51,7 +51,7 @@ test("narration rejected before Jev is explicitly not scored, not a failed Jev c
   assert.equal(body.narration_status, "unavailable");
 });
 
-test("Jev summary counts strict thresholds per question and keeps at most five examples with probabilities", () => {
+test("Jev summary preserves strict thresholds and groups examples in disjoint probability bands", () => {
   const values = [0.5, 0.5001, 0.7, 0.7001, 0.9, 0.9001, 1];
   const report: JevReport = { status: "scored", elapsed_ms: 27, http_status: 200, beats: values.map((p, index) => ({
     beat_index: index, text: `Test beat ${index}`,
@@ -69,12 +69,30 @@ test("Jev summary counts strict thresholds per question and keeps at most five e
   const [unsupported, contradictory] = summary.questions;
   assert.deepEqual([unsupported!.above_0_5, unsupported!.above_0_7, unsupported!.above_0_9], [6, 4, 2]);
   assert.equal(unsupported!.beats_scored, 7);
-  assert.equal(unsupported!.examples.length, 5);
-  assert.deepEqual(unsupported!.examples[0], {
+  assert.deepEqual(unsupported!.bands.map(b => b.count), [2, 2, 2]);
+  assert.deepEqual(unsupported!.bands.map(b => b.examples.map(e => e.probability)),
+    [[0.7, 0.5001], [0.9, 0.7001], [1, 0.9001]]);
+  assert.deepEqual(unsupported!.bands[2]!.examples[0], {
     case_id: 1, run: 1, beat_index: 6, text: "Test beat 6", probability: 1,
   });
   assert.deepEqual([contradictory!.above_0_5, contradictory!.above_0_7, contradictory!.above_0_9], [0, 0, 0]);
-  assert.deepEqual(contradictory!.examples, []);
+  assert.ok(contradictory!.bands.every(b => b.count === 0 && b.examples.length === 0));
+});
+
+test("Jev summary caps examples at ten independently for every question and band", () => {
+  const records = Array.from({ length: 12 }, (_, index) => ({
+    case_id: index + 1, run: 1, jev_shadow: {
+      ...scored, beats: [0.6, 0.8, 0.95].map((p, beat_index) => ({
+        beat_index, text: `Example ${index}/${beat_index}`,
+        unsupported_reason_probability: p, contradictory_winner_probability: p,
+      })),
+    },
+  }));
+  const summary = summarizeJev(records);
+  for (const question of summary.questions) {
+    assert.deepEqual(question.bands.map(b => b.count), [12, 12, 12]);
+    assert.deepEqual(question.bands.map(b => b.examples.length), [10, 10, 10]);
+  }
 });
 
 test("missing telemetry is distinguishable from zero failures, and malformed probabilities are rejected", () => {

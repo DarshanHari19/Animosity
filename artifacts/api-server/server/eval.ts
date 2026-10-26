@@ -142,11 +142,13 @@ async function main() {
     if (jev.http_error_counts.length) console.table(jev.http_error_counts);
     console.log("Jev call timings (milliseconds):");
     console.table(jev.calls);
-    console.table(jev.questions.map(({ examples, ...counts }) => counts));
+    console.table(jev.questions.map(({ bands, ...counts }) => counts));
     for (const question of jev.questions) {
-      console.log(`Jev ${question.question}: up to 5 highest-probability examples above 0.5`);
-      if (question.examples.length) console.table(question.examples);
-      else console.log("No beats above 0.5.");
+      for (const band of question.bands) {
+        console.log(`Jev ${question.question}, ${band.band}: ${band.count} beats; up to 10 examples`);
+        if (band.examples.length) console.table(band.examples);
+        else console.log("No beats in this band.");
+      }
     }
     if (jev.missing_telemetry) console.error(`JEV SUMMARY INCOMPLETE: ${jev.missing_telemetry} responses missing telemetry.`);
     console.log(`${summary.provider_attempts} provider calls; ${rateDeferrals} rate-limit deferrals. Saved ${output}`);

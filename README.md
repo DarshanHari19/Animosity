@@ -50,7 +50,9 @@ After fresh narration passes every existing check, the backend sends one
 `jev-latest` request through Replit AI Integrations for OpenRouter, using managed
 credentials (no personal API key; calls are billed to Replit credits).
 Server-only `jev_shadow` logs contain each beat's text and probabilities of an
-unsupported causal claim or a contradictory winner. Jev never rejects, rewrites,
+unsupported causal claim or a contradictory overall winner. Only model-written
+text is scored: the finish includes the climax, not the appended engine verdict.
+A single dodge, evasion, or successful move is not winning overall. Jev never rejects, rewrites,
 or approves narration. Invalid narration never reaches Jev; cache hits make no
 provider calls. Jev failures/timeouts log `jev_shadow_unavailable` and leave the
 validated narration unchanged. The one shadow call has a 10-second timeout and
@@ -386,8 +388,9 @@ Raw model output remains in server logs and is never sent through the API.
 
 The **Jev shadow** section reports narrations scored, calls failed or timed out,
 and narrations not scored (for example, rejected before Jev). For each question,
-it counts beats strictly above 0.5, 0.7, and 0.9, and shows up to five
-highest-probability examples above 0.5 with their probabilities. These counts are
+it counts beats strictly above 0.5, 0.7, and 0.9, and shows up to ten examples
+per disjoint band: `0.5 < p <= 0.7`, `0.7 < p <= 0.9`, and `p > 0.9`,
+with their probabilities. These counts are
 observations, not acceptance thresholds. The saved JSON includes per-run scores
 and the Jev summary.
 

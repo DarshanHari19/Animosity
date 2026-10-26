@@ -12,6 +12,7 @@ export type ShadowInput = {
   mode: EngineContext["mode"];
   result: MatchupResult;
   evidence: EvidenceItem[];
+  /** Model-authored text only: the finish text is the climax without the engine verdict. */
   beats: Beat[];
 };
 type Dependencies = {
@@ -30,6 +31,10 @@ export async function reviewJevShadow(input: ShadowInput, dependencies: Dependen
   let http_status: number | null = null;
   const elapsed = () => Math.max(0, Math.round(now() - started));
   try {
+    const outcome = input.result.outcome;
+    const winningSubject = outcome.kind === "favored"
+      ? input.animals.find(animal => animal !== outcome.animal) ?? "the other animal"
+      : "either animal";
     const questions: JevRequest["questions"] = {};
     input.beats.forEach((_beat, index) => {
       questions[`unsupported_${index}`] = {
@@ -38,10 +43,10 @@ export async function reviewJevShadow(input: ShadowInput, dependencies: Dependen
       };
       questions[`contradiction_${index}`] = {
         type: "noul",
-        instructions: `For beat ${index}, what is the probability that the sentence implies an animal the engine did not favor is winning? For an even (too close to call) outcome, assess whether either animal is winning. The favored animal gaining ground does not contradict a favored result.`,
+        instructions: `For beat ${index}, what is the probability of yes to: Does this sentence state or clearly imply that ${winningSubject} is winning the fight overall? A single dodge, evasion, or successful move is not winning.`,
       };
     });
-    // All evidence and every public beat (including climax + verdict) in ONE call.
+    // All evidence and every model-authored beat (finish = climax only) in ONE call.
     const response = responseSchema.parse(await (dependencies.request ?? requestJev)({
       model: "jev-latest",
       state: JSON.stringify({

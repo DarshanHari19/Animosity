@@ -28,7 +28,9 @@ test("Jev makes one request with all evidence/beats and logs two probabilities p
       assert.deepEqual(state.engine, input.result);
       assert.deepEqual(state.beats, input.beats.map((beat, index) => ({ index, ...beat })));
       assert.equal(Object.keys(request.questions).length, input.beats.length * 2);
-      assert.match(request.questions.contradiction_0!.instructions, /even.*either animal/);
+      const question = request.questions.contradiction_0!.instructions;
+      assert.ok(question.includes(`${input.animals[1]} is winning the fight overall?`));
+      assert.match(question, /A single dodge, evasion, or successful move is not winning/);
       return { answers: Object.fromEntries(Object.keys(request.questions).map((key) =>
         [key, { noul: key.startsWith("unsupported") ? 0.9 : 0.8 }])) };
     },
@@ -50,6 +52,24 @@ test("Jev makes one request with all evidence/beats and logs two probabilities p
     assert.equal(report.beats[0]!.unsupported_reason_probability, 0.9);
     assert.equal(report.beats[0]!.contradictory_winner_probability, 0.8);
   }
+});
+
+test("Jev's too-close-to-call winner question asks about either animal winning overall", async () => {
+  const report = await reviewJevShadow({
+    ...input, result: fixtureResult({ kind: "even" }),
+  }, {
+    log: () => {},
+    request: async request => {
+      for (const [key, question] of Object.entries(request.questions)) {
+        if (key.startsWith("contradiction")) {
+          assert.match(question.instructions, /either animal is winning the fight overall\?/);
+          assert.match(question.instructions, /A single dodge, evasion, or successful move is not winning/);
+        }
+      }
+      return { answers: Object.fromEntries(Object.keys(request.questions).map(key => [key, { noul: 0.1 }])) };
+    },
+  });
+  assert.equal(report.status, "scored");
 });
 
 test("Jev provider failure is sanitized, not retried, and cannot reject narration", async () => {

@@ -14,6 +14,17 @@ required cached narration to make zero model calls.
 cache reads. Do not move observation into a common response path that also handles
 cache hits or unavailable narration.
 
+Jev observes only model-written text; the finish input is the model climax,
+never the appended deterministic verdict. Its winner question concerns winning
+the fight overall, not a single dodge, evasion, or successful move.
+
+**Why:** The user found high unsupported-reason scores came from our own
+too-close-to-call template, and individual moves were being confused with winning.
+
+**How to apply:** Preserve the model climax separately at the shadow boundary;
+do not recover it by splitting public finish text or make shadow scores enforce
+narration acceptance.
+
 Route tests that examine result presentation must explicitly inject narration,
 even when they do not assert any narration fields.
 

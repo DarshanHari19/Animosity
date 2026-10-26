@@ -65,7 +65,10 @@ test("shadow runs once after successful validation and cannot change beats or tr
     ...mock.options,
     shadowReview: async (input) => {
       reviews++;
-      assert.deepEqual(input.beats, beatsFor(a.name));
+      const publicBeats = beatsFor(a.name);
+      assert.deepEqual(input.beats, [...publicBeats.slice(0, -1),
+        { ...publicBeats.at(-1)!, text: fixtureClimax(a.name) }]);
+      assert.notEqual(input.beats.at(-1)!.text, publicBeats.at(-1)!.text);
       assert.ok(input.evidence.some(({ text }) => text === fixtureEvidence));
       input.beats[0]!.text = "Test-only attempted mutation";
       throw new Error("Shadow provider unavailable");

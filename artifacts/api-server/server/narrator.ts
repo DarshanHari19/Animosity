@@ -207,7 +207,9 @@ export async function narrateMatchup(
         try {
           const report = await shadowReview({
             narration_id: narrationId, animals: [a.name, b.name], environment,
-            mode, result, evidence: evidenceItems, beats: structuredClone(envelope.beats),
+            mode, result, evidence: evidenceItems,
+            // Observe only model-authored text, never the appended engine verdict.
+            beats: structuredClone([...resolved.beats, { ...finish, text: resolved.climax }]),
           });
           if (report) options.onShadowResult?.(report);
         } catch {
