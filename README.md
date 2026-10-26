@@ -1,5 +1,84 @@
 # Animosity
 
+A fact-based animal matchup simulator: pick two animals and an arena, see who
+is favored and why, then watch a story that cites its facts. It is a hypothetical
+comparison, not a prediction of a real encounter.
+
+## Architecture
+
+```text
+React picker → Express /api/fight → Zod input → deterministic engine → verdict
+                                                    │
+                                build-keyed PostgreSQL narration cache
+                                     hit │                  │ miss
+                                         │        Anthropic narrator
+                                         │                  ↓
+                                         │       Zod + evidence/text validator
+                                         │          │ pass            │ fail
+                                         │          ↓                 ↓
+                                         │      save to cache    one retry, then
+                                         │          │           story unavailable
+                                         └──────────┴───────────────→ UI + verdict
+                                                    │
+                                fresh validated model text → Jev quality monitor
+                                                             (shadow only)
+```
+
+The engine owns the outcome and verdict text. The narrator supplies the physical
+action and climax, never the verdict. Cache hits make no provider calls. Jev
+observes only fresh, validated model text and cannot change acceptance, retries,
+or the verdict. A failed story never hides a valid engine result.
+
+## Narration reliability
+
+Story-unavailable rates from successive evaluations, each covering 75 fights.
+These are observed narration failure rates, **not** verdict accuracy or win
+probabilities; no dates or causes are inferred.
+
+| Evaluation | Narration unavailable |
+|---|---|
+| 1 | 23.3% |
+| 2 | 18.3% |
+| 3 | 11.7% |
+| 4 | 10.0% |
+| 5 | 0.0% |
+| 6 | 1.7% |
+| 7 | 0.0% |
+
+## Pages and sharing
+
+The picker lives at `/`, the public explanation at `/how-it-works`, and unknown
+paths show a friendly arena-themed page linking back to the picker.
+The default title is “Animosity: who's favored, and why”.
+The 1200×630 share image is `artifacts/fight-club/public/og-image.png`, with its
+editable SVG alongside it; `favicon.svg` is the simple arch icon.
+
+“Share this bout” copies a static share landing-page URL with the selected
+animals, terrain and mode. The build emits one HTML landing page for each
+ordered animal pair and terrain, including mirror matches, so social crawlers
+can read the specific title without running JavaScript. A browser immediately
+opens the normal picker URL with those selections and starts the existing bout
+flow; these links select a matchup, not a saved narration. Existing query-only
+links still work and update the browser title after animals load.
+Asset links follow the artifact base path; no unpublished production hostname
+is invented.
+
+## Production safety
+
+`X-Animosity-Eval-Bypass-Cache: 1` is honored **only** when
+`NODE_ENV=development`. In production it neither bypasses the cache nor adds
+`jev_shadow` probabilities to responses. Tests cover both restrictions.
+
+The configured default daily cap is **200 narration provider calls per UTC day**,
+including retries, per server process. `NARRATION_DAILY_CAP` can override it.
+The fight limit is **10 requests per minute per IP**, including cache hits.
+Both counters are in memory, so restarts reset them and replicas have separate
+budgets; this is not a durable global spending limit.
+
+There is currently **no `JEV_MODE` environment-variable switch**. Jev is wired
+as an observation-only quality monitor for fresh validated narrations, including
+in production. Its scores never enforce acceptance or alter narration.
+
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
 Replit PostgreSQL stores validated narration only. No authentication, hit points, or game loop.
 

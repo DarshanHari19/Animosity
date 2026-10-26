@@ -6,6 +6,8 @@ import { VsStage } from "@/components/arena/vs-stage";
 import { BoutStage } from "@/components/arena/bout-stage";
 import { VerdictStage } from "@/components/arena/verdict-stage";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePageMetadata } from "@/hooks/use-page-metadata";
+import { fightTitle, SITE_TITLE } from "@/lib/site-metadata";
 import { readSelectionFromUrl, selectionSearch, skipsBout, type Selection, type Stage } from "@/lib/arena";
 
 function errorMessage(err: unknown): string {
@@ -51,6 +53,9 @@ export default function Home() {
   const mutateRef = useRef(createFight.mutateAsync);
   mutateRef.current = createFight.mutateAsync;
   const list = animals.data ?? [];
+  const titleSelection = fight?.sel ?? sel;
+  usePageMetadata(list.some(animal => animal.name === titleSelection.a) && list.some(animal => animal.name === titleSelection.b)
+    ? fightTitle(titleSelection) : SITE_TITLE);
 
   const go = useCallback((next: Stage, url: string, replace = false) => {
     const state: HistoryState = { animosityStage: next, prev: replace ? (window.history.state as HistoryState | null)?.prev : stageRef.current };

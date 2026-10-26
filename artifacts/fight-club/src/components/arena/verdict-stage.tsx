@@ -3,6 +3,7 @@ import type { Animal, FightResponse } from "@workspace/api-client-react";
 import { ArcadeBand } from "./arcade-band";
 import { TaleOfTheTape } from "./tale-of-the-tape";
 import { MathDrawer } from "./math-drawer";
+import { shareFightUrl } from "@/lib/site-metadata";
 import {
   buildSources, splitFinish, ENCOUNTER_LABEL, EVIDENCE_LABEL, findFactor, NARRATION_REASON, outcomeTitle, TERRAINS, type Selection,
 } from "@/lib/arena";
@@ -38,7 +39,7 @@ export function VerdictStage({ sel, red, blue, response, onRematch, onNew }: {
     if (timer.current !== null) window.clearTimeout(timer.current);
     try {
       if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(shareFightUrl(sel, window.location.origin, import.meta.env.BASE_URL));
       setCopied("ok");
     } catch {
       setCopied("fail");

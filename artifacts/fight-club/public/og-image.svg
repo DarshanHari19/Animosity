@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#16110D"/>
+<rect y="330" width="1200" height="300" fill="#2B221B"/>
+<rect y="330" width="1200" height="14" fill="#3A2E25"/>
+<rect y="440" width="1200" height="8" fill="#3A2E25"/>
+<path d="M68 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M180 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M292 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M404 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M516 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M628 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M740 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M852 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M964 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M1076 410V370a28 28 0 0 1 56 0V410Z" fill="#1A1410"/><path d="M40 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M152 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M264 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M376 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M488 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M600 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M712 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M824 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M936 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/><path d="M1048 630V520a36 36 0 0 1 72 0V630Z" fill="#110D0A"/>
+<text x="600" y="120" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="bold" letter-spacing="8" fill="#C99A4E">WHO WOULD WIN</text>
+<text x="600" y="232" text-anchor="middle" font-family="DejaVu Serif, serif" font-size="120" font-weight="bold" letter-spacing="10" fill="#E0B66C">ANIMOSITY</text>
+<rect x="520" y="258" width="160" height="3" fill="#A84A27"/>
+<text x="600" y="306" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="32" fill="#E6D8C2">Every number shows its source</text>
+</svg>
