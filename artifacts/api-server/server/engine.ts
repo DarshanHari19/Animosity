@@ -101,9 +101,7 @@ export function scoreMatchup(
   }, {
     name: "Bite force",
     value: 0,
-    reason: comparableSources
-      ? "Not compared: bite points are unknown or differ."
-      : "Not compared: bite-force values are missing or have different source tiers.",
+    reason: "Not compared: a value is missing, or the values come from different source tiers or different teeth.",
   }];
   if (compareBites) {
     consulted.push(biteTierA, biteTierB);

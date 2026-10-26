@@ -157,7 +157,7 @@ a:hover { color: var(--bronze-hi); }
 .floor-shallows-bed { height: 46%; background: #A88F66; border-top: 6px solid #8A7350; }
 .floor-shallows-water { height: 40%; background: linear-gradient(180deg, rgba(74,138,156,.62), rgba(46,98,116,.78)); border-top: 3px solid rgba(170,212,222,.85); z-index: 3; pointer-events: none; }
 .floor-ocean-veil { background: rgba(24,70,86,.42); border-top: 2px solid rgba(150,200,214,.7); pointer-events: none; }
-.floor-ocean { height: 86%; background: #1F4F5E; border-top: 3px solid #6FA3B4; }
+.floor-ocean { background: #1F4F5E; border-top: 3px solid #6FA3B4; }
 .banner {
   position: absolute; left: 50%; top: 18px; translate: -50% 0; z-index: 5; width: max-content; max-width: calc(100% - 24px);
   padding: 9px 20px; border-radius: 999px; background: var(--bg); border: 1px solid var(--bronze);

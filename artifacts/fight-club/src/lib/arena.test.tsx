@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { cubeRootScale, edgeSide, readFact, readSelectionFromUrl, selectionSearch, signed, skipsBout } from "./arena";
+import { cubeRootScale, edgeSide, readFact, readSelectionFromUrl, selectionSearch, signed, signedFactor, skipsBout } from "./arena";
 import { AnimalFigure, bodyTypeFor } from "@/components/arena/animal-figure";
 import { responseFixture } from "@/test/fixtures";
 
@@ -28,6 +28,12 @@ describe("arena helpers", () => {
     expect(signed(2.3847129416418364)).toBe("+2.38");
     expect(signed(-0.8)).toBe("\u22120.80");
     expect(signed(0.001)).toBe("0");
+  });
+
+  it("explains factor directions independently of the final verdict", () => {
+    expect(signedFactor(-1.38)).toBe("−1.38 (favors the blue corner)");
+    expect(signedFactor(0.8)).toBe("+0.80 (favors the red corner)");
+    expect(signedFactor(0)).toBe("0 (neither corner favored)");
   });
 
   it("round-trips selections and rejects unknown enums", () => {

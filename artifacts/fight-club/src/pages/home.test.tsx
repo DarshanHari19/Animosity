@@ -468,7 +468,7 @@ describe("Phases, hold, and water", () => {
   });
 
   it.each([
-    ["shallow_water", "40%", 1], ["shallow_water", "40%", 20], ["deep_water", "86%", 1], ["deep_water", "86%", 20],
+    ["shallow_water", "40%", 1], ["shallow_water", "40%", 20], ["deep_water", "68%", 1], ["deep_water", "68%", 20],
   ] as const)("anchors a crocodile to the %s surface with a size-independent offset (mass x%s)", async (env, surface, factor) => {
     const croc: Animal[] = [{ ...animals[0]!, name: "Nile crocodile", mass_kg: 500 }, { ...animals[1]!, mass_kg: 500 * factor }];
     animalReply = async () => jsonResponse(croc);
@@ -482,6 +482,10 @@ describe("Phases, hold, and water", () => {
     await advance();
     expect(figure("red").dataset.submerged).toBe("true");
     expect(figure("red").style.bottom).toBe(surface);
+    if (env === "deep_water") {
+      expect(screen.getByTestId("floor-ocean").style.height).toBe("68%");
+      expect(screen.getByTestId("floor-ocean-veil").style.height).toBe("68%");
+    }
     expect(screen.getByTestId("croc-offset-red").style.transform).toBe("translateY(34%)");
     expect(figure("red").dataset.scale).toBe(Math.cbrt(1 / factor).toFixed(3));
     expect(figure("blue").dataset.submerged).toBe("false");
@@ -592,7 +596,7 @@ describe("Verdict", () => {
     expect(document.body.textContent).not.toContain("2.38");
     expect(document.body.textContent).not.toContain("Deciding factor");
     fireEvent.click(screen.getByRole("button", { name: "Why? Show the math" }));
-    expect(screen.getByTestId("text-math-size")).toHaveTextContent("Size: 0.8 × (log2 1,500 − log2 190) = +2.38");
+    expect(screen.getByTestId("text-math-size")).toHaveTextContent("Size: 0.8 × (log2 1,500 − log2 190) = +2.38 (favors the red corner)");
     expect(screen.getByTestId("text-math-total")).toHaveTextContent("Total +2.38. A score of +0.5 or more favors the red corner");
     expect(document.body.textContent).not.toContain("2.3847");
     const lion = within(screen.getByTestId("list-sources")).getAllByRole("link", { name: "Wikipedia" });
@@ -612,14 +616,37 @@ describe("Verdict", () => {
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByTestId("text-source-weight-0")).toHaveTextContent("Hippopotamus: Tier 3, Reference summary");
-    expect(screen.getByTestId("text-detail-factor-weight")).toHaveTextContent("+2.38");
+    expect(screen.getByTestId("text-detail-factor-weight")).toHaveTextContent("+2.38 (favors the red corner)");
     fireEvent.click(screen.getByTestId("button-expand-bite"));
     expect(screen.getByTestId("text-detail-bite-reason")).toHaveTextContent("Hippopotamus has no usable bite force value");
-    expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("source unknown");
+    expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("No peer-reviewed value.");
+    expect(screen.getByTestId("text-source-bite-0")).toHaveTextContent("The widely shared 8,100 N figure comes from a TV program, not a study.");
+    expect(screen.getByTestId("detail-tape-bite")).toHaveTextContent("Bite force is compared only when both values come from the same source tier and were measured at the same kind of tooth.");
+    fireEvent.click(screen.getByTestId("button-expand-style"));
+    expect(screen.getByTestId("text-source-style-0")).toHaveTextContent("A label that shapes the narration. Not sourced or scored yet.");
+    expect(screen.queryByText(/source unknown/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("button-expand-environment"));
     expect(screen.getByTestId("text-detail-env")).toHaveTextContent("No handicap applied: environment factor 0.");
     fireEvent.click(screen.getAllByRole("link", { name: "See the full math" })[0]!);
     expect(screen.getByTestId("drawer-math")).toBeInTheDocument();
+  });
+
+  it("shows each factor's direction in both the breakdown and Why drawer", async () => {
+    const response = scoredResponse();
+    response.result.factors = [
+      { name: "Size", value: -1.38, reason: "Test-only size comparison" },
+      { name: "Bite force", value: 0.8, reason: "Test-only comparable bites" },
+      { name: "Environment", value: -0.8, reason: "Test-only handicap" },
+    ];
+    await toVerdict(response);
+    for (const id of ["weight", "bite", "environment"]) fireEvent.click(screen.getByTestId(`button-expand-${id}`));
+    expect(screen.getByTestId("text-detail-factor-weight")).toHaveTextContent("−1.38 (favors the blue corner)");
+    expect(screen.getByTestId("text-detail-factor-bite")).toHaveTextContent("+0.80 (favors the red corner)");
+    expect(screen.getByTestId("text-detail-env")).toHaveTextContent("−0.80 (favors the blue corner)");
+    fireEvent.click(screen.getByRole("button", { name: "Why? Show the math" }));
+    expect(screen.getByTestId("text-math-size")).toHaveTextContent("−1.38 (favors the blue corner)");
+    expect(screen.getByTestId("text-math-bite")).toHaveTextContent("+0.80 (favors the red corner)");
+    expect(screen.getByTestId("text-math-environment")).toHaveTextContent("−0.80 (favors the blue corner)");
   });
 
   it("labels an environment-gated bout Scored with a gate explanation, and unscored rows Context", async () => {

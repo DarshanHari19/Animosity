@@ -45,7 +45,7 @@ test("missing bites or unequal/unknown tiers exclude the bite factor", () => {
     const result = scoreMatchup(a, b, forced);
     assert.equal(result.factors[1]!.value, 0);
     assert.equal(result.factors[1]!.reason,
-      "Not compared: bite-force values are missing or have different source tiers.");
+      "Not compared: a value is missing, or the values come from different source tiers or different teeth.");
   }
   // An invalid bite is not used (or validated) when comparison is excluded.
   assert.equal(scoreMatchup({ ...a, bite_force_n: -1 }, animal("B"), forced).factors[1]!.value, 0);
@@ -60,7 +60,7 @@ test("equal tiers compare bites only at the same known bite point, in both order
       assert.equal(result.factors[1]!.value, 0);
       assert.equal(result.advantage_score, 0);
       assert.deepEqual(result.outcome, { kind: "even" });
-      assert.match(result.factors[1]!.reason, /bite points are unknown or differ/);
+      assert.match(result.factors[1]!.reason, /different source tiers or different teeth/);
     }
   }
   for (const bite_point of ["canine", "molar", "molariform"] as const) {

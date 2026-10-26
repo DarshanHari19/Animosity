@@ -233,6 +233,11 @@ export function signed(v: number): string {
   return `${r > 0 ? "+" : "\u2212"}${Math.abs(r).toFixed(2)}`;
 }
 
+/** Factor signs refer to input order (red minus blue), not the final winner. */
+export function signedFactor(v: number): string {
+  return `${signed(v)} (${v > 0 ? "favors the red corner" : v < 0 ? "favors the blue corner" : "neither corner favored"})`;
+}
+
 // ---------- URL ----------
 
 export function readSelectionFromUrl(search: string): Partial<Selection> {

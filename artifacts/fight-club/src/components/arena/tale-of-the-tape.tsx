@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import type { Animal, MatchupResult } from "@workspace/api-client-react";
 import {
-  edgeSide, findFactor, formatBite, formatMass, isScored, LEVELS, signed, sourceLinks, sourceNote, STYLE_LABEL, TERRAINS,
+  edgeSide, findFactor, formatBite, formatMass, isScored, LEVELS, signedFactor, sourceLinks, sourceNote, STYLE_LABEL, TERRAINS,
   type Selection, type Side,
 } from "@/lib/arena";
 
@@ -28,9 +28,16 @@ function SourceList({ id, field, red, blue, caveat }: { id: string; field: strin
       <div className="eyebrow" style={{ fontSize: 11, marginBottom: 6 }}>Sources</div>
       <ul style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 4 }}>
         {[red, blue].map((a, i) => {
+          if (field === "fighting_style") return <li key={i} data-testid={`text-source-${id}-${i}`}>
+            {a.name}: A label that shapes the narration. Not sourced or scored yet.
+          </li>;
+          if (field === "bite_force_n" && a.bite_force_n === null) return <li key={i} data-testid={`text-source-${id}-${i}`}>
+            {a.name}: No peer-reviewed value.
+            {a.name === "Hippopotamus" && " The widely shared 8,100 N figure comes from a TV program, not a study."}
+          </li>;
           const src = a.field_sources[field];
           const usable = src && src.citation.trim() && !/\bTODO\b/i.test(src.citation);
-          if (!usable) return <li key={i} data-testid={`text-source-${id}-${i}`}>{a.name}: source unknown</li>;
+          if (!usable) return <li key={i} data-testid={`text-source-${id}-${i}`}>{a.name}: No source provided.</li>;
           const links = sourceLinks(src.citation);
           const note = links.length ? sourceNote(src.citation) : src.citation;
           const tier = TIER_LABEL[src.tier as number];
@@ -161,7 +168,7 @@ export function TaleOfTheTape({ sel, red, blue, result, onShowMath }: {
         {ratio !== null && red.mass_kg === blue.mass_kg && <p style={{ margin: 0 }} data-testid="text-detail-ratio">Both animals have the same listed mass.</p>}
         {ratio !== null && red.mass_kg !== blue.mass_kg && <p style={{ margin: 0 }} data-testid="text-detail-ratio">{heavier} outweighs {lighter} about {ratio} to 1. This ratio is shown for reading only; it is not a second score.</p>}
         {size
-          ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-factor-weight">Size factor from the engine: {signed(size.value)}. {size.reason}</p>
+          ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-factor-weight">Size factor from the engine: {signedFactor(size.value)}. {size.reason}</p>
           : <p style={{ margin: 0 }}>Not counted: this bout was decided by a gate before size was weighed. Weight is shown for context only.</p>}
         <SourceList id="weight" field="mass_kg" red={red} blue={blue} />
         <MathLink onShowMath={onShowMath} />
@@ -169,9 +176,9 @@ export function TaleOfTheTape({ sel, red, blue, result, onShowMath }: {
 
       <Row id="bite" label="BITE FORCE" rowLabel={biteLabel} red={formatBite(red.bite_force_n)} blue={formatBite(blue.bite_force_n)} edge={edgeSide(bite, outcome)} note={biteNote}
         redTone={red.bite_force_n === null ? "var(--dim)" : undefined} blueTone={blue.bite_force_n === null ? "var(--dim)" : undefined}>
-        <p style={{ margin: 0 }}>Bite force is compared only bite to bite, and only when both values exist at the same source tier, so a measured bite is never weighed against an estimate.</p>
+        <p style={{ margin: 0 }}>Bite force is compared only when both values come from the same source tier and were measured at the same kind of tooth.</p>
         {!bite ? <p style={{ margin: 0 }}>Not counted: this bout was decided by a gate before bite force was weighed.</p>
-          : isScored(bite) ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-factor-bite">Bite force factor from the engine: {signed(bite.value)}. {bite.reason}</p>
+          : isScored(bite) ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-factor-bite">Bite force factor from the engine: {signedFactor(bite.value)}. {bite.reason}</p>
             : <p style={{ margin: 0 }} data-testid="text-detail-bite-reason">
               Not compared, so it counts for nothing in this verdict.{" "}
               {biteWhy}
@@ -188,7 +195,7 @@ export function TaleOfTheTape({ sel, red, blue, result, onShowMath }: {
         {envGate
           ? <p style={{ margin: 0 }} data-testid="text-detail-env">Environment gate: {cannotAnimal ?? "one animal"} can't fight {terrain.short.toLowerCase()}. The gate has no numeric factor and no score; it decided the bout before numeric scoring began.</p>
           : env && env.value !== 0
-            ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-env">The engine applied its 0.8 hampered handicap: environment factor {signed(env.value)}. {env.reason}</p>
+            ? <p style={{ margin: 0, fontFamily: "var(--mono)" }} data-testid="text-detail-env">The engine applied its 0.8 hampered handicap: environment factor {signedFactor(env.value)}. {env.reason}</p>
             : scored
               ? <p style={{ margin: 0 }} data-testid="text-detail-env">{rl === "hampered" && bl === "hampered" ? "Both animals are hampered, so the handicaps cancel: net 0." : "No handicap applied: environment factor 0."}</p>
               : <p style={{ margin: 0 }} data-testid="text-detail-env">Not counted: this bout was decided by another gate before the environment was weighed.</p>}

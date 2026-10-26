@@ -93,7 +93,7 @@
     "name": "Saltwater crocodile",
     "profile": "adult_male",
     "mass_kg": 408,
-    "length_m": 5,
+    "length_m": 4.3,
     "top_speed_kmh": 29,
     "primary_weapon": "bite",
     "bite_force_n": 16414,
@@ -117,9 +117,9 @@
         "note": "4.3 m dominant male; mass estimated from length."
       },
       "length_m": {
-        "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",
-        "tier": 3,
-        "note": ""
+        "citation": "Seebacher, Grigg & Beard (1999), J. Exp. Biol. 202:77-86, Table 1.",
+        "tier": 2,
+        "note": "Same 4.3 m dominant male as mass_kg."
       },
       "top_speed_kmh": {
         "citation": "Wikipedia, Saltwater crocodile: https://en.wikipedia.org/wiki/Saltwater_crocodile",

@@ -51,7 +51,8 @@ function transformFor(p: Pose, side: Side): string {
 /** Shallow water surface and figure footing, as % of stage height. Water sits above the figures. */
 export const SHALLOW_SURFACE = 40;
 export const SHALLOW_FOOT = 22;
-export const OCEAN_SURFACE = 86;
+// Reference staging floods 190px of a 280px arena, leaving the upper arches visible.
+export const OCEAN_SURFACE = 68;
 /** Share of the croc's own SVG height (back and eyes at y 88-94 of 140) dropped below the surface. */
 export const CROC_SINK = 34;
 
@@ -97,7 +98,7 @@ export function ArenaStage({ red, blue, environment, mode, beat, reducedMotion, 
           style={{ height: `${SHALLOW_SURFACE}%`, zIndex: 3 }} />
       </>}
       {floor === "ocean" && <>
-        <div aria-hidden="true" className="stage-floor floor-ocean" data-testid="floor-ocean" />
+        <div aria-hidden="true" className="stage-floor floor-ocean" data-testid="floor-ocean" style={{ height: `${OCEAN_SURFACE}%` }} />
         <div aria-hidden="true" className="stage-floor floor-ocean-veil" data-testid="floor-ocean-veil" style={{ height: `${OCEAN_SURFACE}%`, zIndex: 3 }} />
         <svg aria-hidden="true" viewBox="0 0 400 120" preserveAspectRatio="none"
           style={{ position: "absolute", left: 0, bottom: 20, width: "100%", height: 120 }}>

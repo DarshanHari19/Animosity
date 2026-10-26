@@ -53,12 +53,22 @@ test("traits include all seven user-provided animals and their supplied values",
     animals.map(({ mass_kg, length_m, top_speed_kmh, bite_force_n }) =>
       [mass_kg, length_m, top_speed_kmh, bite_force_n]),
     [
-      [188, 2.5, 80, 1315], [192, 2.0, 56, 1410], [408, 5.0, 29, 16414],
+      [188, 2.5, 80, 1315], [192, 2.0, 56, 1410], [408, 4.3, 29, 16414],
       [168, 1.7, 40, 4067], [1354, 3.5, 30, null], [548, 3.8, 40, null],
       [2012, 3.8, 50, null],
     ],
     "Only the explicitly approved source upgrade changes measurements",
   );
+});
+
+test("crocodile length and mass cite the same 4.3 m male in Table 1", () => {
+  const croc = animals.find(animal => animal.name === "Saltwater crocodile")!;
+  assert.equal(croc.length_m, 4.3);
+  assert.deepEqual(croc.field_sources.length_m, {
+    citation: croc.field_sources.mass_kg!.citation,
+    tier: 2,
+    note: "Same 4.3 m dominant male as mass_kg.",
+  });
 });
 
 test("environment sources retain reviewed habitat references and original tiers", () => {
