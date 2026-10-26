@@ -1,5 +1,6 @@
 import type { MouseEvent, ReactElement } from "react";
 import type { Animal } from "@workspace/api-client-react";
+import { Link } from "wouter";
 import { ArcadeBand } from "./arcade-band";
 import {
   ENVIRONMENTS, formatMass, sourceLinks, sourceNote, LEVELS, MODE_COPY, MODES, STYLE_LABEL, TERRAINS, type Env, type Mode, type Selection,
@@ -97,6 +98,7 @@ export function PickerStage({ list, loading, error, onRetry, sel, setSel, onStar
           <nav aria-label="Main" style={{ display: "flex", gap: 24, fontSize: 15, fontWeight: 500 }}>
             <a href="#how" onClick={scrollTo("how")} data-testid="link-how">How it works</a>
             <a href="#trait-sources" onClick={scrollTo("trait-sources")} data-testid="link-sources">Sources</a>
+            <Link href="/how-it-works" data-testid="link-how-it-works-page">Full method</Link>
           </nav>
         </header>
 
@@ -173,6 +175,7 @@ export function PickerStage({ list, loading, error, onRetry, sel, setSel, onStar
             ))}
           </div>
           <div className="dim" style={{ fontSize: 13 }}>Assumes adult males. All matchups are hypothetical. Trait values carry field-level citations; each verdict lists the ones it used.</div>
+          <div style={{ fontSize: 15 }}><Link href="/how-it-works" data-testid="link-how-it-works-details">Read the full method, sources and reliability record</Link></div>
         </section>
 
         <TraitSources list={list} />

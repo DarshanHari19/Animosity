@@ -215,3 +215,16 @@ a:hover { color: var(--bronze-hi); }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 .reduced-motion *, .reduced-motion { animation: none !important; transition: none !important; }
+
+/* How it works page */
+.hiw-section { display: flex; flex-direction: column; gap: 14px; }
+.hiw-section h2 { margin: 0; font-family: var(--display); font-size: clamp(22px, 4vw, 28px); font-weight: 700; }
+.hiw-section p, .hiw-section li { margin: 0; font-size: 16px; line-height: 1.65; color: var(--text-2); }
+.hiw-section ul, .hiw-section ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.formula { font-family: var(--mono); font-size: clamp(15px, 3.6vw, 19px); color: var(--bronze-hi); background: var(--arch); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; overflow-x: auto; }
+.hiw-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.hiw-table th, .hiw-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.hiw-table th { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.table-scroll { overflow-x: auto; }
+.tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.tier-grid > div { padding: 18px; display: flex; flex-direction: column; gap: 8px; }

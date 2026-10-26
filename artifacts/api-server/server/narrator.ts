@@ -127,7 +127,7 @@ export async function narrateMatchup(
         "CLIMAX ONLY: write one conclusive sentence, under 25 words, present tense, no numbers (including number words), no reasons ('because', 'thanks to', 'due to'), no gore. Name both animals when favored.",
         "Use articles before animal names in the climax: 'The Saltwater crocodile drives the Lion off,' never 'Saltwater crocodile drives Lion off.'",
         "Climax may conclude the action, unlike the neutral non-finish beats. Follow the supplied outcome, not a new winner; do not explain it using any physical trait or ability.",
-        "In the wild (realistic), favored: the loser escapes hurt; say how it limps off, flees into the water if the selected terrain supports that, or breaks free and bolts. No death.",
+        "In the wild (realistic), favored: only the loser escapes hurt; say how it limps off, flees into the water if the selected terrain supports that, or breaks free and bolts. The winner never escapes: it drives the loser off or holds its ground. No death.",
         "Arena (forced_fight), favored: no retreat. Describe the finishing move concretely like a nature documentary: what the winner physically does, fitting its supplied fighting_style and the terrain. For example it clamps its jaws on the neck, drags its opponent under in water, tramples it, or pins it and bites down. The loser may die. No blood, wounds, or gore detail. Fighting style is choreography, NEVER a reason for winning. Never use the phrase 'cannot continue' or the substitute 'can\\'t continue'.",
         "Even climax: both animals break off with neither giving ground; name no winner.",
         "Environmental favored climax: show the other animal unable to fight in the selected setting; no physical superiority or combat injury. Environmental outcome takes precedence over ordinary climax choreography.",
@@ -142,7 +142,7 @@ export async function narrateMatchup(
           ? "Both animals break off or apart, with neither giving ground; no winner."
           : mode === "forced_fight"
             ? `${result.outcome.animal} ends the action with a concrete finishing move fitting its fighting style ${environmentPhrase(environment)}. No retreat. The loser may die, but no blood, wounds, or gore detail. Never say 'cannot continue' or 'can't continue'.`
-            : `${result.outcome.animal} drives ${result.outcome.animal === a.name ? b.name : a.name} off; show how that animal escapes hurt ${environmentPhrase(environment)}. No death.`,
+            : `${result.outcome.animal} drives ${result.outcome.animal === a.name ? b.name : a.name} off or holds its ground; only ${result.outcome.animal === a.name ? b.name : a.name} escapes hurt ${environmentPhrase(environment)}. ${result.outcome.animal} never escapes. No death.`,
       evidence: evidenceItems.map(({ id, text, kind }) => ({ id, text, kind })),
     }) },
   ];

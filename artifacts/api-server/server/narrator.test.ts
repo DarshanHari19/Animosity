@@ -53,6 +53,8 @@ test("matching favored outcome returns validated beats in one call", async () =>
   assert.deepEqual(await narrateMatchup(result, a, b, mock.options), beatsFor(a.name));
   assert.equal(mock.calls.length, 1);
   assert.match(mock.calls[0]!.messages[0]!.content, /Do not invent/);
+  assert.match(mock.calls[0]!.messages[0]!.content, /only the loser escapes hurt/);
+  assert.match(mock.calls[0]!.messages[0]!.content, /The winner never escapes: it drives the loser off or holds its ground/);
   const payload = JSON.parse(mock.calls[0]!.messages[1]!.content) as { evidence: EvidenceItem[] };
   assert.ok(payload.evidence.some(({ text }) => text === fixtureEvidence));
   assert.equal(payload.evidence.some(({ text }) => text.includes(".environments")), false);
