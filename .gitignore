@@ -17,6 +17,9 @@ node_modules/
 .env.*
 *.log
 
+# User-provided reference attachments stay local
+/attached_assets/
+
 # IDEs and editors
 /.idea
 .project
