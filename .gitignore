@@ -10,7 +10,12 @@ out-tsc
 .expo-shared
 
 # dependencies
-node_modules
+node_modules/
+
+# local credentials and runtime logs (at any directory depth)
+.env
+.env.*
+*.log
 
 # IDEs and editors
 /.idea
