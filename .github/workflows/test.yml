@@ -1,0 +1,53 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: animosity_ci
+          # Disposable CI-only credentials, not a real deployment secret.
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+          POSTGRES_DB: animosity_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U animosity_ci -d animosity_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      # Connects only to this job's temporary PostgreSQL service.
+      DATABASE_URL: postgresql://animosity_ci:ci-only-not-a-secret@localhost:5432/animosity_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Prepare test database
+        run: pnpm --filter @workspace/db run push
+      - name: Backend tests (mocked model calls)
+        run: pnpm --filter @workspace/api-server test
+      - name: Frontend tests
+        run: pnpm --filter @workspace/fight-club test
+      - name: Type checks
+        run: pnpm typecheck

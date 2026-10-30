@@ -1,5 +1,7 @@
 # Animosity
 
+[![Tests](https://github.com/DarshanHari19/Animosity/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/DarshanHari19/Animosity/actions/workflows/test.yml)
+
 A fact-based animal matchup simulator: pick two animals and an arena, see who
 is favored and why, then watch a story that cites its facts. It is a hypothetical
 comparison, not a prediction of a real encounter.
@@ -31,19 +33,20 @@ or the verdict. A failed story never hides a valid engine result.
 
 ## Narration reliability
 
-Story-unavailable rates from successive evaluations, each covering 75 fights.
+Story-unavailable rates from successive evaluations. The first six covered
+60 fights each; the latest covered 75 fights (25 scenarios × 3 runs).
 These are observed narration failure rates, **not** verdict accuracy or win
-probabilities; no dates or causes are inferred.
+probabilities.
 
-| Evaluation | Narration unavailable |
-|---|---|
-| 1 | 23.3% |
-| 2 | 18.3% |
-| 3 | 11.7% |
-| 4 | 10.0% |
-| 5 | 0.0% |
-| 6 | 1.7% |
-| 7 | 0.0% |
+| Evaluation | Fights | Narration unavailable |
+|---|---|---|
+| 1 | 60 | 23.3% |
+| 2 | 60 | 18.3% |
+| 3 | 60 | 11.7% |
+| 4 | 60 | 10.0% |
+| 5 | 60 | 0.0% |
+| 6 | 60 | 1.7% |
+| 7 | 75 | 0.0% |
 
 ## Pages and sharing
 
@@ -114,6 +117,12 @@ pnpm run typecheck
 pnpm --filter @workspace/api-server test
 pnpm --filter @workspace/fight-club test
 ```
+
+GitHub Actions runs these checks on every push and pull request using Node 24
+and pnpm 10.26.1. CI creates an isolated PostgreSQL service and applies the
+schema so the persistence test runs too. Its fixed test-only database
+credentials are not secrets and never connect to the app's database. No Replit
+or model credentials are required, and all model requests are mocked.
 
 Tests use fictional fixtures and mocked LLM responses only. They do not call
 an LLM, require a key, or replace scoring in production. The persistence test
