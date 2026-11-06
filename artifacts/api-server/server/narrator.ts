@@ -5,7 +5,7 @@ import {
   type Animal, type Beat, type Environment, type EngineContext, type MatchupResult,
 } from "./schemas";
 import { FightError } from "./errors";
-import { DEFAULT_ANTHROPIC_BASE_URL, resolveNarrationConfig } from "./provider-config";
+import { DEFAULT_ANTHROPIC_BASE_URL, parseBaseURL, resolveNarrationConfig } from "./provider-config";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
 import { failedChecks, logNarrationFailure, withOffendingText, type FailureCheck } from "./narration-diagnostics";
 import { narrationTool, resolveEvidence } from "./narration-tool";
@@ -67,16 +67,11 @@ export async function narrateMatchup(
   const endpoint = options.endpoint ?? config.baseURL
     ?? (options.fetch ? "https://narration.test.invalid" : DEFAULT_ANTHROPIC_BASE_URL);
   const model = options.model ?? config.model;
-  let url: URL;
-  try {
-    url = new URL(endpoint);
-    // An ANTHROPIC_BASE_URL override (for example a local proxy) may use HTTP.
-    // Explicit endpoints passed in code retain the HTTPS-only validation.
-    if (url.username || url.password ||
-      (url.protocol !== "https:" && (options.endpoint !== undefined || url.protocol !== "http:"))) throw new Error();
-  } catch {
-    throw new FightError("LLM_CONFIGURATION", "The configured Anthropic API base URL is invalid.", 503);
-  }
+  // Validation runs before any cap reservation. An ANTHROPIC_BASE_URL override may use
+  // http only on loopback; explicit endpoints passed in code must be https. Neither may
+  // carry credentials, a path, a query or a fragment.
+  const url = parseBaseURL(endpoint, { allowPath: false, allowLoopbackHttp: options.endpoint === undefined });
+  if (!url) throw new FightError("LLM_CONFIGURATION", "The configured Anthropic API base URL is invalid.", 503);
   const environment = options.environment ?? "land";
   const evidenceItems = narrationEvidence(result, a, b, environment);
   const mode = options.mode ?? "realistic";

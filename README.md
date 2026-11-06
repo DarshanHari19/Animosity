@@ -138,7 +138,8 @@ and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`
 After fresh narration passes every existing check, the backend sends one
 `jev-latest` request to OpenRouter's TypeSafe System One API
 (`https://openrouter.ai/api` by default; override with `OPENROUTER_BASE_URL`),
-authenticated with `OPENROUTER_API_KEY`. If the key is missing, Jev is skipped.
+authenticated with `OPENROUTER_API_KEY`. Without it, Jev reports unavailable; narration is unaffected.
+`OPENROUTER_BASE_URL` must be https, or http on a loopback host (`localhost`, `127.0.0.1`, `[::1]`), with no credentials, query or fragment; an invalid value makes Jev unavailable.
 Server-only `jev_shadow` logs contain each beat's text and probabilities of an
 unsupported causal claim or a contradictory overall winner. Only model-written
 text is scored: the finish includes the climax, not the appended engine verdict.
@@ -232,6 +233,8 @@ Narration calls the Anthropic API with your own key. Set these in `.env`
 
 - `ANTHROPIC_API_KEY`: required for narration. Never sent to the browser or logged.
 - `ANTHROPIC_BASE_URL`: optional; defaults to `https://api.anthropic.com`.
+  It must be an origin only (no path, query or fragment, no credentials): https, or http on a
+  loopback host (`localhost`, `127.0.0.1`, `[::1]`). Anything else gives `LLM_CONFIGURATION`.
 - `NARRATION_MODEL`: optional; defaults to **`claude-haiku-5-5`**. A blank value counts as unset.
 - If the key is missing, narration returns `LLM_NOT_CONFIGURED`: the verdict is
   still returned with `narration_status: "unavailable"`, and the server logs a

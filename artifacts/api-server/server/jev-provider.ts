@@ -2,7 +2,7 @@ import {
   TypeSafeClient, APIError, APITimeoutError, APIConnectionError,
   type TypeSafeClientConfig,
 } from "@typesafe-ai/sdk";
-import { resolveJevConfig } from "./provider-config";
+import { parseOpenRouterBaseURL, resolveJevConfig } from "./provider-config";
 import type { JevFailureCategory } from "./jev-telemetry";
 
 export type JevRequest = {
@@ -23,7 +23,7 @@ export async function requestJev(
   options: Pick<TypeSafeClientConfig, "baseURL" | "apiKey" | "fetch"> = {},
 ): Promise<unknown> {
   const config = resolveJevConfig(process.env);
-  const baseURL = options.baseURL ?? config.baseURL;
+  const baseURL = options.baseURL ?? (parseOpenRouterBaseURL(config.baseURL) ? config.baseURL : undefined);
   const apiKey = options.apiKey ?? config.apiKey;
   if (!baseURL || !apiKey) throw new JevRequestError("configuration_error", null);
   let status: number | null = null;
