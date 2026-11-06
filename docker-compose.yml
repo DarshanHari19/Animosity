@@ -1,0 +1,23 @@
+# Local development database. Mirrors the CI service in .github/workflows/test.yml.
+# Dev-only credentials: this database is local, disposable, and holds no real data.
+services:
+  postgres:
+    image: postgres:16
+    container_name: animosity-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: animosity
+      POSTGRES_PASSWORD: animosity-local-dev
+      POSTGRES_DB: animosity
+    ports:
+      - "5432:5432"
+    volumes:
+      - animosity-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U animosity -d animosity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  animosity-pgdata:
