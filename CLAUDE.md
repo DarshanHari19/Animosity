@@ -8,7 +8,8 @@ Animosity is a fact-based animal matchup simulator. A deterministic engine decid
 2. Run the backend tests, frontend tests, and type checks after every change. If anything fails, stop and report. Never edit, skip, or delete a test to make it pass.
 3. Never commit secrets. Keys live in `.env` locally (gitignored) and in the host's secret settings in production. Keep `.env.example` current with every variable, values blank.
 4. Stop and ask before creating accounts, spending money, changing DNS, running paid evals, merging to main, or deleting anything on Replit.
-5. End each task with a short report: what changed, test counts, and anything done that wasn't asked for.
+5. Stay inside the repo. Stop and ask before installing system software (Homebrew, global npm packages, runtimes), changing files outside the repo (except the vault note in Project memory), or deleting anything outside the repo, including caches. Project dependencies through `pnpm install` are fine.
+6. End each task with a short report: what changed, test counts, and anything done that wasn't asked for.
 
 ## Layout
 
@@ -20,12 +21,17 @@ Animosity is a fact-based animal matchup simulator. A deterministic engine decid
 
 ## Commands
 
-- Install: `pnpm install`
-- Backend tests: `pnpm --filter @workspace/api-server test`
-- Frontend tests: `pnpm --filter @workspace/fight-club test`
+Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
+
+- First-time setup: `cp .env.example .env` and edit it (set `DATABASE_URL`; also `POSTGRES_PORT` and the `DATABASE_URL` port if 5432 is taken), then `docker compose up -d`, `pnpm install`, `pnpm db:push`
+- Dev (API on `PORT`, default 8080; web on `WEB_PORT`, default 5173, proxying `/api`): `pnpm dev`
+- Tests (backend + frontend): `pnpm test`
+  - Backend only: `pnpm --filter @workspace/api-server test`
+  - Frontend only: `pnpm --filter @workspace/fight-club test`
 - Type checks: `pnpm typecheck`
-- Database schema: `pnpm --filter @workspace/db run push`
-- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first)
+- Database schema: `pnpm db:push` (same as `pnpm --filter @workspace/db run push`)
+- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `REPLIT_DEV_DOMAIN`, then `http://localhost:$PORT` (default 8080)
+- Root scripts load the repo-root `.env`; variables already in the shell win
 - CI runs the tests and type checks on every push (`.github/workflows`)
 
 ## Source of truth

@@ -15,6 +15,7 @@ node_modules/
 # local credentials and runtime logs (at any directory depth)
 .env
 .env.*
+!.env.example
 *.log
 
 # User-provided reference attachments stay local

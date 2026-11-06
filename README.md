@@ -102,15 +102,19 @@ Install dependencies with `pnpm install`. In Replit, start the existing
 The preview opens the page at `/`; the API is served at `/api`.
 The workflows supply each service's port and routing configuration.
 
-For local development outside Replit, use two terminals:
+For local development outside Replit, start the local database and apply the schema once,
+then run both servers from the repo root (Node 24, pnpm 10.26.1):
 
 ```sh
-PORT=5000 pnpm --filter @workspace/api-server run dev
-PORT=5173 BASE_PATH=/ pnpm --filter @workspace/fight-club run dev
+cp .env.example .env   # edit: set DATABASE_URL; set POSTGRES_PORT (and the DATABASE_URL port) if 5432 is taken
+docker compose up -d
+pnpm install
+pnpm db:push
+pnpm dev               # API on PORT (default 8080), web on WEB_PORT (default 5173)
 ```
 
-Route `/api` to port 5000 and `/` to port 5173 with your local reverse proxy.
-Replit already provides that routing; no custom Vite proxy is needed there.
+The Vite dev server proxies `/api` to the API port, so open `http://localhost:5173`.
+Without a model key, fights return verdicts with narration unavailable.
 
 ```sh
 pnpm run typecheck
@@ -448,8 +452,9 @@ batch to take several minutes and use up to 150 narration-provider calls,
 plus one Jev shadow call per accepted narration.
 
 Before every fight it compares `/api/health` against the current build manifest
-and stops on a mismatch. Default host is `REPLIT_DEV_DOMAIN`; `--base-url` can
-select another development origin, but it must serve that same build.
+and stops on a mismatch. The host is chosen in this order: `--base-url`, `EVAL_BASE_URL`,
+`REPLIT_DEV_DOMAIN`, then `http://localhost:$PORT` (default 8080). Whatever
+origin is selected must serve that same build.
 `X-Narration-Attempts` is a server-owned response header counting actual provider
 attempts (0–2, including retries). The evaluator uses it rather than guessing
 first-attempt results from buffered logs. The public JSON response is unchanged.

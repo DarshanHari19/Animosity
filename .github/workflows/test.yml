@@ -34,9 +34,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      # pnpm version comes from "packageManager" in package.json (single source of truth).
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.26.1
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
