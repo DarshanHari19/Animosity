@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
+import { resolveEvalBaseUrl } from "./eval-base-url";
 import { AnimalSchema, fightResponseSchemaFor } from "./schemas";
 import { evaluationCases, summarizeEvaluation, type EvaluationRun } from "./evaluation";
 import { JevReportSchema, summarizeJev } from "./jev-telemetry";
@@ -20,7 +21,7 @@ async function main() {
     "base-url": { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) {
-    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.`);
+    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nBase URL precedence: --base-url, then EVAL_BASE_URL, then http://localhost:$PORT (default 8080).\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.`);
     return;
   }
   const repeats = Number(values.runs);
@@ -31,8 +32,7 @@ async function main() {
     throw Error(`--scenarios must contain distinct IDs from 1 through ${evaluationCases.length}.`);
   }
   const cases = selected.map(id => evaluationCases[id - 1]!);
-  const base = values["base-url"] ?? (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "");
-  if (!base) throw Error("Set --base-url to your running development server's origin.");
+  const base = resolveEvalBaseUrl({ flag: values["base-url"], env: process.env });
   const url = new URL(base);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw Error("Invalid base URL.");
   const build = healthSchema.shape.build_id.parse(JSON.parse(fs.readFileSync(manifest, "utf8")).build_id);
