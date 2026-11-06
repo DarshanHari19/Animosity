@@ -8,7 +8,8 @@ Animosity is a fact-based animal matchup simulator. A deterministic engine decid
 2. Run the backend tests, frontend tests, and type checks after every change. If anything fails, stop and report. Never edit, skip, or delete a test to make it pass.
 3. Never commit secrets. Keys live in `.env` locally (gitignored) and in the host's secret settings in production. Keep `.env.example` current with every variable, values blank.
 4. Stop and ask before creating accounts, spending money, changing DNS, running paid evals, merging to main, or deleting anything on Replit.
-5. End each task with a short report: what changed, test counts, and anything done that wasn't asked for.
+5. Stay inside the repo. Stop and ask before installing system software (Homebrew, global npm packages, runtimes), changing files outside the repo (except the vault note in Project memory), or deleting anything outside the repo, including caches. Project dependencies through `pnpm install` are fine.
+6. End each task with a short report: what changed, test counts, and anything done that wasn't asked for.
 
 ## Layout
 
