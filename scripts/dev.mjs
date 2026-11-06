@@ -27,7 +27,10 @@ const { result } = concurrently(
 );
 
 console.log(`[dev] API http://localhost:${apiPort}  |  web http://localhost:${webPort} (proxies /api to the API)`);
+// Ctrl-C / SIGTERM is a normal way to stop dev: exit 0. A real child failure exits 1.
+let stopping = false;
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => (stopping = true));
 result.then(
   () => process.exit(0),
-  () => process.exit(1),
+  () => process.exit(stopping ? 0 : 1),
 );

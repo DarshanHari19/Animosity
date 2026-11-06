@@ -21,7 +21,7 @@ async function main() {
     "base-url": { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) {
-    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nBase URL precedence: --base-url, then EVAL_BASE_URL, then http://localhost:$PORT (default 8080).\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.`);
+    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nBase URL precedence: --base-url, then EVAL_BASE_URL, then REPLIT_DEV_DOMAIN, then http://localhost:$PORT (default 8080).\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.`);
     return;
   }
   const repeats = Number(values.runs);

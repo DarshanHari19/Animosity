@@ -117,7 +117,7 @@ Agent scope rules, run commands, and a narration description.
 - These are documentation only. No code reads them.
 
 ### `scripts/post-merge.sh` (4 lines)
-`pnpm install --frozen-lockfile` and `pnpm --filter db push` (`:3-4`). The package is named `@workspace/db` (`lib/db/package.json:2`). It is unverified whether pnpm's `--filter db` matches a scoped name, so this hook may already be broken. It is Replit-only (`.replit:38-40`) and not used by CI.
+`pnpm install --frozen-lockfile` and `pnpm --filter db push` (`:3-4`). The package is named `@workspace/db` (`lib/db/package.json:2`). Verified in review: `pnpm --filter db exec pwd` resolves to `lib/db`, so pnpm's `--filter db` does match the scoped name `@workspace/db` and the hook works. It is Replit-only (`.replit:38-40`) and not used by CI.
 
 ### Replit mentions in code and doc text (non-functional)
 - `artifacts/api-server/server/narrator.ts:62-63` (error message says "Enable Replit AI Integrations for Anthropic...") and `:76` ("managed Anthropic integration URL").

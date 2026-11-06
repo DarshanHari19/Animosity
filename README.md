@@ -106,8 +106,8 @@ For local development outside Replit, start the local database and apply the sch
 then run both servers from the repo root (Node 24, pnpm 10.26.1):
 
 ```sh
+cp .env.example .env   # edit: set DATABASE_URL; set POSTGRES_PORT (and the DATABASE_URL port) if 5432 is taken
 docker compose up -d
-cp .env.example .env   # then set DATABASE_URL (see .env.example)
 pnpm install
 pnpm db:push
 pnpm dev               # API on PORT (default 8080), web on WEB_PORT (default 5173)
@@ -452,8 +452,9 @@ batch to take several minutes and use up to 150 narration-provider calls,
 plus one Jev shadow call per accepted narration.
 
 Before every fight it compares `/api/health` against the current build manifest
-and stops on a mismatch. Default host is `REPLIT_DEV_DOMAIN`; `--base-url` can
-select another development origin, but it must serve that same build.
+and stops on a mismatch. The host is chosen in this order: `--base-url`, `EVAL_BASE_URL`,
+`REPLIT_DEV_DOMAIN`, then `http://localhost:$PORT` (default 8080). Whatever
+origin is selected must serve that same build.
 `X-Narration-Attempts` is a server-owned response header counting actual provider
 attempts (0–2, including retries). The evaluator uses it rather than guessing
 first-attempt results from buffered logs. The public JSON response is unchanged.
