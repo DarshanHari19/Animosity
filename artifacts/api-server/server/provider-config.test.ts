@@ -202,3 +202,36 @@ test("jev: an invalid OPENROUTER_BASE_URL fails soft as configuration_error with
   });
   assert.deepEqual(seen.map(({ url }) => url), ["http://localhost:4000/v1/systemone"]);
 });
+
+test("NARRATION_MODEL: an invalid model ID falls back to the default, warns by name, and is never logged or sent", async () => {
+  for (const bad of ["OPENROUTER_API_KEY=dummy-secret", "a b", "m\nx", "model;rm", "x=y"]) {
+    assert.equal(resolveNarrationConfig({ NARRATION_MODEL: bad }).model, "claude-haiku-5-5");
+    const summary = narrationStartupSummary({ NARRATION_MODEL: bad });
+    assert.equal(summary.narration_model, "claude-haiku-5-5");
+    const warnings = startupConfigWarnings({ ANTHROPIC_API_KEY: "k", OPENROUTER_API_KEY: "k", NARRATION_MODEL: bad });
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0]!, /^NARRATION_MODEL is not a valid model ID/);
+    assert.equal(warnings[0]!.includes("dummy-secret"), false);
+  }
+  for (const good of ["claude-haiku-5-5", "anthropic/claude-x:beta", "model@2025.01"]) {
+    assert.equal(resolveNarrationConfig({ NARRATION_MODEL: good }).model, good);
+  }
+  const sent: string[] = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+    sent.push(JSON.parse(String(init?.body)).model); return new Response("{}", { status: 500 });
+  }) as typeof fetch;
+  try {
+    await withEnv({ ANTHROPIC_API_KEY: "k", NARRATION_MODEL: "OPENROUTER_API_KEY=dummy-secret" }, async () => {
+      await assert.rejects(narrateMatchup(result, a, b), errorCode("LLM_PROVIDER_FAILURE"));
+    });
+  } finally { globalThis.fetch = original; }
+  assert.deepEqual(sent, ["claude-haiku-5-5"]);
+});
+
+test("the backend test run starts without provider settings from the shell", () => {
+  // Guaranteed by test-env-preload.mjs; this fails if the test script stops using it.
+  for (const name of KEYS.concat(["ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_CUSTOM_HEADERS"])) {
+    assert.equal(process.env[name], undefined, name);
+  }
+});

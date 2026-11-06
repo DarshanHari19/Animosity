@@ -42,12 +42,19 @@ const readKey = (env: Env, name: string): string | undefined => {
   return invalidKey(value) ? undefined : value;
 };
 
+/** Conservative model-ID shape. Anything else (spaces, "=", newlines) falls back to the default. */
+const MODEL_PATTERN = /^[A-Za-z0-9._:@/-]+$/;
+const readModel = (env: Env): string => {
+  const value = read(env, "NARRATION_MODEL");
+  return value !== undefined && MODEL_PATTERN.test(value) ? value : DEFAULT_NARRATION_MODEL;
+};
+
 export function resolveNarrationConfig(env: Env) {
   return {
     apiKey: readKey(env, "ANTHROPIC_API_KEY"),
     /** Explicit override only; undefined means the official API. */
     baseURL: read(env, "ANTHROPIC_BASE_URL"),
-    model: read(env, "NARRATION_MODEL") ?? DEFAULT_NARRATION_MODEL,
+    model: readModel(env),
   };
 }
 
@@ -75,6 +82,10 @@ export function startupConfigWarnings(env: Env): string[] {
   };
   check("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "narration", " (fights return the verdict only)", parseAnthropicBaseURL);
   check("OPENROUTER_API_KEY", "OPENROUTER_BASE_URL", "Jev shadow scoring", " (narration is not affected)", parseOpenRouterBaseURL);
+  const model = read(env, "NARRATION_MODEL");
+  if (model !== undefined && !MODEL_PATTERN.test(model)) {
+    warnings.push(`NARRATION_MODEL is not a valid model ID; using the default ${DEFAULT_NARRATION_MODEL}.`);
+  }
   for (const name of ["ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_CUSTOM_HEADERS"]) {
     if (read(env, name)) warnings.push(`${name} is set; the Anthropic SDK reads it and adds request headers. Unset it unless intended.`);
   }
