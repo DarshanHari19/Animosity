@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 
-const FOLDED_LINE = /^[A-Za-z_][A-Za-z0-9_]*=/;
+const FOLDED_LINE = /^(export\s+)?[A-Za-z_][A-Za-z0-9_]*=/;
 
 export function loadDotEnv(file, env = process.env, warn = console.warn) {
   let content;

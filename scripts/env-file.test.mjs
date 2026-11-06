@@ -36,3 +36,12 @@ test("a trailing-space line that absorbs the next line is dropped with a warning
   assert.equal(warnings[0].includes("dummy-secret-value"), false);
   assert.equal(warnings[0].includes("OPENROUTER_API_KEY"), false);
 });
+
+test("an export-prefixed folded line is also dropped", () => {
+  const { env, warnings } = load("A= \nexport B=dummy-secret-value\nOTHER=ok\n");
+  assert.equal("A" in env, false);
+  assert.equal(env.OTHER, "ok");
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /\bA\b/);
+  assert.equal(warnings[0].includes("dummy-secret-value"), false);
+});
