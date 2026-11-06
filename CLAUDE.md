@@ -30,7 +30,7 @@ Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
   - Frontend only: `pnpm --filter @workspace/fight-club test`
 - Type checks: `pnpm typecheck`
 - Database schema: `pnpm db:push` (same as `pnpm --filter @workspace/db run push`)
-- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `REPLIT_DEV_DOMAIN`, then `http://localhost:$PORT` (default 8080)
+- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `http://localhost:$PORT` (default 8080)
 - Root scripts load the repo-root `.env`; variables already in the shell win
 - CI runs the tests and type checks on every push (`.github/workflows`)
 

@@ -7,7 +7,7 @@ import { fixtureBeats, fixtureResult, startFightServer } from "./test-helpers";
 import { narrationCacheKey } from "./narration-cache";
 
 test("PostgreSQL narration survives router restarts and stores only the first validated set", {
-  skip: !process.env.DATABASE_URL && "Requires the development Replit database",
+  skip: !process.env.DATABASE_URL && "Requires DATABASE_URL (a reachable Postgres)",
 }, async t => {
   const { postgresNarrationCache: cache } = await import("./postgres-narration-cache");
   const { db, pool, narrationCacheTable } = await import("@workspace/db");
