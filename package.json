@@ -14,9 +14,6 @@
   },
   "private": true,
   "packageManager": "pnpm@10.26.1",
-  "dependencies": {
-    "@replit/connectors-sdk": "^0.4.3"
-  },
   "devDependencies": {
     "concurrently": "^10.0.6",
     "prettier": "^3.9.6",
