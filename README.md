@@ -102,15 +102,19 @@ Install dependencies with `pnpm install`. In Replit, start the existing
 The preview opens the page at `/`; the API is served at `/api`.
 The workflows supply each service's port and routing configuration.
 
-For local development outside Replit, use two terminals:
+For local development outside Replit, start the local database and apply the schema once,
+then run both servers from the repo root (Node 24, pnpm 10.26.1):
 
 ```sh
-PORT=5000 pnpm --filter @workspace/api-server run dev
-PORT=5173 BASE_PATH=/ pnpm --filter @workspace/fight-club run dev
+docker compose up -d
+cp .env.example .env   # then set DATABASE_URL (see .env.example)
+pnpm install
+pnpm db:push
+pnpm dev               # API on PORT (default 8080), web on WEB_PORT (default 5173)
 ```
 
-Route `/api` to port 5000 and `/` to port 5173 with your local reverse proxy.
-Replit already provides that routing; no custom Vite proxy is needed there.
+The Vite dev server proxies `/api` to the API port, so open `http://localhost:5173`.
+Without a model key, fights return verdicts with narration unavailable.
 
 ```sh
 pnpm run typecheck

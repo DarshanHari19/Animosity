@@ -20,12 +20,17 @@ Animosity is a fact-based animal matchup simulator. A deterministic engine decid
 
 ## Commands
 
-- Install: `pnpm install`
-- Backend tests: `pnpm --filter @workspace/api-server test`
-- Frontend tests: `pnpm --filter @workspace/fight-club test`
+Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
+
+- First-time setup: `docker compose up -d`, then `cp .env.example .env` and set `DATABASE_URL` (see `.env.example`), then `pnpm install` and `pnpm db:push`
+- Dev (API on `PORT`, default 8080; web on `WEB_PORT`, default 5173, proxying `/api`): `pnpm dev`
+- Tests (backend + frontend): `pnpm test`
+  - Backend only: `pnpm --filter @workspace/api-server test`
+  - Frontend only: `pnpm --filter @workspace/fight-club test`
 - Type checks: `pnpm typecheck`
-- Database schema: `pnpm --filter @workspace/db run push`
-- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first)
+- Database schema: `pnpm db:push` (same as `pnpm --filter @workspace/db run push`)
+- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `http://localhost:$PORT`
+- Root scripts load the repo-root `.env`; variables already in the shell win
 - CI runs the tests and type checks on every push (`.github/workflows`)
 
 ## Source of truth
