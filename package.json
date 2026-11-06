@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "eval": "pnpm --filter @workspace/api-server run eval",
+    "dev": "node scripts/dev.mjs",
+    "test": "node scripts/with-env.mjs sh -c 'pnpm --filter @workspace/api-server test && pnpm --filter @workspace/fight-club test'",
+    "db:push": "node scripts/with-env.mjs pnpm --filter @workspace/db run push",
+    "eval": "node scripts/with-env.mjs pnpm --filter @workspace/api-server run eval",
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
@@ -15,6 +18,7 @@
     "@replit/connectors-sdk": "^0.4.3"
   },
   "devDependencies": {
+    "concurrently": "^10.0.6",
     "prettier": "^3.9.6",
     "typescript": "~5.9.3"
   }

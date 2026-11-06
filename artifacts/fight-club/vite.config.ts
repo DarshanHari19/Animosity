@@ -28,6 +28,14 @@ if (!basePath) {
   );
 }
 
+// Local development only: the root `pnpm dev` script sets API_PORT so the picker
+// can call the API same-origin. Unset on Replit, where /api is routed for us.
+const apiPort = process.env.API_PORT;
+
+if (apiPort !== undefined && (Number.isNaN(Number(apiPort)) || Number(apiPort) <= 0)) {
+  throw new Error(`Invalid API_PORT value: "${apiPort}"`);
+}
+
 export default defineConfig({
   base: basePath,
   plugins: [
@@ -74,6 +82,9 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    ...(apiPort
+      ? { proxy: { '/api': { target: `http://localhost:${apiPort}`, changeOrigin: false } } }
+      : {}),
   },
   preview: {
     port,
