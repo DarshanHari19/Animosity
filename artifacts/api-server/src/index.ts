@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { narrationStartupSummary, startupConfigWarnings } from "../server/provider-config";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,9 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+logger.info(narrationStartupSummary(process.env), "Narration provider configured");
+for (const warning of startupConfigWarnings(process.env)) logger.warn(warning);
 
 app.listen(port, (err) => {
   if (err) {

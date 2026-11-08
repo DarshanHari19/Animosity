@@ -25,12 +25,12 @@ Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
 
 - First-time setup: `cp .env.example .env` and edit it (set `DATABASE_URL`; also `POSTGRES_PORT` and the `DATABASE_URL` port if 5432 is taken), then `docker compose up -d`, `pnpm install`, `pnpm db:push`
 - Dev (API on `PORT`, default 8080; web on `WEB_PORT`, default 5173, proxying `/api`): `pnpm dev`
-- Tests (backend + frontend): `pnpm test`
+- Tests (backend + frontend): `pnpm test` (loads `.env` but strips the provider keys and URLs, so tests never use billable keys)
   - Backend only: `pnpm --filter @workspace/api-server test`
   - Frontend only: `pnpm --filter @workspace/fight-club test`
 - Type checks: `pnpm typecheck`
 - Database schema: `pnpm db:push` (same as `pnpm --filter @workspace/db run push`)
-- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `REPLIT_DEV_DOMAIN`, then `http://localhost:$PORT` (default 8080)
+- Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `http://localhost:$PORT` (default 8080)
 - Root scripts load the repo-root `.env`; variables already in the shell win
 - CI runs the tests and type checks on every push (`.github/workflows`)
 

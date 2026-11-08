@@ -2,7 +2,7 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// Separate from the dev server config: no PORT, BASE_PATH, or Replit plugins.
+// Separate from the dev server config: no PORT or BASE_PATH.
 export default defineConfig({
   plugins: [react()],
   resolve: {

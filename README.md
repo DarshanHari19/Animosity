@@ -83,7 +83,7 @@ as an observation-only quality monitor for fresh validated narrations, including
 in production. Its scores never enforce acceptance or alter narration.
 
 A minimal React + Vite page and Node + Express TypeScript API, with Zod validation.
-Replit PostgreSQL stores validated narration only. No authentication, hit points, or game loop.
+PostgreSQL stores validated narration only. No authentication, hit points, or game loop.
 
 **This is a limited hypothetical model, not a scientific prediction.** The twelve
 animal profiles and trait values were entered from user-provided data. The
@@ -97,13 +97,8 @@ require a configured LLM provider; gate outcomes can return explanations without
 
 ## Run
 
-Install dependencies with `pnpm install`. In Replit, start the existing
-`artifacts/api-server: API Server` and `artifacts/fight-club: web` workflows.
-The preview opens the page at `/`; the API is served at `/api`.
-The workflows supply each service's port and routing configuration.
-
-For local development outside Replit, start the local database and apply the schema once,
-then run both servers from the repo root (Node 24, pnpm 10.26.1):
+Start the local database and apply the schema once, then run both servers from
+the repo root (Node 24, pnpm 10.26.1):
 
 ```sh
 cp .env.example .env   # edit: set DATABASE_URL; set POSTGRES_PORT (and the DATABASE_URL port) if 5432 is taken
@@ -114,7 +109,9 @@ pnpm dev               # API on PORT (default 8080), web on WEB_PORT (default 51
 ```
 
 The Vite dev server proxies `/api` to the API port, so open `http://localhost:5173`.
-Without a model key, fights return verdicts with narration unavailable.
+Set `ANTHROPIC_API_KEY` in `.env` for narration (and `OPENROUTER_API_KEY` for Jev).
+Without a model key, fights return verdicts with narration unavailable, and the
+server logs one startup warning per missing key.
 
 ```sh
 pnpm run typecheck
@@ -125,8 +122,8 @@ pnpm --filter @workspace/fight-club test
 GitHub Actions runs these checks on every push and pull request using Node 24
 and pnpm 10.26.1. CI creates an isolated PostgreSQL service and applies the
 schema so the persistence test runs too. Its fixed test-only database
-credentials are not secrets and never connect to the app's database. No Replit
-or model credentials are required, and all model requests are mocked.
+credentials are not secrets and never connect to the app's database. No
+model credentials are required, and all model requests are mocked.
 
 Tests use fictional fixtures and mocked LLM responses only. They do not call
 an LLM, require a key, or replace scoring in production. The persistence test
@@ -139,8 +136,10 @@ and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`
 ## Jev shadow observations
 
 After fresh narration passes every existing check, the backend sends one
-`jev-latest` request through Replit AI Integrations for OpenRouter, using managed
-credentials (no personal API key; calls are billed to Replit credits).
+`jev-latest` request to OpenRouter's TypeSafe System One API
+(`https://openrouter.ai/api` by default; override with `OPENROUTER_BASE_URL`),
+authenticated with `OPENROUTER_API_KEY`. Without it, Jev reports unavailable; narration is unaffected.
+`OPENROUTER_BASE_URL` must be https, or http on a loopback host (`localhost`, `127.0.0.1`, `[::1]`), with no credentials, query or fragment; an invalid value makes Jev unavailable.
 Server-only `jev_shadow` logs contain each beat's text and probabilities of an
 unsupported causal claim or a contradictory overall winner. Only model-written
 text is scored: the finish includes the climax, not the appended engine verdict.
@@ -149,8 +148,8 @@ or approves narration. Invalid narration never reaches Jev; cache hits make no
 provider calls. Jev failures/timeouts log `jev_shadow_unavailable` and leave the
 validated narration unchanged. The one shadow call has a 10-second timeout and
 no retries; it is separate from the unchanged narration retry and daily cap.
-TypeSafe requests use `compression: false`: the managed transport does not accept
-zstd-compressed bodies.
+TypeSafe requests use `compression: false`: zstd-compressed
+requests over 1 KB were rejected with HTTP 415.
 
 ## Fill in the science
 
@@ -229,16 +228,17 @@ tests cover exact scoring rules, validation, routes and mocked provider response
 
 ## Configure narration
 
-Narration uses **Replit AI Integrations for Anthropic** with Replit-managed
-credentials. No personal API key or `LLM_API_KEY` is required. Usage is billed
-to your Replit credits.
+Narration calls the Anthropic API with your own key. Set these in `.env`
+(local) or the host's secret settings (production); see `.env.example`.
 
-- Default model: **`claude-haiku-5-5`**, a Claude Haiku-class model.
-- Replit provisions `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` and
-  `AI_INTEGRATIONS_ANTHROPIC_API_KEY`. The backend uses these through the
-  Anthropic SDK; credentials never go to the browser or logs.
-- If managed configuration is missing, narration returns `LLM_NOT_CONFIGURED`
-  with an instruction to enable the Anthropic AI integration, not to add a key.
+- `ANTHROPIC_API_KEY`: required for narration. Never sent to the browser or logged.
+- `ANTHROPIC_BASE_URL`: optional; defaults to `https://api.anthropic.com`.
+  It must be an origin only (no path, query or fragment, no credentials): https, or http on a
+  loopback host (`localhost`, `127.0.0.1`, `[::1]`). Anything else gives `LLM_CONFIGURATION`.
+- `NARRATION_MODEL`: optional; defaults to **`claude-haiku-5-5`**. A blank value counts as unset.
+- If the key is missing, narration returns `LLM_NOT_CONFIGURED`: the verdict is
+  still returned with `narration_status: "unavailable"`, and the server logs a
+  startup warning.
 - Legacy `LLM_API_KEY`, `LLM_API_URL`, and `LLM_MODEL` are no longer read.
 
 The backend assigns stable fight-local IDs (`E1`, `E2`, …) to the filtered
@@ -396,7 +396,7 @@ These deterministic English checks are conservative, not semantic fact proof.
 
 ## Persistent narration cache
 
-Replit's built-in PostgreSQL stores one validated narration per **ordered**
+PostgreSQL stores one validated narration per **ordered**
 animal A, animal B, environment, mode, and build ID. A cache hit returns the
 same beats without calling the provider or reserving daily-cap budget. Failed
 or unavailable narrations are never cached. Non-narrated outcomes bypass the
@@ -453,7 +453,7 @@ plus one Jev shadow call per accepted narration.
 
 Before every fight it compares `/api/health` against the current build manifest
 and stops on a mismatch. The host is chosen in this order: `--base-url`, `EVAL_BASE_URL`,
-`REPLIT_DEV_DOMAIN`, then `http://localhost:$PORT` (default 8080). Whatever
+then `http://localhost:$PORT` (default 8080). Whatever
 origin is selected must serve that same build.
 `X-Narration-Attempts` is a server-owned response header counting actual provider
 attempts (0–2, including retries). The evaluator uses it rather than guessing

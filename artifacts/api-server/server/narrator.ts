@@ -5,6 +5,7 @@ import {
   type Animal, type Beat, type Environment, type EngineContext, type MatchupResult,
 } from "./schemas";
 import { FightError } from "./errors";
+import { DEFAULT_ANTHROPIC_BASE_URL, parseBaseURL, resolveNarrationConfig } from "./provider-config";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
 import { failedChecks, logNarrationFailure, withOffendingText, type FailureCheck } from "./narration-diagnostics";
 import { narrationTool, resolveEvidence } from "./narration-tool";
@@ -56,25 +57,21 @@ export async function narrateMatchup(
   if (result.outcome.kind !== "favored" && result.outcome.kind !== "even") {
     throw new FightError("NARRATION_NOT_APPLICABLE", "This outcome requires an explanation, not narration.", 502);
   }
-  const baseURL = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
-  const apiKey = options.apiKey ?? process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
-  if (!apiKey || (!options.fetch && !baseURL)) {
+  const config = resolveNarrationConfig(process.env);
+  const apiKey = options.apiKey ?? config.apiKey;
+  if (!apiKey) {
     throw new FightError("LLM_NOT_CONFIGURED",
-      "Enable Replit AI Integrations for Anthropic to provision managed narration credentials; no personal API key is required.", 503);
+      "Set ANTHROPIC_API_KEY to enable narration.", 503);
   }
   // The reserved URL is only used by injected test transports, never live calls.
-  const endpoint = options.endpoint ?? baseURL ?? "https://narration.test.invalid";
-  const model = options.model ?? "claude-haiku-5-5";
-  let url: URL;
-  try {
-    url = new URL(endpoint);
-    // Managed proxy URLs may use internal HTTP. Explicit test endpoints retain
-    // the existing HTTPS-only validation; production uses only the managed URL.
-    if (url.username || url.password ||
-      (url.protocol !== "https:" && (options.endpoint !== undefined || url.protocol !== "http:"))) throw new Error();
-  } catch {
-    throw new FightError("LLM_CONFIGURATION", "The managed Anthropic integration URL is invalid.", 503);
-  }
+  const endpoint = options.endpoint ?? config.baseURL
+    ?? (options.fetch ? "https://narration.test.invalid" : DEFAULT_ANTHROPIC_BASE_URL);
+  const model = options.model ?? config.model;
+  // Validation runs before any cap reservation. An ANTHROPIC_BASE_URL override may use
+  // http only on loopback; explicit endpoints passed in code must be https. Neither may
+  // carry credentials, a path, a query or a fragment.
+  const url = parseBaseURL(endpoint, { allowPath: false, allowLoopbackHttp: options.endpoint === undefined });
+  if (!url) throw new FightError("LLM_CONFIGURATION", "The configured Anthropic API base URL is invalid.", 503);
   const environment = options.environment ?? "land";
   const evidenceItems = narrationEvidence(result, a, b, environment);
   const mode = options.mode ?? "realistic";

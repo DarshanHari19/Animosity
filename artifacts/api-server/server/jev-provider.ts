@@ -2,6 +2,7 @@ import {
   TypeSafeClient, APIError, APITimeoutError, APIConnectionError,
   type TypeSafeClientConfig,
 } from "@typesafe-ai/sdk";
+import { parseOpenRouterBaseURL, resolveJevConfig } from "./provider-config";
 import type { JevFailureCategory } from "./jev-telemetry";
 
 export type JevRequest = {
@@ -21,13 +22,14 @@ export async function requestJev(
   onHttpStatus: (status: number) => void,
   options: Pick<TypeSafeClientConfig, "baseURL" | "apiKey" | "fetch"> = {},
 ): Promise<unknown> {
-  const baseURL = options.baseURL ?? process.env.AI_INTEGRATIONS_OPENROUTER_BASE_URL;
-  const apiKey = options.apiKey ?? process.env.AI_INTEGRATIONS_OPENROUTER_API_KEY;
+  const config = resolveJevConfig(process.env);
+  const baseURL = options.baseURL ?? (parseOpenRouterBaseURL(config.baseURL) ? config.baseURL : undefined);
+  const apiKey = options.apiKey ?? config.apiKey;
   if (!baseURL || !apiKey) throw new JevRequestError("configuration_error", null);
   let status: number | null = null;
   const client = new TypeSafeClient({
     baseURL, apiKey, timeout: 10_000, retry: { maxRetries: 0 }, logLevel: "off",
-    compression: false,
+    compression: false, // zstd requests over 1 KB were rejected with HTTP 415.
     fetch: async (url, init) => {
       const response = await (options.fetch ?? fetch)(url, init);
       status = response.status;
