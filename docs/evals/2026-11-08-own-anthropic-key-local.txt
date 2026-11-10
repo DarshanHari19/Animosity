@@ -1,0 +1,266 @@
+
+> workspace@0.0.0 eval /Users/darshanhari/code/Animosity
+> node scripts/with-env.mjs pnpm --filter @workspace/api-server run eval
+
+
+> @workspace/api-server@0.0.0 eval /Users/darshanhari/code/Animosity/artifacts/api-server
+> tsx server/eval.ts
+
+Build 2026-11-08T23:30:47.109Z: 25 scenarios × 3 runs. Requests paced at least 6.5 seconds apart.
+Case 1, run 1: available; calls=1; reason=null
+Case 2, run 1: available; calls=1; reason=null
+Case 3, run 1: available; calls=1; reason=null
+Case 4, run 1: available; calls=1; reason=null
+Case 5, run 1: available; calls=1; reason=null
+Case 6, run 1: available; calls=1; reason=null
+Case 7, run 1: available; calls=1; reason=null
+Case 8, run 1: available; calls=1; reason=null
+Case 9, run 1: available; calls=1; reason=null
+Case 10, run 1: available; calls=1; reason=null
+Case 11, run 1: available; calls=1; reason=null
+Case 12, run 1: available; calls=1; reason=null
+Case 13, run 1: available; calls=2; reason=null
+Case 14, run 1: available; calls=1; reason=null
+Case 15, run 1: available; calls=1; reason=null
+Case 16, run 1: available; calls=1; reason=null
+Case 17, run 1: available; calls=1; reason=null
+Case 18, run 1: available; calls=1; reason=null
+Case 19, run 1: available; calls=1; reason=null
+Case 20, run 1: available; calls=1; reason=null
+Case 21, run 1: available; calls=1; reason=null
+Case 22, run 1: available; calls=1; reason=null
+Case 23, run 1: available; calls=2; reason=null
+Case 24, run 1: available; calls=1; reason=null
+Case 25, run 1: available; calls=1; reason=null
+Case 1, run 2: available; calls=1; reason=null
+Case 2, run 2: available; calls=1; reason=null
+Case 3, run 2: available; calls=1; reason=null
+Case 4, run 2: available; calls=1; reason=null
+Case 5, run 2: available; calls=1; reason=null
+Case 6, run 2: available; calls=2; reason=null
+Case 7, run 2: available; calls=1; reason=null
+Case 8, run 2: available; calls=1; reason=null
+Case 9, run 2: available; calls=1; reason=null
+Case 10, run 2: available; calls=2; reason=null
+Case 11, run 2: available; calls=1; reason=null
+Case 12, run 2: available; calls=1; reason=null
+Case 13, run 2: available; calls=1; reason=null
+Case 14, run 2: available; calls=1; reason=null
+Case 15, run 2: available; calls=1; reason=null
+Case 16, run 2: available; calls=1; reason=null
+Case 17, run 2: available; calls=1; reason=null
+Case 18, run 2: available; calls=1; reason=null
+Case 19, run 2: available; calls=1; reason=null
+Case 20, run 2: available; calls=1; reason=null
+Case 21, run 2: available; calls=1; reason=null
+Case 22, run 2: available; calls=1; reason=null
+Case 23, run 2: available; calls=1; reason=null
+Case 24, run 2: available; calls=1; reason=null
+Case 25, run 2: available; calls=1; reason=null
+Case 1, run 3: available; calls=1; reason=null
+Case 2, run 3: available; calls=1; reason=null
+Case 3, run 3: available; calls=1; reason=null
+Case 4, run 3: available; calls=1; reason=null
+Case 5, run 3: available; calls=1; reason=null
+Case 6, run 3: available; calls=1; reason=null
+Case 7, run 3: available; calls=1; reason=null
+Case 8, run 3: available; calls=1; reason=null
+Case 9, run 3: available; calls=2; reason=null
+Case 10, run 3: available; calls=1; reason=null
+Case 11, run 3: available; calls=1; reason=null
+Case 12, run 3: available; calls=1; reason=null
+Case 13, run 3: available; calls=1; reason=null
+Case 14, run 3: available; calls=1; reason=null
+Case 15, run 3: available; calls=1; reason=null
+Case 16, run 3: available; calls=1; reason=null
+Case 17, run 3: unavailable; calls=2; reason=INVALID_NARRATION
+Case 18, run 3: available; calls=1; reason=null
+Case 19, run 3: available; calls=1; reason=null
+Case 20, run 3: available; calls=1; reason=null
+Case 21, run 3: available; calls=1; reason=null
+Case 22, run 3: available; calls=1; reason=null
+Case 23, run 3: available; calls=1; reason=null
+Case 24, run 3: available; calls=1; reason=null
+Case 25, run 3: available; calls=2; reason=null
+┌─────────┬──────────────────────┬─────────┬─────────┐
+│ (index) │ metric               │ count   │ rate    │
+├─────────┼──────────────────────┼─────────┼─────────┤
+│ 0       │ 'First-attempt pass' │ '68/75' │ '90.7%' │
+│ 1       │ 'Final unavailable'  │ '1/75'  │ '1.3%'  │
+└─────────┴──────────────────────┴─────────┴─────────┘
+┌─────────┬───────────────────────────────┬───────┐
+│ (index) │ narration_reason              │ count │
+├─────────┼───────────────────────────────┼───────┤
+│ 0       │ 'null'                        │ 74    │
+│ 1       │ 'INVALID_NARRATION'           │ 1     │
+│ 2       │ 'LLM_PROVIDER_FAILURE'        │ 0     │
+│ 3       │ 'NARRATION_DAILY_CAP_REACHED' │ 0     │
+│ 4       │ 'LLM_NOT_CONFIGURED'          │ 0     │
+│ 5       │ 'LLM_CONFIGURATION'           │ 0     │
+│ 6       │ 'NARRATION_CAP_CONFIGURATION' │ 0     │
+│ 7       │ 'NARRATION_FAILED'            │ 0     │
+└─────────┴───────────────────────────────┴───────┘
+┌─────────┬────┬──────────────────────────────────────────────┬─────────────────┬────────────────┬────────────┬─────────────┐
+│ (index) │ id │ matchup                                      │ environment     │ mode           │ First-pass │ Unavailable │
+├─────────┼────┼──────────────────────────────────────────────┼─────────────────┼────────────────┼────────────┼─────────────┤
+│ 0       │ 1  │ 'Lion vs Lion'                               │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 1       │ 2  │ 'Hippopotamus vs Lion'                       │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 2       │ 3  │ 'Saltwater crocodile vs Lion'                │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 3       │ 4  │ 'Lion vs Grizzly bear'                       │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 4       │ 5  │ 'Gorilla vs Grizzly bear'                    │ 'land'          │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 5       │ 6  │ 'Rhinoceros vs Lion'                         │ 'land'          │ 'realistic'    │ '2/3'      │ '0/3'       │
+│ 6       │ 7  │ 'Hippopotamus vs Rhinoceros'                 │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 7       │ 8  │ 'Hippopotamus vs Saltwater crocodile'        │ 'shallow_water' │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 8       │ 9  │ 'Great white shark vs Saltwater crocodile'   │ 'deep_water'    │ 'forced_fight' │ '2/3'      │ '0/3'       │
+│ 9       │ 10 │ 'Great white shark vs Lion'                  │ 'deep_water'    │ 'forced_fight' │ '2/3'      │ '0/3'       │
+│ 10      │ 11 │ 'Great white shark vs Lion'                  │ 'land'          │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 11      │ 12 │ 'Saltwater crocodile vs Lion'                │ 'shallow_water' │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 12      │ 13 │ 'Hippopotamus vs Lion'                       │ 'shallow_water' │ 'forced_fight' │ '2/3'      │ '0/3'       │
+│ 13      │ 14 │ 'Rhinoceros vs Grizzly bear'                 │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 14      │ 15 │ 'Grizzly bear vs Saltwater crocodile'        │ 'land'          │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 15      │ 16 │ 'Gorilla vs Lion'                            │ 'land'          │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 16      │ 17 │ 'Gorilla vs Rhinoceros'                      │ 'land'          │ 'forced_fight' │ '2/3'      │ '1/3'       │
+│ 17      │ 18 │ 'Great white shark vs Great white shark'     │ 'deep_water'    │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 18      │ 19 │ 'Saltwater crocodile vs Saltwater crocodile' │ 'shallow_water' │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 19      │ 20 │ 'Hippopotamus vs Hippopotamus'               │ 'shallow_water' │ 'realistic'    │ '3/3'      │ '0/3'       │
+│ 20      │ 21 │ 'Tiger vs Lion'                              │ 'land'          │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 21      │ 22 │ 'Polar bear vs Grizzly bear'                 │ 'land'          │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 22      │ 23 │ 'African bush elephant vs Rhinoceros'        │ 'land'          │ 'forced_fight' │ '2/3'      │ '0/3'       │
+│ 23      │ 24 │ 'Orca vs Great white shark'                  │ 'deep_water'    │ 'forced_fight' │ '3/3'      │ '0/3'       │
+│ 24      │ 25 │ 'Komodo dragon vs Gorilla'                   │ 'land'          │ 'forced_fight' │ '2/3'      │ '0/3'       │
+└─────────┴────┴──────────────────────────────────────────────┴─────────────────┴────────────────┴────────────┴─────────────┘
+Failed checks across all attempts (each check counted once per failed attempt):
+┌─────────┬──────────────────────┬─────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ (index) │ check                │ failed_attempts │ example_1                                                                                               │ example_2                                                                                                        │ example_3                                                                                                         │
+├─────────┼──────────────────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 0       │ 'causal_grounding'   │ 2               │ 'The Lion lunges in, trying to grab hold, but the Rhinoceros keeps pushing it toward the edge.'         │ 'The Gorilla feints left, then sidesteps, but the Rhinoceros swerves and keeps closing the distance.'            │ ''                                                                                                                │
+│ 1       │ 'non_finish_verdict' │ 3               │ 'The African bush elephant wraps its trunk around the Rhinoceros and pushes it back across the land.'   │ 'The Rhinoceros swings around, weighing about 12 times the Gorilla, and presses it back across the open ground.' │ 'The Gorilla surges in with powerful arms, wrestling the Komodo dragon and driving it further across the ground.' │
+│ 2       │ 'text_consistency'   │ 3               │ "The Hippopotamus, at a weight more than seven times the Lion's, bears down and keeps pushing forward." │ 'The Great white shark, nearly four meters of muscle, drives in relentlessly through the spray.'                 │ 'The Great white shark and the Saltwater crocodile break apart in deep water, neither one giving ground at all.'  │
+└─────────┴──────────────────────┴─────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Jev shadow: 74 narrations scored; 0 calls failed or timed out; 1 narrations not scored.
+Jev failures by sanitized category:
+┌─────────┬───────────────────────┬───────┐
+│ (index) │ category              │ count │
+├─────────┼───────────────────────┼───────┤
+│ 0       │ 'timeout'             │ 0     │
+│ 1       │ 'http_error'          │ 0     │
+│ 2       │ 'parse_error'         │ 0     │
+│ 3       │ 'transport_error'     │ 0     │
+│ 4       │ 'configuration_error' │ 0     │
+│ 5       │ 'internal_error'      │ 0     │
+└─────────┴───────────────────────┴───────┘
+Jev call timings (milliseconds):
+┌─────────┬─────────┬─────┬──────────┬──────────────────┬─────────────┬────────────┐
+│ (index) │ case_id │ run │ status   │ failure_category │ http_status │ elapsed_ms │
+├─────────┼─────────┼─────┼──────────┼──────────────────┼─────────────┼────────────┤
+│ 0       │ 1       │ 1   │ 'scored' │ null             │ 200         │ 442        │
+│ 1       │ 2       │ 1   │ 'scored' │ null             │ 200         │ 297        │
+│ 2       │ 3       │ 1   │ 'scored' │ null             │ 200         │ 323        │
+│ 3       │ 4       │ 1   │ 'scored' │ null             │ 200         │ 288        │
+│ 4       │ 5       │ 1   │ 'scored' │ null             │ 200         │ 276        │
+│ 5       │ 6       │ 1   │ 'scored' │ null             │ 200         │ 283        │
+│ 6       │ 7       │ 1   │ 'scored' │ null             │ 200         │ 344        │
+│ 7       │ 8       │ 1   │ 'scored' │ null             │ 200         │ 264        │
+│ 8       │ 9       │ 1   │ 'scored' │ null             │ 200         │ 371        │
+│ 9       │ 10      │ 1   │ 'scored' │ null             │ 200         │ 305        │
+│ 10      │ 11      │ 1   │ 'scored' │ null             │ 200         │ 291        │
+│ 11      │ 12      │ 1   │ 'scored' │ null             │ 200         │ 280        │
+│ 12      │ 13      │ 1   │ 'scored' │ null             │ 200         │ 274        │
+│ 13      │ 14      │ 1   │ 'scored' │ null             │ 200         │ 220        │
+│ 14      │ 15      │ 1   │ 'scored' │ null             │ 200         │ 292        │
+│ 15      │ 16      │ 1   │ 'scored' │ null             │ 200         │ 342        │
+│ 16      │ 17      │ 1   │ 'scored' │ null             │ 200         │ 299        │
+│ 17      │ 18      │ 1   │ 'scored' │ null             │ 200         │ 336        │
+│ 18      │ 19      │ 1   │ 'scored' │ null             │ 200         │ 289        │
+│ 19      │ 20      │ 1   │ 'scored' │ null             │ 200         │ 330        │
+│ 20      │ 21      │ 1   │ 'scored' │ null             │ 200         │ 304        │
+│ 21      │ 22      │ 1   │ 'scored' │ null             │ 200         │ 284        │
+│ 22      │ 23      │ 1   │ 'scored' │ null             │ 200         │ 269        │
+│ 23      │ 24      │ 1   │ 'scored' │ null             │ 200         │ 261        │
+│ 24      │ 25      │ 1   │ 'scored' │ null             │ 200         │ 264        │
+│ 25      │ 1       │ 2   │ 'scored' │ null             │ 200         │ 330        │
+│ 26      │ 2       │ 2   │ 'scored' │ null             │ 200         │ 273        │
+│ 27      │ 3       │ 2   │ 'scored' │ null             │ 200         │ 290        │
+│ 28      │ 4       │ 2   │ 'scored' │ null             │ 200         │ 268        │
+│ 29      │ 5       │ 2   │ 'scored' │ null             │ 200         │ 294        │
+│ 30      │ 6       │ 2   │ 'scored' │ null             │ 200         │ 291        │
+│ 31      │ 7       │ 2   │ 'scored' │ null             │ 200         │ 227        │
+│ 32      │ 8       │ 2   │ 'scored' │ null             │ 200         │ 305        │
+│ 33      │ 9       │ 2   │ 'scored' │ null             │ 200         │ 339        │
+│ 34      │ 10      │ 2   │ 'scored' │ null             │ 200         │ 313        │
+│ 35      │ 11      │ 2   │ 'scored' │ null             │ 200         │ 218        │
+│ 36      │ 12      │ 2   │ 'scored' │ null             │ 200         │ 294        │
+│ 37      │ 13      │ 2   │ 'scored' │ null             │ 200         │ 369        │
+│ 38      │ 14      │ 2   │ 'scored' │ null             │ 200         │ 286        │
+│ 39      │ 15      │ 2   │ 'scored' │ null             │ 200         │ 303        │
+│ 40      │ 16      │ 2   │ 'scored' │ null             │ 200         │ 290        │
+│ 41      │ 17      │ 2   │ 'scored' │ null             │ 200         │ 276        │
+│ 42      │ 18      │ 2   │ 'scored' │ null             │ 200         │ 312        │
+│ 43      │ 19      │ 2   │ 'scored' │ null             │ 200         │ 327        │
+│ 44      │ 20      │ 2   │ 'scored' │ null             │ 200         │ 287        │
+│ 45      │ 21      │ 2   │ 'scored' │ null             │ 200         │ 410        │
+│ 46      │ 22      │ 2   │ 'scored' │ null             │ 200         │ 271        │
+│ 47      │ 23      │ 2   │ 'scored' │ null             │ 200         │ 324        │
+│ 48      │ 24      │ 2   │ 'scored' │ null             │ 200         │ 398        │
+│ 49      │ 25      │ 2   │ 'scored' │ null             │ 200         │ 286        │
+│ 50      │ 1       │ 3   │ 'scored' │ null             │ 200         │ 342        │
+│ 51      │ 2       │ 3   │ 'scored' │ null             │ 200         │ 296        │
+│ 52      │ 3       │ 3   │ 'scored' │ null             │ 200         │ 293        │
+│ 53      │ 4       │ 3   │ 'scored' │ null             │ 200         │ 390        │
+│ 54      │ 5       │ 3   │ 'scored' │ null             │ 200         │ 287        │
+│ 55      │ 6       │ 3   │ 'scored' │ null             │ 200         │ 276        │
+│ 56      │ 7       │ 3   │ 'scored' │ null             │ 200         │ 339        │
+│ 57      │ 8       │ 3   │ 'scored' │ null             │ 200         │ 276        │
+│ 58      │ 9       │ 3   │ 'scored' │ null             │ 200         │ 281        │
+│ 59      │ 10      │ 3   │ 'scored' │ null             │ 200         │ 224        │
+│ 60      │ 11      │ 3   │ 'scored' │ null             │ 200         │ 284        │
+│ 61      │ 12      │ 3   │ 'scored' │ null             │ 200         │ 301        │
+│ 62      │ 13      │ 3   │ 'scored' │ null             │ 200         │ 285        │
+│ 63      │ 14      │ 3   │ 'scored' │ null             │ 200         │ 299        │
+│ 64      │ 15      │ 3   │ 'scored' │ null             │ 200         │ 283        │
+│ 65      │ 16      │ 3   │ 'scored' │ null             │ 200         │ 283        │
+│ 66      │ 18      │ 3   │ 'scored' │ null             │ 200         │ 324        │
+│ 67      │ 19      │ 3   │ 'scored' │ null             │ 200         │ 285        │
+│ 68      │ 20      │ 3   │ 'scored' │ null             │ 200         │ 294        │
+│ 69      │ 21      │ 3   │ 'scored' │ null             │ 200         │ 289        │
+│ 70      │ 22      │ 3   │ 'scored' │ null             │ 200         │ 349        │
+│ 71      │ 23      │ 3   │ 'scored' │ null             │ 200         │ 280        │
+│ 72      │ 24      │ 3   │ 'scored' │ null             │ 200         │ 273        │
+│ 73      │ 25      │ 3   │ 'scored' │ null             │ 200         │ 287        │
+└─────────┴─────────┴─────┴──────────┴──────────────────┴─────────────┴────────────┘
+┌─────────┬────────────────────────────────────┬──────────────┬───────────┬───────────┬───────────┐
+│ (index) │ question                           │ beats_scored │ above_0_5 │ above_0_7 │ above_0_9 │
+├─────────┼────────────────────────────────────┼──────────────┼───────────┼───────────┼───────────┤
+│ 0       │ 'unsupported_reason_probability'   │ 501          │ 16        │ 1         │ 0         │
+│ 1       │ 'contradictory_winner_probability' │ 501          │ 0         │ 0         │ 0         │
+└─────────┴────────────────────────────────────┴──────────────┴───────────┴───────────┴───────────┘
+Jev unsupported_reason_probability, 0.5 < p <= 0.7: 15 beats; up to 10 examples
+┌─────────┬─────────┬─────┬────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬─────────────┐
+│ (index) │ case_id │ run │ beat_index │ text                                                                                                                   │ probability │
+├─────────┼─────────┼─────┼────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────┤
+│ 0       │ 24      │ 3   │ 4          │ "The Orca cuts across the shark's path, pushing it toward the depths with its massive bulk."                           │ 0.67        │
+│ 1       │ 21      │ 1   │ 5          │ 'The Tiger pushes back, surging forward with its weight, forcing the Lion to give ground a few paces.'                 │ 0.65        │
+│ 2       │ 23      │ 3   │ 5          │ 'The African bush elephant drives the Rhinoceros down with a crushing charge and tramples it on the open land.'        │ 0.58        │
+│ 3       │ 24      │ 2   │ 6          │ 'The Orca drives the Great white shark down, pinning it in the deep water and holding it under until the fight ends.'  │ 0.56        │
+│ 4       │ 25      │ 2   │ 5          │ 'The Gorilla pins the Komodo dragon to the land and holds it down, ending the fight with a crushing grip.'             │ 0.56        │
+│ 5       │ 2       │ 1   │ 4          │ 'The Hippopotamus presses forward, driving the Lion back step by step across the dirt.'                                │ 0.54        │
+│ 6       │ 8       │ 1   │ 4          │ 'The Hippopotamus presses on, pushing its heavy bulk forward and driving the crocodile back through the mud.'          │ 0.54        │
+│ 7       │ 24      │ 1   │ 6          │ 'The Orca drives forward and seizes the Great white shark, pinning it beneath the deep water until the fight is over.' │ 0.54        │
+│ 8       │ 17      │ 2   │ 5          │ 'The Rhinoceros drives its horn forward, pressing its advantage on the open ground.'                                   │ 0.54        │
+│ 9       │ 22      │ 2   │ 6          │ 'The Polar bear pins the Grizzly bear to the ground on land and clamps its jaws down, ending the fight.'               │ 0.54        │
+└─────────┴─────────┴─────┴────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴─────────────┘
+Jev unsupported_reason_probability, 0.7 < p <= 0.9: 1 beats; up to 10 examples
+┌─────────┬─────────┬─────┬────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────┬─────────────┐
+│ (index) │ case_id │ run │ beat_index │ text                                                                                              │ probability │
+├─────────┼─────────┼─────┼────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────┤
+│ 0       │ 3       │ 2   │ 4          │ 'The Lion charges again, but its footing slips on the uneven ground, and it pulls back to reset.' │ 0.8         │
+└─────────┴─────────┴─────┴────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────┴─────────────┘
+Jev unsupported_reason_probability, p > 0.9: 0 beats; up to 10 examples
+No beats in this band.
+Jev contradictory_winner_probability, 0.5 < p <= 0.7: 0 beats; up to 10 examples
+No beats in this band.
+Jev contradictory_winner_probability, 0.7 < p <= 0.9: 0 beats; up to 10 examples
+No beats in this band.
+Jev contradictory_winner_probability, p > 0.9: 0 beats; up to 10 examples
+No beats in this band.
+82 provider calls; 0 rate-limit deferrals. Saved /Users/darshanhari/code/Animosity/generated-artifacts/narration-eval/2026-11-08T23-31-01.366Z.json

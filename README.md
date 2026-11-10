@@ -34,7 +34,8 @@ or the verdict. A failed story never hides a valid engine result.
 ## Narration reliability
 
 Story-unavailable rates from successive evaluations. The first six covered
-60 fights each; the latest covered 75 fights (25 scenarios × 3 runs).
+60 fights each; the last two covered 75 fights (25 scenarios × 3 runs).
+Evaluation 8 ran on the project's own Anthropic key; see `docs/evals/`.
 These are observed narration failure rates, **not** verdict accuracy or win
 probabilities.
 
@@ -47,6 +48,7 @@ probabilities.
 | 5 | 60 | 0.0% |
 | 6 | 60 | 1.7% |
 | 7 | 75 | 0.0% |
+| 8 (own Anthropic key, local) | 75 | 1.3% |
 
 ## Pages and sharing
 
