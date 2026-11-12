@@ -106,11 +106,16 @@ the repo root (Node 24, pnpm 10.26.1):
 cp .env.example .env   # edit: set DATABASE_URL; set POSTGRES_PORT (and the DATABASE_URL port) if 5432 is taken
 docker compose up -d
 pnpm install
-pnpm db:push
+pnpm db:migrate        # same as pnpm db:push (drizzle-kit push)
 pnpm dev               # API on PORT (default 8080), web on WEB_PORT (default 5173)
 ```
 
 The Vite dev server proxies `/api` to the API port, so open `http://localhost:5173`.
+To use the Neon staging branch instead of Docker, set `DATABASE_URL` to its pooled
+connection string (host contains `-pooler`, `sslmode=require`) and
+`DATABASE_URL_UNPOOLED` to the direct one, then run `pnpm db:migrate`. Schema pushes use
+the unpooled URL when set. To switch back to Docker, restore the Docker `DATABASE_URL`
+and clear `DATABASE_URL_UNPOOLED`.
 Set `ANTHROPIC_API_KEY` in `.env` for narration (and `OPENROUTER_API_KEY` for Jev).
 Without a model key, fights return verdicts with narration unavailable, and the
 server logs one startup warning per missing key.
