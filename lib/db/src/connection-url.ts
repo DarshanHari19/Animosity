@@ -25,17 +25,22 @@ export function normalizeDatabaseUrl(connectionString: string): string {
   return connectionString;
 }
 
-function hostnameOf(connectionString: string): string | null {
+function parseUrl(connectionString: string): URL | null {
   try {
-    return new URL(connectionString).hostname;
+    return new URL(connectionString);
   } catch {
     return null;
   }
 }
 
+function hostnameOf(connectionString: string): string | null {
+  return parseUrl(connectionString)?.hostname ?? null;
+}
+
 /**
  * Which database a schema push should target. DATABASE_URL_UNPOOLED is used only when it is
- * the direct twin of DATABASE_URL (same host with "-pooler" removed from the first label).
+ * the direct twin of DATABASE_URL (same host with "-pooler" removed from the first label, and
+ * the same database, port and user).
  * Otherwise DATABASE_URL wins, so `DATABASE_URL=<other> pnpm db:migrate` never silently
  * pushes to the database named in .env.
  */
@@ -47,13 +52,18 @@ export function pickMigrationUrl(env: {
   const direct = env.DATABASE_URL_UNPOOLED;
   if (!pooled) return null;
   if (direct) {
-    const pooledHost = hostnameOf(pooled);
-    const directHost = hostnameOf(direct);
-    if (pooledHost && directHost) {
-      const [first = "", ...rest] = pooledHost.split(".");
+    const p = parseUrl(pooled);
+    const d = parseUrl(direct);
+    if (p && d) {
+      const [first = "", ...rest] = p.hostname.split(".");
       const twin = [first.replace(/-pooler$/, ""), ...rest].join(".");
-      if (twin === directHost) {
-        return { url: direct, hostname: directHost, usedUnpooled: true };
+      if (
+        twin === d.hostname &&
+        p.pathname === d.pathname &&
+        p.port === d.port &&
+        p.username === d.username
+      ) {
+        return { url: direct, hostname: d.hostname, usedUnpooled: true };
       }
     }
   }

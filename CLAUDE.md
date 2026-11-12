@@ -29,7 +29,7 @@ Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
   - Backend only: `pnpm --filter @workspace/api-server test`
   - Frontend only: `pnpm --filter @workspace/fight-club test`
 - Type checks: `pnpm typecheck`
-- Database schema: `pnpm db:migrate` (alias `pnpm db:push`; runs drizzle-kit push, over `DATABASE_URL_UNPOOLED` when set, else `DATABASE_URL`)
+- Database schema: `pnpm db:migrate` (alias `pnpm db:push`; runs drizzle-kit push, over `DATABASE_URL_UNPOOLED` only when it is the `-pooler`-less twin of `DATABASE_URL` (same database, port and user), else `DATABASE_URL`)
 - Database: Neon staging is the default (pooled `DATABASE_URL`, optional direct `DATABASE_URL_UNPOOLED`, used only when it is the `-pooler`-less twin of `DATABASE_URL`). Docker is the fallback: set `DATABASE_URL` to the Docker URL and clear `DATABASE_URL_UNPOOLED`. `db:migrate` prints the target host before pushing
 - Narration eval (paid model calls, 75 fights): `pnpm eval` (ask first). Target is `--base-url`, then `EVAL_BASE_URL`, then `http://localhost:$PORT` (default 8080)
 - Root scripts load the repo-root `.env`; variables already in the shell win

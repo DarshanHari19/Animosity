@@ -73,3 +73,15 @@ test("pickMigrationUrl falls back to DATABASE_URL and returns null without it", 
   assert.equal(pickMigrationUrl({ DATABASE_URL_UNPOOLED: base })?.url, undefined);
   assert.equal(pickMigrationUrl({ DATABASE_URL: base })?.url, base);
 });
+
+test("pickMigrationUrl falls back when the twin host has a different db, port or user", () => {
+  const pooled = "postgresql://u:p@ep-abc-pooler.r.example.test/db";
+  for (const direct of [
+    "postgresql://u:p@ep-abc.r.example.test/otherdb",
+    "postgresql://u:p@ep-abc.r.example.test:6543/db",
+    "postgresql://other:p@ep-abc.r.example.test/db",
+  ]) {
+    const r = pickMigrationUrl({ DATABASE_URL: pooled, DATABASE_URL_UNPOOLED: direct });
+    assert.deepEqual([r?.url, r?.usedUnpooled], [pooled, false]);
+  }
+});
