@@ -46,6 +46,8 @@ jobs:
         run: pnpm --filter @workspace/db run push
       - name: Env loader tests
         run: node --test scripts/env-file.test.mjs
+      - name: DB helper tests
+        run: pnpm --filter @workspace/db test
       - name: Backend tests (mocked model calls)
         run: pnpm --filter @workspace/api-server test
       - name: Frontend tests

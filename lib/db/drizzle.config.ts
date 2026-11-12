@@ -1,18 +1,21 @@
 import { defineConfig } from "drizzle-kit";
 import path from "path";
-import { normalizeDatabaseUrl } from "./src/connection-url";
+import { normalizeDatabaseUrl, pickMigrationUrl } from "./src/connection-url";
 
-// Schema pushes use a direct (unpooled) connection when DATABASE_URL_UNPOOLED is set:
-// PgBouncer is a poor fit for DDL. Otherwise fall back to DATABASE_URL (Docker, CI).
-const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
-if (!url) {
+// Schema pushes use the direct (unpooled) twin of DATABASE_URL when DATABASE_URL_UNPOOLED
+// matches it: PgBouncer is a poor fit for DDL. Otherwise DATABASE_URL (Docker, CI, overrides).
+const target = pickMigrationUrl(process.env);
+if (!target) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
 }
+console.log(
+  `[db] schema push target host: ${target.hostname ?? "(unparseable URL)"}${target.usedUnpooled ? " (direct)" : ""}`,
+);
 
 export default defineConfig({
   schema: path.join(__dirname, "./src/schema/index.ts"),
   dialect: "postgresql",
   dbCredentials: {
-    url: normalizeDatabaseUrl(url),
+    url: normalizeDatabaseUrl(target.url),
   },
 });

@@ -17,11 +17,15 @@ if (!process.env.DATABASE_URL) {
 // - idleTimeoutMillis 30s: drop idle sockets before Neon suspends the compute (scale to
 //   zero) and leaves us holding dead connections.
 // - connectionTimeoutMillis 10s: a cold compute can take several seconds to wake.
+// - query_timeout 5s: see below.
 export const pool = new Pool({
   connectionString: normalizeDatabaseUrl(process.env.DATABASE_URL),
   max: 10,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 10_000,
+  // Client-side cap so a stuck cache query cannot hang a fight; routes.ts treats cache
+  // errors as warnings and falls back to the normal narration path.
+  query_timeout: 5_000,
 });
 
 // An error on an idle client (e.g. Neon suspended the compute) is emitted on the pool.
