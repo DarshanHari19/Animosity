@@ -18,6 +18,9 @@ node_modules/
 !.env.example
 *.log
 
+# Neon CLI local context
+.neon
+
 # User-provided reference attachments stay local
 /attached_assets/
 

@@ -2,7 +2,7 @@ import { db, narrationCacheTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { NarrationCache } from "./narration-cache";
 
-/** Schema is applied in development by Drizzle, and in production by Publish. No startup DDL. */
+/** Schema is applied in development by Drizzle, and in any other environment by `pnpm db:migrate` against the target database. No startup DDL. */
 export const postgresNarrationCache: NarrationCache = {
   async get(key) {
     const [row] = await db.select({ beats: narrationCacheTable.beats })

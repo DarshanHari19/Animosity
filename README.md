@@ -99,18 +99,25 @@ require a configured LLM provider; gate outcomes can return explanations without
 
 ## Run
 
-Start the local database and apply the schema once, then run both servers from
-the repo root (Node 24, pnpm 10.26.1):
+Apply the schema once, then run both servers from the repo root (Node 24, pnpm 10.26.1).
+The steps below use the Docker fallback database; skip `docker compose up -d` if
+`.env` points at Neon staging (see below):
 
 ```sh
 cp .env.example .env   # edit: set DATABASE_URL; set POSTGRES_PORT (and the DATABASE_URL port) if 5432 is taken
 docker compose up -d
 pnpm install
-pnpm db:push
+pnpm db:migrate        # same as pnpm db:push (drizzle-kit push)
 pnpm dev               # API on PORT (default 8080), web on WEB_PORT (default 5173)
 ```
 
 The Vite dev server proxies `/api` to the API port, so open `http://localhost:5173`.
+Neon staging is the default database when `.env` points there: set `DATABASE_URL` to its
+pooled connection string (host contains `-pooler`, `sslmode=require`) and optionally
+`DATABASE_URL_UNPOOLED` to the direct one, then run `pnpm db:migrate`. Schema pushes use
+the unpooled URL only when it is the `-pooler`-less twin of `DATABASE_URL` (same database,
+port and user). Docker is the fallback: restore the Docker `DATABASE_URL` and clear
+`DATABASE_URL_UNPOOLED`.
 Set `ANTHROPIC_API_KEY` in `.env` for narration (and `OPENROUTER_API_KEY` for Jev).
 Without a model key, fights return verdicts with narration unavailable, and the
 server logs one startup warning per missing key.
@@ -131,7 +138,7 @@ Tests use fictional fixtures and mocked LLM responses only. They do not call
 an LLM, require a key, or replace scoring in production. The persistence test
 uses the development database and deletes its own test row (skipped when no
 `DATABASE_URL` is configured). Before running it for the first time:
-`pnpm --filter @workspace/db run push`.
+`pnpm db:migrate`.
 Frontend regression tests use test-only HTTP responses with the real API hooks
 and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`.
 
@@ -415,9 +422,9 @@ workflow rebuilds the API. Cache failures log a server-side warning and use
 the normal narration path; a failed cache write never hides a valid verdict.
 
 The database schema is in `lib/db/src/schema/narration-cache.ts`. Apply it to
-the development database with `pnpm --filter @workspace/db run push`.
-Publishing applies the development schema to production; no startup-time DDL
-or custom production migration is used. Local development also needs a
+the target database with `pnpm db:migrate` (drizzle-kit push; it prints the target
+host first). Production gets the schema the same way, run against the production
+`DATABASE_URL`; no startup-time DDL or custom migration is used. Local development also needs a
 PostgreSQL `DATABASE_URL`.
 - The page is in `artifacts/fight-club/src/pages/home.tsx`. A successful response
   reveals the first narrated beat immediately, then one every 1.5 seconds. Both SVG
