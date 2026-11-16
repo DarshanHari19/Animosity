@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 import { sharePages } from './share-pages';
+import { parsePublicBaseUrl } from './src/lib/public-base-url';
 
 const rawPort = process.env.PORT;
 
@@ -35,10 +36,13 @@ if (apiPort !== undefined && (Number.isNaN(Number(apiPort)) || Number(apiPort) <
   throw new Error(`Invalid API_PORT value: "${apiPort}"`);
 }
 
+// Optional absolute origin for og:image, og:url and canonical. Throws (fails the build) if invalid.
+const publicOrigin = parsePublicBaseUrl(process.env.PUBLIC_BASE_URL);
+
 export default defineConfig({
   base: basePath,
   plugins: [
-    sharePages(),
+    sharePages(publicOrigin),
     react(),
     tailwindcss(),
   ],
