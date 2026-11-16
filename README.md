@@ -65,14 +65,17 @@ can read the specific title without running JavaScript. A browser immediately
 opens the normal picker URL with those selections and starts the existing bout
 flow; these links select a matchup, not a saved narration. Existing query-only
 links still work and update the browser title after animals load.
-Asset links follow the artifact base path; no unpublished production hostname
-is invented.
+Asset links follow the artifact base path. Set `PUBLIC_BASE_URL` (an origin such as
+`https://staging.example.com`) at build time to make `og:image`, `twitter:image`, `og:url`
+and canonical links absolute; unset keeps them relative. An invalid value fails the build.
 
 ## Production safety
 
-`X-Animosity-Eval-Bypass-Cache: 1` is honored **only** when
-`NODE_ENV=development`. In production it neither bypasses the cache nor adds
-`jev_shadow` probabilities to responses. Tests cover both restrictions.
+`X-Animosity-Eval-Bypass-Cache` bypasses the cache and adds `jev_shadow` (and, after failed
+attempts, `eval_diagnostics`) **only** when its value equals `EVAL_TOKEN` (constant-time
+compare). With `EVAL_TOKEN` unset, only `NODE_ENV=development` honors the legacy value `1`;
+production ignores the header entirely. With the token set, `1` is no longer accepted.
+Tests cover all of these cases.
 
 The configured default daily cap is **200 narration provider calls per UTC day**,
 including retries, per server process. `NARRATION_DAILY_CAP` can override it.
@@ -141,6 +144,24 @@ uses the development database and deletes its own test row (skipped when no
 `pnpm db:migrate`.
 Frontend regression tests use test-only HTTP responses with the real API hooks
 and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`.
+
+## Deploy (Railway staging)
+
+One long-running service: Express serves `/api` and the built frontend (including
+`share/*.html`). `railway.json` holds the build and start commands, the `/api/health`
+check and a single US East replica. Build locally with `pnpm build:deploy`.
+
+1. Create a Railway project with a `staging` environment and a service from this GitHub repo
+   (Railpack builder, Node 24 from `.nvmrc`). Set the region to US East if it is not already.
+2. In the service Variables, set (names only): `DATABASE_URL` (Neon staging, pooled),
+   `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `NARRATION_DAILY_CAP`, `EVAL_TOKEN`,
+   `PUBLIC_BASE_URL` (the service's public `https://` origin). Optional: `TRUST_PROXY_HOPS`,
+   `BUILD_ID`. Railway provides `PORT` and `RAILWAY_GIT_COMMIT_SHA`; do not set them.
+3. Generate the token with `openssl rand -hex 32`; put the same value in your local `.env`.
+4. Leave App Sleeping (serverless) off. Deploy, then check `https://<host>/api/health`:
+   `build_id` is the deployed commit SHA.
+5. Staging eval (paid, ask first): `EVAL_BASE_URL=https://<host> pnpm eval`. It takes the
+   expected build ID from `/api/health` and stops if it changes mid-run (a redeploy).
 
 ## Jev shadow observations
 
@@ -454,14 +475,18 @@ pnpm eval --help
 
 This makes real `POST /api/fight` calls through the running server, using its
 normal rate limit and daily provider-call cap. It never reads LLM credentials or
-resets/bypasses limits. It sends `X-Animosity-Eval-Bypass-Cache: 1`, which bypasses
-cache reads **and writes only in development**; production ignores this header.
+resets/bypasses limits. It sends `X-Animosity-Eval-Bypass-Cache` with `EVAL_TOKEN`
+(or `1` when `EVAL_TOKEN` is unset, which only a development server honors); the cache is
+bypassed for reads and writes only when the server accepts it. A remote target requires
+`EVAL_TOKEN` to match the server's.
 Requests start at least 6.5 seconds apart; expect the full
 batch to take several minutes and use up to 150 narration-provider calls,
 plus one Jev shadow call per accepted narration.
 
-Before every fight it compares `/api/health` against the current build manifest
-and stops on a mismatch. The host is chosen in this order: `--base-url`, `EVAL_BASE_URL`,
+For localhost targets, before every fight it compares `/api/health` against the current
+local build manifest and stops on a mismatch. For remote targets it takes the build ID
+from `/api/health` at the start and stops if it changes. Failed-check diagnostics come
+from the local journal (localhost) or the token-gated `eval_diagnostics` response field (remote). The host is chosen in this order: `--base-url`, `EVAL_BASE_URL`,
 then `http://localhost:$PORT` (default 8080). Whatever
 origin is selected must serve that same build.
 `X-Narration-Attempts` is a server-owned response header counting actual provider
