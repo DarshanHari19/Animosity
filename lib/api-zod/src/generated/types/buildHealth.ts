@@ -11,4 +11,9 @@ export interface BuildHealth {
   status: BuildHealthStatus;
   /** @minLength 1 */
   build_id: string;
+  /**
+     * Git commit SHA the build came from; omitted when the host did not provide one.
+     * @minLength 1
+     */
+  commit?: string;
 }

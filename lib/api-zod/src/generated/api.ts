@@ -134,9 +134,11 @@ export const HealthCheckResponse = zod.object({
 
 
 
+
 export const GetBuildHealthResponse = zod.object({
   "status": zod.enum(['ok']),
-  "build_id": zod.string().min(1)
+  "build_id": zod.string().min(1),
+  "commit": zod.string().min(1).optional().describe('Git commit SHA the build came from; omitted when the host did not provide one.')
 })
 
 

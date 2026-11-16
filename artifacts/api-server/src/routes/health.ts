@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse, GetBuildHealthResponse } from "@workspace/api-zod";
-import { BUILD_ID } from "../build-id";
+import { BUILD_ID, COMMIT } from "../build-id";
 
 const router: IRouter = Router();
 
@@ -10,7 +10,7 @@ router.get("/healthz", (_req, res) => {
 });
 router.get("/health", (_req, res) => {
   res.set("Cache-Control", "no-store");
-  res.json(GetBuildHealthResponse.parse({ status: "ok", build_id: BUILD_ID }));
+  res.json(GetBuildHealthResponse.parse({ status: "ok", build_id: BUILD_ID, ...(COMMIT ? { commit: COMMIT } : {}) }));
 });
 
 export default router;
