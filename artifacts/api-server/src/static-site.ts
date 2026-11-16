@@ -18,6 +18,9 @@ function cacheControlFor(filePath: string, root: string): string {
   return path.relative(root, filePath).split(path.sep)[0] === "assets" ? IMMUTABLE : SHORT;
 }
 
+// Dotfiles and dot-directories (/.env, /.git/config) are never served and never get the SPA shell.
+const hasDotSegment = (requestPath: string) => requestPath.split("/").some((segment) => segment.startsWith("."));
+
 const isApiPath = (requestPath: string) => requestPath === "/api" || requestPath.startsWith("/api/");
 
 /**
@@ -28,6 +31,10 @@ const isApiPath = (requestPath: string) => requestPath === "/api" || requestPath
 export function mountFrontend(app: Express, dir: string = defaultFrontendDir): boolean {
   const indexFile = path.join(dir, "index.html");
   if (!existsSync(indexFile)) return false;
+  app.use((req: Request, res: Response, next) => {
+    if (hasDotSegment(req.path)) { res.status(404).type("text/plain").send("Not found"); return; }
+    next();
+  });
   app.use(express.static(dir, {
     cacheControl: false,
     setHeaders: (res: Response, filePath: string) => { res.setHeader("Cache-Control", cacheControlFor(filePath, dir)); },

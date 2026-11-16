@@ -63,6 +63,16 @@ test("frontend: /api stays JSON, missing files 404, non-GET does not fall back",
   assert.equal((await fetch(`${url}/how-it-works`, { method: "POST" })).status, 404);
 });
 
+test("frontend: dot paths are 404, never the SPA shell", async t => {
+  const { app } = site(t, true);
+  const url = await listen(t, app);
+  for (const p of ["/.env", "/.git/config", "/assets/.hidden", "/share/../.env", "/foo/.well-known/x"]) {
+    const response = await fetch(`${url}${p}`);
+    assert.equal(response.status, 404, p);
+    assert.ok(!(await response.text()).includes("shell"), p);
+  }
+});
+
 test("frontend: disabled when the build output is absent", async t => {
   const { app, enabled } = site(t, false);
   assert.equal(enabled, false);
