@@ -8,11 +8,23 @@ import { rm, writeFile } from "node:fs/promises";
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
 
+// Build ID precedence: explicit BUILD_ID, then the host's commit SHA (Railway sets
+// RAILWAY_GIT_COMMIT_SHA on GitHub-triggered deploys), then the build timestamp.
+// It keys the narration cache, so a new deploy (new commit) means a new cache key.
+function resolveBuildId(env) {
+  const explicit = env.BUILD_ID?.trim() || env.RAILWAY_GIT_COMMIT_SHA?.trim();
+  if (!explicit) return new Date().toISOString();
+  if (!/^[A-Za-z0-9._:+-]{1,100}$/.test(explicit)) {
+    throw new Error("BUILD_ID / RAILWAY_GIT_COMMIT_SHA must be 1-100 characters from A-Z a-z 0-9 . _ : + -");
+  }
+  return explicit;
+}
+
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
-  const buildId = new Date().toISOString();
+  const buildId = resolveBuildId(process.env);
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
