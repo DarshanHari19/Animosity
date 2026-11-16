@@ -155,7 +155,7 @@ test("route: eval_diagnostics follows failed attempts, only for the correct toke
     assert.deepEqual(records.map(record => record.attempt), Array.from({ length: attempts }, (_, i) => i + 1), label);
     assert.deepEqual(diagnosticsFromResponse(ok.body.eval_diagnostics, { attempts, available: false }), records);
     assert.ok(!JSON.stringify(ok.body).includes(TOKEN));
-    for (const headers of [{}, { [EVAL_BYPASS_HEADER]: "wrong" }, { [EVAL_BYPASS_HEADER]: "1" }]) {
+    for (const headers of [{} as Record<string, string>, { [EVAL_BYPASS_HEADER]: "wrong" }, { [EVAL_BYPASS_HEADER]: "1" }]) {
       const denied = await call(headers);
       assert.equal(denied.body.narration_status, "unavailable", label); // the attempts did fail
       assert.equal(denied.attempts, String(attempts), label);

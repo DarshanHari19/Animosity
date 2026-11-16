@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "inputs": [{ "step": "install" }],
+      "commands": ["pnpm build:deploy"]
+    }
+  },
+  "deploy": {
+    "startCommand": "node --enable-source-maps artifacts/api-server/dist/index.mjs"
+  }
+}

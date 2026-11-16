@@ -148,20 +148,69 @@ and fake timers for playback. They run without workflows, `PORT`, or `BASE_PATH`
 ## Deploy (Railway staging)
 
 One long-running service: Express serves `/api` and the built frontend (including
-`share/*.html`). `railway.json` holds the build and start commands, the `/api/health`
-check and a single US East replica. Build locally with `pnpm build:deploy`.
+`share/*.html`). Railpack reads `railpack.json` from the repo: the build step runs
+`pnpm build:deploy` (builds only the API and fight-club, with `BASE_PATH=/` and a dummy `PORT`
+for Vite, which throws without them) and the start command runs the bundled server. Railpack
+installs with `pnpm install --frozen-lockfile` and keeps devDependencies, and sets
+`NODE_ENV=production` at runtime. The Node version comes from `.nvmrc` (24). The root `start`
+script is a fallback with the same command. Build locally with `pnpm build:deploy`.
 
-1. Create a Railway project with a `staging` environment and a service from this GitHub repo
-   (Railpack builder, Node 24 from `.nvmrc`). Set the region to US East if it is not already.
-2. In the service Variables, set (names only): `DATABASE_URL` (Neon staging, pooled),
+Railway no longer reads service settings from the repo for new services (config-as-code is
+deprecated and unavailable to new services), so set these in the dashboard:
+
+| Setting | Value |
+|---|---|
+| Environment | named `staging` |
+| Region | US East |
+| Replicas | 1 (the rate limiter and daily cap are in memory, so replicas would split them) |
+| Health check path | `/api/health` |
+| Health check timeout | 120 seconds |
+| App Sleeping (serverless) | off |
+| Restart policy | on failure |
+
+Steps:
+
+1. Create a Railway project with a `staging` environment and a service from this GitHub repo.
+2. Set these service variables (names only): `DATABASE_URL` (Neon staging, pooled),
    `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `NARRATION_DAILY_CAP`, `EVAL_TOKEN`,
-   `PUBLIC_BASE_URL` (the service's public `https://` origin). Optional: `TRUST_PROXY_HOPS`,
-   `BUILD_ID`. Railway provides `PORT` and `RAILWAY_GIT_COMMIT_SHA`; do not set them.
-3. Generate the token with `openssl rand -hex 32`; put the same value in your local `.env`.
-4. Leave App Sleeping (serverless) off. Deploy, then check `https://<host>/api/health`:
-   `build_id` is the deployed commit SHA.
-5. Staging eval (paid, ask first): `EVAL_BASE_URL=https://<host> pnpm eval`. It takes the
-   expected build ID from `/api/health` and stops if it changes mid-run (a redeploy).
+   `PUBLIC_BASE_URL`. Optional: `TRUST_PROXY_HOPS`, `BUILD_ID`. Railway provides `PORT`,
+   `RAILWAY_GIT_COMMIT_SHA` and `RAILWAY_DEPLOYMENT_ID`; do not set them.
+3. Use `PUBLIC_BASE_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}` (a Railway reference variable) or
+   your own domain. It is read at **build** time, so changing it needs a redeploy.
+4. Generate the token with `openssl rand -hex 32` (at least 32 characters; shorter disables
+   the eval bypass and logs a warning). Put the same value in your local `.env`.
+5. Deploy, then check `https://<host>/api/health`: `commit` is the deployed commit and
+   `build_id` is `<commit>.<deployment prefix>`, so every deploy has its own narration cache
+   key. A deploy not triggered from GitHub (for example `railway up`) has no commit variable:
+   `commit` is omitted and `build_id` falls back to a build timestamp.
+6. Staging eval (paid, ask first): `EVAL_BASE_URL=https://<host> pnpm eval`. A remote target must
+   be https; redirects are refused so the token is never sent elsewhere. It takes the expected
+   build ID from `/api/health` at the start and stops if it changes mid-run (a redeploy).
+
+### Verify the proxy setting on staging
+
+Per-IP rate limiting depends on `trust proxy` (default 1 hop; `TRUST_PROXY_HOPS` overrides).
+Railway's docs do not state the `X-Forwarded-For` hop count, so check once on staging. The
+probe is free: `POST /api/fight` with `{}` returns 400 and makes no provider call, and the
+limiter (10 requests per minute per IP) runs first.
+
+```sh
+H=https://<host>
+# (i) 11 requests with varying spoofed X-Forwarded-For: the 11th must be 429.
+for i in $(seq 1 11); do
+  curl -s -o /dev/null -w "%{http_code} " -X POST "$H/api/fight" -H 'content-type: application/json' \
+    -H "X-Forwarded-For: 203.0.113.$i" -d '{}'
+done; echo
+```
+
+- Expected: ten `400`s, then `429`. Spoofing does not help an attacker.
+- If all eleven are `400`, clients can spoof their IP: the app trusts too many hops. Lower
+  `TRUST_PROXY_HOPS` (for example to 0 if the platform proxy does not add a hop you should
+  trust) and rerun.
+
+(ii) Wait a minute, then send 6 requests from a laptop and 6 from a phone on cellular (no Wi-Fi).
+Neither device should get a `429`. If one does early, every client shares one key (the proxy's
+address): raise `TRUST_PROXY_HOPS` by one (for example to 2) and rerun both checks.
 
 ## Jev shadow observations
 
