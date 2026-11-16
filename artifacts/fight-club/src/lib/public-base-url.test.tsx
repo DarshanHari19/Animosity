@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { absoluteUrl, parsePublicBaseUrl } from "./public-base-url";
-import { renderSharePage } from "../../share-pages";
+import { renderSharePage, rewriteIndexHtml } from "../../share-pages";
 
 describe("parsePublicBaseUrl", () => {
   it("treats unset and blank as relative mode", () => {
@@ -39,5 +39,19 @@ describe("renderSharePage URLs", () => {
     expect(html).toContain('name="twitter:image" content="https://staging.example.com/og-image.png"');
     expect(html).toContain('property="og:url" content="https://staging.example.com/share/lion-vs-hippopotamus-land.html"');
     expect(html).toContain('rel="canonical" href="https://staging.example.com/share/lion-vs-hippopotamus-land.html"');
+  });
+});
+
+describe("index.html transform", () => {
+  const index = '<meta property="og:image" content="/og-image.png" /><meta name="twitter:image" content="/og-image.png" />';
+  const run = (origin?: string) => rewriteIndexHtml(index, "/", origin);
+  it("makes only the image URLs absolute, with no og:url or canonical (it serves every route)", () => {
+    const html = run("https://staging.example.com");
+    expect(html).toContain('content="https://staging.example.com/og-image.png"');
+    expect(html).not.toContain("og:url");
+    expect(html).not.toContain("canonical");
+  });
+  it("leaves index.html untouched without an origin", () => {
+    expect(run()).toBe(index);
   });
 });

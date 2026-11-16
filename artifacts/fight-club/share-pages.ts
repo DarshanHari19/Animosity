@@ -33,6 +33,16 @@ ${urlTags}<link rel="icon" type="image/svg+xml" href="${base}favicon.svg">
 </head><body><h1>${title}</h1><p><a href="${escapeHtml(destination)}">Open this bout</a></p><script>${script}</script></body></html>`;
 }
 
+/**
+ * index.html is served for every SPA route, so it must not claim a page-specific og:url or
+ * canonical (they would point every route at home). Only the image URLs become absolute here;
+ * share/*.html carry their own og:url and canonical. Vite has already expanded %BASE_URL%.
+ */
+export function rewriteIndexHtml(html: string, base: string, origin?: string): string {
+  if (!origin) return html;
+  return html.replaceAll(`content="${base}og-image.png"`, `content="${absoluteUrl(origin, `${base}og-image.png`)}"`);
+}
+
 /** `origin` is the validated PUBLIC_BASE_URL origin; when undefined, URLs stay relative. */
 export function sharePages(origin?: string): Plugin {
   const catalog = JSON.parse(readFileSync(new URL("../api-server/server/traits.json", import.meta.url), "utf8")) as { name: string }[];
@@ -48,18 +58,7 @@ export function sharePages(origin?: string): Plugin {
   return {
     name: "animosity-share-pages",
     configResolved(config) { base = config.base; },
-    transformIndexHtml(html) {
-      if (!origin) return html;
-      // Vite has already expanded %BASE_URL%; make the social image URLs absolute and add og:url/canonical.
-      const home = absoluteUrl(origin, base);
-      return {
-        html: html.replaceAll(`content="${base}og-image.png"`, `content="${absoluteUrl(origin, `${base}og-image.png`)}"`),
-        tags: [
-          { tag: "meta", attrs: { property: "og:url", content: home }, injectTo: "head" },
-          { tag: "link", attrs: { rel: "canonical", href: home }, injectTo: "head" },
-        ],
-      };
-    },
+    transformIndexHtml(html) { return rewriteIndexHtml(html, base, origin); },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const pathname = new URL(req.url ?? "/", "http://local.invalid").pathname;
