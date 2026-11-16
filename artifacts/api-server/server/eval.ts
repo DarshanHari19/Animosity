@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
-import { resolveEvalBaseUrl } from "./eval-base-url";
+import { assertSafeEvalTarget, isLocalTarget, resolveEvalBaseUrl } from "./eval-base-url";
 import { AnimalSchema, fightResponseSchemaFor } from "./schemas";
 import { evaluationCases, summarizeEvaluation, type EvaluationRun } from "./evaluation";
 import { JevReportSchema, summarizeJev } from "./jev-telemetry";
@@ -13,7 +13,6 @@ import { diagnosticOffset, readDiagnostics, diagnosticsForRun, diagnosticsFromRe
 
 const healthSchema = z.object({ status: z.literal("ok"), build_id: z.string().min(1) });
 const manifest = fileURLToPath(new URL("../dist/build-id.json", import.meta.url));
-const isLocalTarget = (url: URL) => ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 
 async function main() {
@@ -37,14 +36,14 @@ A remote run takes its expected build ID from /api/health at the start and stops
   const cases = selected.map(id => evaluationCases[id - 1]!);
   const base = resolveEvalBaseUrl({ flag: values["base-url"], env: process.env });
   const url = new URL(base);
-  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw Error("Invalid base URL.");
+  assertSafeEvalTarget(url);
   // Localhost targets share this workspace: compare against the local build manifest and read
   // the local diagnostics journal. Remote targets (a deployed server) have neither.
   const local = isLocalTarget(url);
   const evalToken = process.env.EVAL_TOKEN?.trim() || undefined;
   if (!local && !evalToken) throw Error("A remote target requires EVAL_TOKEN (the same value the server has). Set it in .env.");
   const fetchHealth = async () => {
-    const response = await fetch(new URL("/api/health", url), { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+    const response = await fetch(new URL("/api/health", url), { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15_000) });
     if (!response.ok) throw Error(`Health check failed: HTTP ${response.status}.`);
     return healthSchema.parse(await response.json());
   };
@@ -61,7 +60,7 @@ A remote run takes its expected build ID from /api/health at the start and stops
     }
   };
   await checkBuild();
-  const animalResponse = await fetch(new URL("/api/animals", url), { signal: AbortSignal.timeout(15_000) });
+  const animalResponse = await fetch(new URL("/api/animals", url), { redirect: "error", signal: AbortSignal.timeout(15_000) });
   if (!animalResponse.ok) throw Error(`Animal catalog failed: HTTP ${animalResponse.status}.`);
   const animals = z.array(AnimalSchema).parse(await animalResponse.json());
   for (const c of cases) for (const name of [c.input.animalA, c.input.animalB]) {
@@ -92,7 +91,7 @@ A remote run takes its expected build ID from /api/health at the start and stops
         const started = new Date().toISOString();
         const response = await fetch(new URL("/api/fight", url), {
           method: "POST", headers: { "Content-Type": "application/json", "X-Animosity-Eval-Bypass-Cache": evalToken ?? "1" },
-          body: JSON.stringify(c.input), signal: AbortSignal.timeout(80_000),
+          body: JSON.stringify(c.input), redirect: "error", signal: AbortSignal.timeout(80_000),
         });
         if (response.status === 429 && deferral < 2) {
           const retry = Number(response.headers.get("Retry-After") ?? "60");
