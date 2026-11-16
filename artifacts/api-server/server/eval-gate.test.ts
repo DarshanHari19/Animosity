@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { z } from "zod";
 import { animals } from "./animals";
-import { evalBypassGranted } from "./eval-gate";
+import { narrateMatchup } from "./narrator";
+import { evalBypassGranted, evalTokenWarning, normalizeEvalToken } from "./eval-gate";
 import { EVAL_BYPASS_HEADER, type NarrationCache } from "./narration-cache";
 import { fixtureBeats, fixtureResult, startFightServer } from "./test-helpers";
-import { diagnosticsFromResponse } from "./narration-diagnostic-store";
+import { diagnosticsFromResponse, recordSchema } from "./narration-diagnostic-store";
 import type { Beat } from "./schemas";
 
 const a = animals[0]!;
@@ -107,4 +108,59 @@ test("remote eval diagnostics: counts must match the attempts the server reporte
   assert.equal(diagnosticsFromResponse(undefined, { attempts: 1, available: true }).length, 0);
   assert.throws(() => diagnosticsFromResponse(undefined, { attempts: 2, available: true }), /eval_diagnostics/);
   assert.throws(() => diagnosticsFromResponse([record(1), record(1)], { attempts: 2, available: false }), /eval_diagnostics/);
+});
+
+test("gate: the token is trimmed, and one shorter than 32 characters disables the bypass everywhere", () => {
+  assert.equal(evalBypassGranted({ header: TOKEN, token: `  ${TOKEN}\n`, development: false }), true);
+  const weak = "short-secret";
+  for (const development of [false, true]) {
+    for (const header of [weak, "1", TOKEN]) {
+      assert.equal(evalBypassGranted({ header, token: weak, development }), false);
+    }
+  }
+  assert.equal(evalBypassGranted({ header: "x".repeat(31), token: "x".repeat(31), development: true }), false);
+  assert.equal(evalBypassGranted({ header: "x".repeat(32), token: "x".repeat(32), development: false }), true);
+});
+
+test("gate: warning names the variable, never the value, and only for weak tokens", () => {
+  assert.equal(evalTokenWarning(undefined), null);
+  assert.equal(evalTokenWarning("   "), null);
+  assert.equal(evalTokenWarning(TOKEN), null);
+  const warning = evalTokenWarning("short-secret")!;
+  assert.match(warning, /EVAL_TOKEN/);
+  assert.ok(!warning.includes("short-secret"));
+  assert.equal(normalizeEvalToken("").kind, "unset");
+});
+
+// Real narrator with a failing transport and a dummy key: no network, no billable key.
+const failingNarrate = (transport: typeof fetch): typeof import("./narrator").narrateMatchup =>
+  (output, first, second, options) => narrateMatchup(output, first, second, { ...options, fetch: transport, apiKey: "test-only-dummy" });
+
+test("route: eval_diagnostics follows failed attempts, only for the correct token", async t => {
+  for (const [label, transport, attempts] of [
+    ["transport failure", (async () => { throw new Error("socket closed"); }) as typeof fetch, 1],
+    ["unparseable output", (async () => Response.json({ choices: [{ message: { content: "not json" } }] })) as typeof fetch, 2],
+  ] as const) {
+    const server = await startFightServer(t, score, failingNarrate(transport),
+      undefined, undefined, { development: false, evalToken: TOKEN });
+    const call = async (headers: Record<string, string>) => {
+      const response = await server.post(input, headers);
+      return { attempts: response.headers.get("X-Narration-Attempts"), body: z.object({}).passthrough().parse(await response.json()) };
+    };
+    const ok = await call({ [EVAL_BYPASS_HEADER]: TOKEN });
+    assert.equal(ok.body.narration_status, "unavailable", label);
+    assert.equal(ok.attempts, String(attempts), label);
+    const records = z.array(recordSchema).parse(ok.body.eval_diagnostics);
+    assert.equal(records.length, attempts, label);
+    assert.deepEqual(records.map(record => record.attempt), Array.from({ length: attempts }, (_, i) => i + 1), label);
+    assert.deepEqual(diagnosticsFromResponse(ok.body.eval_diagnostics, { attempts, available: false }), records);
+    assert.ok(!JSON.stringify(ok.body).includes(TOKEN));
+    for (const headers of [{}, { [EVAL_BYPASS_HEADER]: "wrong" }, { [EVAL_BYPASS_HEADER]: "1" }]) {
+      const denied = await call(headers);
+      assert.equal(denied.body.narration_status, "unavailable", label); // the attempts did fail
+      assert.equal(denied.attempts, String(attempts), label);
+      assert.ok(!("eval_diagnostics" in denied.body), label);
+      assert.ok(!("jev_shadow" in denied.body), label);
+    }
+  }
 });
