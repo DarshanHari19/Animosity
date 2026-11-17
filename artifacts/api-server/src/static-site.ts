@@ -19,7 +19,12 @@ function cacheControlFor(filePath: string, root: string): string {
 }
 
 // Dotfiles and dot-directories (/.env, /.git/config) are never served and never get the SPA shell.
-const hasDotSegment = (requestPath: string) => requestPath.split("/").some((segment) => segment.startsWith("."));
+// The path is percent-decoded first so /%2eenv is caught too; malformed encoding is refused.
+function hasDotSegment(requestPath: string): boolean {
+  let decoded: string;
+  try { decoded = decodeURIComponent(requestPath); } catch { return true; }
+  return decoded.split(/[/\\]/).some((segment) => segment.startsWith("."));
+}
 
 const isApiPath = (requestPath: string) => requestPath === "/api" || requestPath.startsWith("/api/");
 

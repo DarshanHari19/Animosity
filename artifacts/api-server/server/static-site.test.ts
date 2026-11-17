@@ -73,6 +73,17 @@ test("frontend: dot paths are 404, never the SPA shell", async t => {
   }
 });
 
+test("frontend: encoded dot paths and malformed encoding are 404", async t => {
+  const { app } = site(t, true);
+  const url = await listen(t, app);
+  for (const p of ["/%2eenv", "/assets/%2ehidden", "/%2egit/config", "/%E0%A4%A", "/how-it-works/%zz"]) {
+    const response = await fetch(`${url}${p}`);
+    assert.equal(response.status, 404, p);
+    assert.ok(!(await response.text()).includes("shell"), p);
+  }
+  assert.equal((await fetch(`${url}/how-it-works%2Fx`)).status, 200); // plain encoded slash is not a dot path
+});
+
 test("frontend: disabled when the build output is absent", async t => {
   const { app, enabled } = site(t, false);
   assert.equal(enabled, false);

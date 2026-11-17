@@ -66,8 +66,9 @@ opens the normal picker URL with those selections and starts the existing bout
 flow; these links select a matchup, not a saved narration. Existing query-only
 links still work and update the browser title after animals load.
 Asset links follow the artifact base path. Set `PUBLIC_BASE_URL` (an origin such as
-`https://staging.example.com`) at build time to make `og:image`, `twitter:image`, `og:url`
-and canonical links absolute; unset keeps them relative. An invalid value fails the build.
+`https://staging.example.com`) at build time to make `og:image` and `twitter:image` absolute everywhere, and add
+`og:url` and canonical links on the `share/*.html` pages (not on `index.html`, which serves every route);
+unset keeps everything relative. An invalid value fails the build.
 
 ## Production safety
 
@@ -204,9 +205,9 @@ done; echo
 ```
 
 - Expected: ten `400`s, then `429`. Spoofing does not help an attacker.
-- If all eleven are `400`, clients can spoof their IP: the app trusts too many hops. Lower
-  `TRUST_PROXY_HOPS` (for example to 0 if the platform proxy does not add a hop you should
-  trust) and rerun.
+- If all eleven are `400` at one hop, the rightmost `X-Forwarded-For` entry is client-controlled.
+  Do not lower `TRUST_PROXY_HOPS` (that puts everyone in one bucket). Don't share the staging
+  URL publicly; the limiter needs to key on Railway's `X-Real-IP` header (code change, ask first).
 
 (ii) Wait a minute, then send 6 requests from a laptop and 6 from a phone on cellular (no Wi-Fi).
 Neither device should get a `429`. If one does early, every client shares one key (the proxy's
