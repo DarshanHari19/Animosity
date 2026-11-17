@@ -7,6 +7,7 @@ import {
 import { FightError } from "./errors";
 import { DEFAULT_ANTHROPIC_BASE_URL, parseBaseURL, resolveNarrationConfig } from "./provider-config";
 import { createAnthropicProvider, type NarrationMessage } from "./anthropic-provider";
+import type { DiagnosticAttempt } from "./narration-diagnostic-store";
 import { failedChecks, logNarrationFailure, withOffendingText, type FailureCheck } from "./narration-diagnostics";
 import { narrationTool, resolveEvidence } from "./narration-tool";
 import { narrationTextChecks } from "./narration-text-checks";
@@ -32,6 +33,8 @@ type Options = {
   onProviderAttempt?: () => void;
   shadowReview?: (input: ShadowInput) => Promise<JevReport | void>;
   onShadowResult?: (report: JevReport) => void;
+  /** Eval-only: receives the same record appended to the local diagnostics journal. */
+  onDiagnostic?: (record: DiagnosticAttempt) => void;
 };
 
 const ProviderResponseSchema = z.object({
@@ -222,7 +225,7 @@ export async function narrateMatchup(
       checks ??= providerDiagnostic?.checks ??
         (validationFailure ? failedChecks(error, parsed, evidence) : [{ check: "provider_failure" }]);
       checks = withOffendingText(checks, parsed, rawModelText ?? providerDiagnostic?.rawModelText ?? null);
-      logNarrationFailure(diagnosticContext, checks, rawModelText ?? providerDiagnostic?.rawModelText ?? null);
+      logNarrationFailure(diagnosticContext, checks, rawModelText ?? providerDiagnostic?.rawModelText ?? null, options.onDiagnostic);
       if (!validationFailure) {
         if (error instanceof FightError) throw error;
         throw new FightError("LLM_PROVIDER_FAILURE", "Narration provider request failed or timed out.", 502);

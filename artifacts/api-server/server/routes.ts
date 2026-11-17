@@ -10,8 +10,14 @@ import { environmentPhrase, humanWording } from "./wording";
 import { BUILD_ID } from "../src/build-id";
 import { EVAL_BYPASS_HEADER, narrationCacheKey, type NarrationCache } from "./narration-cache";
 import { JevReportSchema, unavailableJevReport, type JevReport } from "./jev-telemetry";
+import { evalBypassGranted } from "./eval-gate";
+import type { DiagnosticAttempt } from "./narration-diagnostic-store";
 
-type RouterOptions = { cache?: NarrationCache; buildId?: string; development?: boolean };
+type RouterOptions = {
+  cache?: NarrationCache; buildId?: string; development?: boolean;
+  /** Test injection for EVAL_TOKEN; defaults to the process environment, read per request. */
+  evalToken?: string | undefined;
+};
 
 const narrationErrors = new Set([
   "INVALID_NARRATION", "LLM_PROVIDER_FAILURE", "NARRATION_DAILY_CAP_REACHED",
@@ -63,8 +69,12 @@ export function createFightRouter(
       let providerAttempts = 0;
       let narration_source: "cache" | "model" = "model";
       const buildId = options.buildId ?? BUILD_ID;
-      const bypass = (options.development ?? process.env.NODE_ENV === "development")
-        && req.get(EVAL_BYPASS_HEADER) === "1";
+      const bypass = evalBypassGranted({
+        header: req.get(EVAL_BYPASS_HEADER),
+        token: "evalToken" in options ? options.evalToken : process.env.EVAL_TOKEN,
+        development: options.development ?? process.env.NODE_ENV === "development",
+      });
+      const evalDiagnostics: DiagnosticAttempt[] = [];
       let jevReport: JevReport = { status: "not_scored" };
       const cache = bypass ? undefined : options.cache;
       const key = narrationCacheKey(a.name, b.name, environment, mode, buildId);
@@ -82,6 +92,7 @@ export function createFightRouter(
           } else {
             beats = beatsSchemaFor(a, b).parse(await narrate(result, a, b, {
               environment, mode, onProviderAttempt: () => { providerAttempts++; },
+              ...(bypass ? { onDiagnostic: (record: DiagnosticAttempt) => { evalDiagnostics.push(record); } } : {}),
               ...(bypass ? { onShadowResult: (report: JevReport) => {
                 // Never let malformed observational data affect a valid bout.
                 const checked = JevReportSchema.safeParse(report);
@@ -131,8 +142,13 @@ export function createFightRouter(
       }
       // Server-owned telemetry for pnpm eval; the UI does not display cache provenance.
       res.setHeader("X-Narration-Attempts", String(providerAttempts));
-      // This is a development-only eval extension, not part of the public API.
-      res.json(bypass ? { ...response.data, jev_shadow: jevReport } : response.data);
+      // Eval-only extension, present only when the request carried the eval token (or the
+      // development-only legacy value). Not part of the public API.
+      res.json(bypass ? {
+        ...response.data, jev_shadow: jevReport,
+        // Omitted when empty: a clean run adds nothing beyond the existing jev_shadow field.
+        ...(evalDiagnostics.length ? { eval_diagnostics: evalDiagnostics } : {}),
+      } : response.data);
     } catch (error) {
       if (error instanceof FightError) {
         res.status(error.status).json({ error: error.message, code: error.code });

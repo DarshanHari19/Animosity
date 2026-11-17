@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
-import { resolveEvalBaseUrl } from "./eval-base-url";
+import { assertSafeEvalTarget, isLocalTarget, resolveEvalBaseUrl } from "./eval-base-url";
 import { AnimalSchema, fightResponseSchemaFor } from "./schemas";
 import { evaluationCases, summarizeEvaluation, type EvaluationRun } from "./evaluation";
 import { JevReportSchema, summarizeJev } from "./jev-telemetry";
-import { diagnosticOffset, readDiagnostics, diagnosticsForRun, summarizeDiagnosticChecks,
+import { diagnosticOffset, readDiagnostics, diagnosticsForRun, diagnosticsFromResponse, summarizeDiagnosticChecks,
   type EvaluationDiagnostic } from "./narration-diagnostic-store";
 
 const healthSchema = z.object({ status: z.literal("ok"), build_id: z.string().min(1) });
@@ -21,7 +21,9 @@ async function main() {
     "base-url": { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) {
-    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nBase URL precedence: --base-url, then EVAL_BASE_URL, then http://localhost:$PORT (default 8080).\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples are read from server diagnostics in this workspace.`);
+    console.log(`pnpm eval [--scenarios 1,2] [--runs 1] [--base-url https://your-dev-host]\nBase URL precedence: --base-url, then EVAL_BASE_URL, then http://localhost:$PORT (default 8080).\nDefault: all ${evaluationCases.length} scenarios × 3 runs. Real provider calls; existing limits apply.\nFailed-check counts/examples come from the local diagnostics journal for localhost targets,
+and from the token-gated eval response for remote targets (requires EVAL_TOKEN, matching the server).
+A remote run takes its expected build ID from /api/health at the start and stops if it changes.`);
     return;
   }
   const repeats = Number(values.runs);
@@ -34,17 +36,31 @@ async function main() {
   const cases = selected.map(id => evaluationCases[id - 1]!);
   const base = resolveEvalBaseUrl({ flag: values["base-url"], env: process.env });
   const url = new URL(base);
-  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw Error("Invalid base URL.");
-  const build = healthSchema.shape.build_id.parse(JSON.parse(fs.readFileSync(manifest, "utf8")).build_id);
-  const checkBuild = async () => {
-    const disk = JSON.parse(fs.readFileSync(manifest, "utf8")).build_id;
-    const response = await fetch(new URL("/api/health", url), { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+  assertSafeEvalTarget(url);
+  // Localhost targets share this workspace: compare against the local build manifest and read
+  // the local diagnostics journal. Remote targets (a deployed server) have neither.
+  const local = isLocalTarget(url);
+  const evalToken = process.env.EVAL_TOKEN?.trim() || undefined;
+  if (!local && !evalToken) throw Error("A remote target requires EVAL_TOKEN (the same value the server has). Set it in .env.");
+  const fetchHealth = async () => {
+    const response = await fetch(new URL("/api/health", url), { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(15_000) });
     if (!response.ok) throw Error(`Health check failed: HTTP ${response.status}.`);
-    const health = healthSchema.parse(await response.json());
-    if (disk !== build || health.build_id !== build) throw Error("Build ID mismatch. STOPPED before the next fight; restart the API and rerun.");
+    return healthSchema.parse(await response.json());
+  };
+  const build = local
+    ? healthSchema.shape.build_id.parse(JSON.parse(fs.readFileSync(manifest, "utf8")).build_id)
+    : (await fetchHealth()).build_id;
+  const checkBuild = async () => {
+    const health = await fetchHealth();
+    if (local) {
+      const disk = JSON.parse(fs.readFileSync(manifest, "utf8")).build_id;
+      if (disk !== build || health.build_id !== build) throw Error("Build ID mismatch. STOPPED before the next fight; restart the API and rerun.");
+    } else if (health.build_id !== build) {
+      throw Error("The server build ID changed during the run (a redeploy). STOPPED before the next fight; rerun.");
+    }
   };
   await checkBuild();
-  const animalResponse = await fetch(new URL("/api/animals", url), { signal: AbortSignal.timeout(15_000) });
+  const animalResponse = await fetch(new URL("/api/animals", url), { redirect: "error", signal: AbortSignal.timeout(15_000) });
   if (!animalResponse.ok) throw Error(`Animal catalog failed: HTTP ${animalResponse.status}.`);
   const animals = z.array(AnimalSchema).parse(await animalResponse.json());
   for (const c of cases) for (const name of [c.input.animalA, c.input.animalB]) {
@@ -55,7 +71,7 @@ async function main() {
   const output = path.join(directory, `${new Date().toISOString().replaceAll(":", "-")}.json`);
   const runs: EvaluationRun[] = [];
   const diagnostics: EvaluationDiagnostic[] = [];
-  let diagnosticCursor = diagnosticOffset();
+  let diagnosticCursor = local ? diagnosticOffset() : 0;
   let diagnosticsComplete = true;
   const save = () => fs.writeFileSync(output, JSON.stringify({
     build_id: build, rate_deferrals: rateDeferrals, summary: summarizeEvaluation(runs), runs,
@@ -74,8 +90,8 @@ async function main() {
         previousStart = Date.now();
         const started = new Date().toISOString();
         const response = await fetch(new URL("/api/fight", url), {
-          method: "POST", headers: { "Content-Type": "application/json", "X-Animosity-Eval-Bypass-Cache": "1" },
-          body: JSON.stringify(c.input), signal: AbortSignal.timeout(80_000),
+          method: "POST", headers: { "Content-Type": "application/json", "X-Animosity-Eval-Bypass-Cache": evalToken ?? "1" },
+          body: JSON.stringify(c.input), redirect: "error", signal: AbortSignal.timeout(80_000),
         });
         if (response.status === 429 && deferral < 2) {
           const retry = Number(response.headers.get("Retry-After") ?? "60");
@@ -88,11 +104,11 @@ async function main() {
         if (response.status !== 200) throw Error(`Case ${c.case_id}: HTTP ${response.status}; evaluation stopped.`);
         const a = animals.find(a => a.name === c.input.animalA)!;
         const b = animals.find(a => a.name === c.input.animalB)!;
-        const { jev_shadow: rawJev, ...publicBody } = z.object({
-          jev_shadow: z.unknown(),
+        const { jev_shadow: rawJev, eval_diagnostics: rawDiagnostics, ...publicBody } = z.object({
+          jev_shadow: z.unknown(), eval_diagnostics: z.unknown(),
         }).passthrough().parse(await response.json());
         const jev = JevReportSchema.safeParse(rawJev);
-        if (!jev.success) throw Error("Missing/invalid Jev eval telemetry; restart the current development API. Jev counts were not guessed from logs.");
+        if (!jev.success) throw Error("Missing/invalid Jev eval telemetry; check that EVAL_TOKEN matches the server (or restart the current development API). Jev counts were not guessed from logs.");
         const body = fightResponseSchemaFor(a, b).parse(publicBody);
         if (body.narration_status === "not_required") throw Error(`Case ${c.case_id} is no longer narrated; stopped rather than inflate pass rates.`);
         const count = response.headers.get("X-Narration-Attempts");
@@ -103,12 +119,18 @@ async function main() {
           finished: new Date().toISOString(), body, jev_shadow: jev.data });
         console.log(`Case ${c.case_id}, run ${repeat}: ${body.narration_status}; calls=${count}; reason=${body.narration_reason ?? "null"}`);
         try {
-          const records = readDiagnostics(diagnosticCursor);
-          diagnosticCursor = diagnosticOffset();
-          diagnostics.push(...diagnosticsForRun(records, {
-            started, finished: runs.at(-1)!.finished, animals: [a.name, b.name],
-            attempts: Number(count), available: body.narration_status === "available",
-          }));
+          if (local) {
+            const records = readDiagnostics(diagnosticCursor);
+            diagnosticCursor = diagnosticOffset();
+            diagnostics.push(...diagnosticsForRun(records, {
+              started, finished: runs.at(-1)!.finished, animals: [a.name, b.name],
+              attempts: Number(count), available: body.narration_status === "available",
+            }));
+          } else {
+            diagnostics.push(...diagnosticsFromResponse(rawDiagnostics, {
+              attempts: Number(count), available: body.narration_status === "available",
+            }));
+          }
         } catch (error) {
           diagnosticsComplete = false;
           throw error;

@@ -13,7 +13,7 @@ export type DiagnosticAttempt = {
   timestamp: string; narration_id: string; animals: string[]; attempt: number;
   checks: FailureCheck[];
 };
-const recordSchema = z.object({
+export const recordSchema = z.object({
   timestamp: z.string().datetime(), narration_id: z.string().min(1),
   animals: z.array(z.string()).length(2), attempt: z.number().int().min(1).max(2),
   checks: z.array(z.object({
@@ -70,6 +70,21 @@ export function diagnosticsForRun(records: EvaluationDiagnostic[], run: {
     throw Error("Missing or ambiguous server diagnostics. Run eval beside the current API in the same workspace; do not run overlapping identical matchups.");
   }
   return matched;
+}
+
+/**
+ * Remote eval: the server returns this request's records in the token-gated response, so no
+ * shared filesystem is needed. Same completeness rule as diagnosticsForRun.
+ */
+export function diagnosticsFromResponse(raw: unknown, run: { attempts: number; available: boolean }): EvaluationDiagnostic[] {
+  const parsed = z.array(recordSchema).safeParse(raw ?? []); // omitted when the server saw no failures
+  const expected = run.attempts - Number(run.available);
+  if (!parsed.success || parsed.data.length !== expected ||
+    new Set(parsed.data.map(record => record.attempt)).size !== parsed.data.length ||
+    new Set(parsed.data.map(record => record.narration_id)).size > 1) {
+    throw Error("Missing or inconsistent eval_diagnostics from the server; update and redeploy the server, then rerun.");
+  }
+  return parsed.data;
 }
 
 /** Count a check once per failed provider attempt, not once per affected beat. */

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm, writeFile } from "node:fs/promises";
+import { resolveBuildIdentity } from "./build-identity.mjs";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -12,7 +13,7 @@ const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
-  const buildId = new Date().toISOString();
+  const { buildId, commit } = resolveBuildIdentity(process.env);
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
@@ -20,7 +21,10 @@ async function buildAll() {
     platform: "node",
     bundle: true,
     format: "esm",
-    define: { __ANIMOSITY_BUILD_ID__: JSON.stringify(buildId) },
+    define: {
+      __ANIMOSITY_BUILD_ID__: JSON.stringify(buildId),
+      __ANIMOSITY_COMMIT__: JSON.stringify(commit ?? ""),
+    },
     outdir: distDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
@@ -120,7 +124,7 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
-  await writeFile(path.join(distDir, "build-id.json"), JSON.stringify({ build_id: buildId }) + "\n");
+  await writeFile(path.join(distDir, "build-id.json"), JSON.stringify({ build_id: buildId, ...(commit ? { commit } : {}) }) + "\n");
 }
 
 buildAll().catch((err) => {

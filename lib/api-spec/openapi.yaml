@@ -250,4 +250,5 @@ components:
       properties:
         status: { type: string, enum: [ok] }
         build_id: { type: string, minLength: 1 }
+        commit: { type: string, minLength: 1, description: Git commit SHA the build came from; omitted when the host did not provide one. }
 

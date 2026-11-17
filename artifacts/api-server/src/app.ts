@@ -3,11 +3,16 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { mountFrontend } from "./static-site";
+import { trustProxyHops } from "./trust-proxy";
 
 const app: Express = express();
-// Trust only the immediate reverse proxy, not arbitrary client-supplied chains.
-// Revisit this hop count if the deployment's proxy topology changes.
-app.set("trust proxy", 1);
+// Trust only the proxy hops in front of the app, not arbitrary client-supplied chains.
+// Default 1 (one reverse proxy). Railway's docs do not state a hop count for
+// X-Forwarded-For (they document X-Real-IP as the client IP), so TRUST_PROXY_HOPS lets the
+// deployer correct it after checking a staging request, without a code change. A wrong count
+// breaks per-IP rate limiting: too low keys on the proxy, too high lets clients spoof their IP.
+app.set("trust proxy", trustProxyHops(process.env.TRUST_PROXY_HOPS));
 
 app.use(
   pinoHttp({
@@ -31,6 +36,10 @@ app.use(
 app.use(cors());
 
 app.use("/api", router);
+// Unknown /api paths stay JSON, never the SPA fallback or an HTML error page.
+app.use("/api", (_req, res) => { res.status(404).json({ error: "Not found.", code: "NOT_FOUND" }); });
+// Production: serve the built frontend from this process. Skipped when it was not built.
+mountFrontend(app);
 
 const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error?.type === "entity.parse.failed") {

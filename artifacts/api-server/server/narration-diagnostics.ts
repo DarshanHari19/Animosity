@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { logger } from "../src/lib/logger";
-import { appendDiagnostic } from "./narration-diagnostic-store";
+import { appendDiagnostic, type DiagnosticAttempt } from "./narration-diagnostic-store";
 
 export type FailureCheck = {
   check: "JSON_parse" | "Zod_schema" | "fact_used_not_in_evidence" |
@@ -52,17 +52,21 @@ export function withOffendingText(checks: FailureCheck[], parsed: unknown, raw: 
   });
 }
 
-/** Server-only: never include these diagnostic fields in an HTTP response. */
+/** Server-only, except the token-gated eval response (see routes.ts): never expose these in public responses. */
 export function logNarrationFailure(
   context: { narration_id: string; animals: string[]; model: string; attempt: number; expectedOutcome: unknown },
   checks: FailureCheck[],
   rawModelText: string | null,
+  onRecord?: (record: DiagnosticAttempt) => void,
 ): void {
+  const record: DiagnosticAttempt = {
+    timestamp: new Date().toISOString(), narration_id: context.narration_id,
+    animals: context.animals, attempt: context.attempt, checks,
+  };
+  // Eval-only callback (token-gated in routes.ts); it must never affect narration.
+  try { onRecord?.(record); } catch { /* no effect */ }
   try {
-    appendDiagnostic({
-      timestamp: new Date().toISOString(), narration_id: context.narration_id,
-      animals: context.animals, attempt: context.attempt, checks,
-    });
+    appendDiagnostic(record);
   } catch {
     // Observability must never change narration, retry or HTTP behavior.
     logger.error("Could not write server narration diagnostics; eval will report incomplete diagnostics.");
