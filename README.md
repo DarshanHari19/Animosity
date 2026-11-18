@@ -34,8 +34,9 @@ or the verdict. A failed story never hides a valid engine result.
 ## Narration reliability
 
 Story-unavailable rates from successive evaluations. The first six covered
-60 fights each; the last two covered 75 fights (25 scenarios × 3 runs).
-Evaluation 8 ran on the project's own Anthropic key; see `docs/evals/`.
+60 fights each; the last three covered 75 fights (25 scenarios × 3 runs).
+Evaluations 8 and 9 ran on the project's own Anthropic key; evaluation 9 ran
+against Railway staging. See `docs/evals/`.
 These are observed narration failure rates, **not** verdict accuracy or win
 probabilities.
 
@@ -49,6 +50,7 @@ probabilities.
 | 6 | 60 | 1.7% |
 | 7 | 75 | 0.0% |
 | 8 (own Anthropic key, local) | 75 | 1.3% |
+| 9 (own key, Railway staging) | 75 | 2.7% |
 
 ## Pages and sharing
 
@@ -174,15 +176,18 @@ Steps:
 1. Create a Railway project with a `staging` environment and a service from this GitHub repo.
 2. Set these service variables (names only): `DATABASE_URL` (Neon staging, pooled),
    `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `NARRATION_DAILY_CAP`, `EVAL_TOKEN`,
-   `PUBLIC_BASE_URL`. Optional: `TRUST_PROXY_HOPS`, `BUILD_ID`. Railway provides `PORT`,
-   `RAILWAY_GIT_COMMIT_SHA` and `RAILWAY_DEPLOYMENT_ID`; do not set them.
+   `PUBLIC_BASE_URL`, and `TRUST_PROXY_HOPS=2`. `TRUST_PROXY_HOPS=2` is required on Railway,
+   not optional: it was verified on staging (see the proxy check below). Optional: `BUILD_ID`.
+   Railway provides `PORT` and `RAILWAY_GIT_COMMIT_SHA`; do not set them.
 3. Use `PUBLIC_BASE_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}` (a Railway reference variable) or
    your own domain. It is read at **build** time, so changing it needs a redeploy.
 4. Generate the token with `openssl rand -hex 32` (at least 32 characters; shorter disables
    the eval bypass and logs a warning). Put the same value in your local `.env`.
-5. Deploy, then check `https://<host>/api/health`: `commit` is the deployed commit and
-   `build_id` is `<commit>.<deployment prefix>`, so every deploy has its own narration cache
-   key. A deploy not triggered from GitHub (for example `railway up`) has no commit variable:
+5. Deploy, then check `https://<host>/api/health`: `commit` is the deployed commit. On Railway
+   `build_id` is the commit SHA alone, because `RAILWAY_DEPLOYMENT_ID` is not available at build
+   time. A redeploy of the same commit keeps the narration cache; a new commit gets a new one.
+   (Hosts that provide a deployment ID at build add it as `<commit>.<deployment prefix>`.)
+   A deploy not triggered from GitHub (for example `railway up`) has no commit variable:
    `commit` is omitted and `build_id` falls back to a build timestamp.
 6. Staging eval (paid, ask first): `EVAL_BASE_URL=https://<host> pnpm eval`. A remote target must
    be https; redirects are refused so the token is never sent elsewhere. It takes the expected
@@ -190,7 +195,8 @@ Steps:
 
 ### Verify the proxy setting on staging
 
-Per-IP rate limiting depends on `trust proxy` (default 1 hop; `TRUST_PROXY_HOPS` overrides).
+Per-IP rate limiting depends on `trust proxy` (default 1 hop; `TRUST_PROXY_HOPS` overrides;
+Railway needs 2).
 Railway's docs do not state the `X-Forwarded-For` hop count, so check once on staging. The
 probe is free: `POST /api/fight` with `{}` returns 400 and makes no provider call, and the
 limiter (10 requests per minute per IP) runs first.
@@ -204,10 +210,12 @@ for i in $(seq 1 11); do
 done; echo
 ```
 
-- Expected: ten `400`s, then `429`. Spoofing does not help an attacker.
-- If all eleven are `400` at one hop, the rightmost `X-Forwarded-For` entry is client-controlled.
-  Do not lower `TRUST_PROXY_HOPS` (that puts everyone in one bucket). Don't share the staging
-  URL publicly; the limiter needs to key on Railway's `X-Real-IP` header (code change, ask first).
+- Expected on Railway with `TRUST_PROXY_HOPS=2` (verified on staging): ten `400`s, then `429`.
+  Spoofed `X-Forwarded-For` (single or two entries) and `X-Real-IP` were still limited. Spoofing
+  does not help an attacker.
+- If all eleven are `400`, the limiter is not keying on the client. On Railway this happened at
+  one hop, where the key was a changing internal proxy hop and the limiter never fired. Set
+  `TRUST_PROXY_HOPS=2` (verified) and rerun. Don't share the staging URL publicly.
 
 (ii) Wait a minute, then send 6 requests from a laptop and 6 from a phone on cellular (no Wi-Fi).
 Neither device should get a `429`. If one does early, every client shares one key (the proxy's
@@ -446,9 +454,9 @@ These deterministic English checks are conservative, not semantic fact proof.
 - Both limits remain **in memory, per server process**, separate from the persistent narration cache. The daily
   budget resets at midnight **UTC**; restarting the server resets both limits.
   Multiple server replicas have separate budgets, so this is not a persistent
-  account-wide billing limit. IP resolution trusts one immediate reverse-proxy
-  hop, not arbitrary forwarded-header chains; review that setting if changing
-  the deployment topology. Expired IP windows are pruned without background timers.
+  account-wide billing limit. IP resolution trusts `TRUST_PROXY_HOPS` reverse-proxy
+  hops (default 1; Railway needs 2, verified on staging), not arbitrary forwarded-header chains;
+  review that setting if changing the deployment topology. Expired IP windows are pruned without background timers.
 
 - `GET /api/animals` returns the animal records for the selectors.
 - `GET /api/health` returns `{ status: "ok", build_id }` with caching disabled.
