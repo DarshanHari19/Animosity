@@ -454,9 +454,9 @@ These deterministic English checks are conservative, not semantic fact proof.
 - Both limits remain **in memory, per server process**, separate from the persistent narration cache. The daily
   budget resets at midnight **UTC**; restarting the server resets both limits.
   Multiple server replicas have separate budgets, so this is not a persistent
-  account-wide billing limit. IP resolution trusts one immediate reverse-proxy
-  hop, not arbitrary forwarded-header chains; review that setting if changing
-  the deployment topology. Expired IP windows are pruned without background timers.
+  account-wide billing limit. IP resolution trusts `TRUST_PROXY_HOPS` reverse-proxy
+  hops (default 1; Railway needs 2, verified on staging), not arbitrary forwarded-header chains;
+  review that setting if changing the deployment topology. Expired IP windows are pruned without background timers.
 
 - `GET /api/animals` returns the animal records for the selectors.
 - `GET /api/health` returns `{ status: "ok", build_id }` with caching disabled.
