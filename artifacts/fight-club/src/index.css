@@ -262,10 +262,10 @@ a:hover { color: var(--bronze-hi); }
   .vs-figure { min-width: 24px; }
   .vs-plank { height: 10px; }
   .vs-corner { font-size: 12px; letter-spacing: .1em; gap: 6px; }
-  .vs-name { font-size: clamp(14px, 4.6vw, 22px); letter-spacing: .03em; line-height: 1.1; }
+  .vs-name { font-size: clamp(12px, 3.6vw, 22px); letter-spacing: 0; line-height: 1.1; }
   .vs-meta { font-size: 13px; line-height: 1.35; }
   .vs-divider { padding: 0 4px; }
   .vs-text { font-size: 28px; }
   .vs-actions { flex-wrap: nowrap; width: 100%; gap: 10px; }
-  .vs-ring, .vs-change { flex: 1 1 0; min-width: 0; min-height: 52px; padding: 0 12px; font-size: 16px; }
+  .vs-ring, .vs-change { flex: 1 1 0; min-width: 0; min-height: 52px; padding: 0 6px; font-size: 14px; letter-spacing: 0; white-space: nowrap; }
 }
