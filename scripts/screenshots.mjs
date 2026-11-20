@@ -6,9 +6,10 @@
 //
 // SAFETY: this script must NEVER request a verdict, because that triggers a paid model call.
 // Clicking "Start the bout" already sends POST /api/fight (narration + Jev), before the VS screen
-// shows, so every non-GET request to /api/ is aborted at the browser-context level before any
-// navigation. The VS screen renders without the fight response. A page.on("response") guard
-// counts any API write that still reaches the network and fails the run if there is one.
+// shows, so every request whose method is not GET or HEAD (any path) is aborted at the
+// browser-context level before any navigation (fail closed), and service workers are blocked.
+// The VS screen renders without the fight response. A page.on("request") guard counts every
+// such write request; any not matched by an abort (reached = writes - blocked) fails the run.
 // The script also never clicks "Ring the bell" (button-ring).
 import "./load-env.mjs";
 import { mkdirSync } from "node:fs";
@@ -68,7 +69,7 @@ try {
 
 const failures = [];
 let blocked = 0;
-let reached = 0;
+let writes = 0;
 
 try {
   const probe = await fetch(base, { signal: AbortSignal.timeout(10_000) }).catch((err) => err);
@@ -82,10 +83,12 @@ try {
     console.log(`Target: ${base}`);
     console.log("screen             viewport    scrollH  viewH  fits");
 
-    const isApiWrite = (req) => req.method() !== "GET" && new URL(req.url()).pathname.startsWith("/api/");
+    const isWrite = (req) => req.method() !== "GET" && req.method() !== "HEAD";
 
     const shoot = async (page, screen, [w, h]) => {
-      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
       await page.waitForTimeout(800); // let entrance animations and layout settle
       const scrollH = await page.evaluate(() => document.documentElement.scrollHeight);
       await page.screenshot({ path: `${OUT_DIR}${screen}-${w}x${h}.png`, fullPage: true });
@@ -95,19 +98,22 @@ try {
     };
 
     for (const vp of VIEWPORTS) {
-      const context = await browser.newContext({ viewport: { width: vp[0], height: vp[1] } });
+      const context = await browser.newContext({
+        viewport: { width: vp[0], height: vp[1] },
+        serviceWorkers: "block",
+      });
       try {
-        // Block every API write before any navigation (see SAFETY above).
-        await context.route("**/api/**", (route) => {
-          if (isApiWrite(route.request())) {
+        // Block every non-GET/HEAD request before any navigation (see SAFETY above).
+        await context.route("**/*", (route) => {
+          if (isWrite(route.request())) {
             blocked++;
             return route.abort();
           }
           return route.continue();
         });
         const page = await context.newPage();
-        page.on("response", (res) => {
-          if (isApiWrite(res.request())) reached++;
+        page.on("request", (req) => {
+          if (isWrite(req)) writes++;
         });
 
         await page.goto(base + "/", { waitUntil: "domcontentloaded" });
@@ -137,9 +143,10 @@ try {
       }
     }
 
+    const reached = writes - blocked;
     console.log(`API writes blocked: ${blocked}, reached network: ${reached}`);
     if (reached > 0) {
-      failures.push(`${reached} API write request(s) reached the network`);
+      failures.push(`${reached} write request(s) reached the network`);
     }
     if (failures.length) {
       console.error("Screenshot run failed:");

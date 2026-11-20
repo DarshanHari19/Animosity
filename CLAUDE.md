@@ -35,7 +35,7 @@ Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
 
 - First-time setup: `cp .env.example .env` and edit it (set `DATABASE_URL`), `pnpm install`, `pnpm db:migrate`. Default database is Neon staging when `.env` points there; for the Docker fallback also set `POSTGRES_PORT` and the `DATABASE_URL` port if 5432 is taken and run `docker compose up -d` first
 - Dev (API on `PORT`, default 8080; web on `WEB_PORT`, default 5173, proxying `/api`): `pnpm dev`
-- Screenshots (needs a running frontend): `pnpm screenshots` captures the picker, VS and How it works at 360, 390, 768 and 1280 widths into `screenshots/`. It blocks every API write, so it never sends `POST /api/fight` or makes a model call. Target is `--base-url`, then `SCREENSHOT_BASE_URL`, then `http://localhost:$WEB_PORT`
+- Screenshots (needs a running frontend): `pnpm screenshots` captures the picker, VS and How it works at 360, 390, 768 and 1280 widths into `screenshots/`. It blocks every non-GET request, so it never sends `POST /api/fight` or makes a model call. Target is `--base-url`, then `SCREENSHOT_BASE_URL`, then `http://localhost:$WEB_PORT`
 - Tests (backend + frontend): `pnpm test` (loads `.env` but strips the provider keys and URLs, so tests never use billable keys)
   - Backend only: `pnpm --filter @workspace/api-server test`
   - Frontend only: `pnpm --filter @workspace/fight-club test`
