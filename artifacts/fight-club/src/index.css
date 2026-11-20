@@ -228,3 +228,38 @@ a:hover { color: var(--bronze-hi); }
 .table-scroll { overflow-x: auto; }
 .tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .tier-grid > div { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Versus stage. Desktop values mirror the former inline styles; narrow screens keep the fighters side by side. */
+.vs-wrap { align-items: center; gap: 36px; padding-top: 32px; }
+.vs-row { width: 100%; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 24px; }
+.vs-fighter { flex: 1 1 360px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.vs-figbox { width: 100%; height: clamp(170px, 30vw, 270px); display: flex; align-items: flex-end; justify-content: center; }
+.vs-figure { min-width: 70px; }
+.vs-plank { width: 86%; height: 18px; border-radius: 4px; background: #BFA06E; }
+.vs-corner { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.vs-name { margin: 0; font-size: clamp(28px, 5vw, 42px); font-weight: 700; letter-spacing: .06em; text-align: center; text-transform: uppercase; overflow-wrap: anywhere; }
+.vs-meta { font-size: 16px; text-align: center; }
+.vs-divider { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 8px; }
+.vs-rule { width: 2px; height: 56px; background: #6B5638; }
+.vs-text { font-size: 76px; font-weight: 700; color: var(--bronze); line-height: 1; }
+.vs-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+.vs-ring { min-height: 58px; padding: 0 40px; font-size: 20px; }
+.vs-change { min-height: 58px; }
+@media (max-width: 640px) {
+  .vs-band svg { height: 56px !important; }
+  .vs-wrap { gap: 14px; padding-top: 16px; padding-bottom: 32px; }
+  .vs-row { flex-wrap: nowrap; align-items: flex-end; gap: 0; }
+  .vs-fighter { flex: 1 1 0; min-width: 0; gap: 8px; }
+  .vs-figbox { height: clamp(110px, 36vw, 150px); }
+  .vs-figure { min-width: 40px; }
+  .vs-plank { height: 10px; }
+  .vs-corner { font-size: 11px; letter-spacing: .12em; gap: 6px; }
+  .vs-name { font-size: clamp(16px, 5.4vw, 22px); letter-spacing: .03em; line-height: 1.1; }
+  .vs-meta { font-size: 12px; line-height: 1.35; }
+  .vs-divider { padding: 0 4px; align-self: center; }
+  .vs-rule { display: none; }
+  .vs-text { font-size: 28px; }
+  .vs-actions { gap: 10px; }
+  .vs-ring { min-height: 52px; padding: 0 28px; font-size: 18px; }
+  .vs-change { min-height: 52px; }
+}
