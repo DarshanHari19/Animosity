@@ -11,6 +11,16 @@ Animosity is a fact-based animal matchup simulator. A deterministic engine decid
 5. Stay inside the repo. Stop and ask before installing system software (Homebrew, global npm packages, runtimes), changing files outside the repo (except the vault note in Project memory), or deleting anything outside the repo, including caches. Project dependencies through `pnpm install` are fine.
 6. End each task with a short report: what changed, test counts, and anything done that wasn't asked for.
 
+## Workflow
+
+- The main session is the Architect: it plans, assigns, checks results, reports, and updates the vault note. It doesn't edit repo files.
+- Match the process to the risk:
+  - Small (copy, docs, a one-file style tweak): Fast Worker, no worktree. Run the tests; no review.
+  - Normal (frontend features and fixes, API outside the engine, tooling): Builder in a worktree, then Reviewer. After a small follow-up fix, the Architect checks the diff and reruns the tests; send it back to Reviewer only if the follow-up is substantial.
+  - High stakes (engine, `traits.json`, source tiers, verdict text, narration checks, secrets, deploy config): Builder, Reviewer, and a Second Reviewer who doesn't see the first review.
+- UI changes: run `pnpm screenshots` and look at the phone and desktop shots before reporting done.
+- One task per session. Start a new session for each phase or task; this file, the vault note, and `docs/MIGRATION_PLAN.md` are the handoff. Don't paste old transcripts.
+
 ## Layout
 
 - `artifacts/api-server/server/`: API, engine (`engine.ts`), narrator, claim checks, eval (`eval.ts`), `traits.json`
@@ -25,6 +35,7 @@ Node 24 (`.nvmrc`) and pnpm 10.26.1 (`packageManager`). Run from the repo root.
 
 - First-time setup: `cp .env.example .env` and edit it (set `DATABASE_URL`), `pnpm install`, `pnpm db:migrate`. Default database is Neon staging when `.env` points there; for the Docker fallback also set `POSTGRES_PORT` and the `DATABASE_URL` port if 5432 is taken and run `docker compose up -d` first
 - Dev (API on `PORT`, default 8080; web on `WEB_PORT`, default 5173, proxying `/api`): `pnpm dev`
+- Screenshots (needs a running frontend; never requests a verdict): `pnpm screenshots` captures the picker, VS and How it works at 360, 390, 768 and 1280 widths into `screenshots/`. Target is `--base-url`, then `SCREENSHOT_BASE_URL`, then `http://localhost:$WEB_PORT`
 - Tests (backend + frontend): `pnpm test` (loads `.env` but strips the provider keys and URLs, so tests never use billable keys)
   - Backend only: `pnpm --filter @workspace/api-server test`
   - Frontend only: `pnpm --filter @workspace/fight-club test`
