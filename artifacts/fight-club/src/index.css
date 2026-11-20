@@ -252,6 +252,7 @@ a:hover { color: var(--bronze-hi); }
   .vs-divider { padding: 0 8px; align-self: center; }
   .vs-rule { display: none; }
   .vs-text { font-size: 56px; }
+  .vs-name { font-size: clamp(22px, 3.4vw, 32px); }
 }
 /* Compact sizes for phones. */
 @media (max-width: 640px) {
